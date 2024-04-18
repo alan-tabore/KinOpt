@@ -1,0 +1,1373 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>src.kinetic_models &#8212; kinopt 1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=362ab14a" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/src/kinetic_models';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">kinopt 1.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">src.kinetic_models</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for src.kinetic_models</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">kinetic_models module.</span>
+
+<span class="sd">This module provides functions for simulating chemical reaction kinetics using various kinetic models.</span>
+<span class="sd">To create the global kinetic of reaction, multiple elements are available:</span>
+
+<span class="sd">* rate law : describing the rate of purely chemical reaction</span>
+<span class="sd">* vitrification law : describing a rate depending on vitrification and diffusion phenomenon</span>
+<span class="sd">* coupling law : describing the relation between rate law and vitrification law</span>
+<span class="sd">* tg law : describing the evolution of glass transition temperature with respect to extent</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+
+
+<div class="viewcode-block" id="arrhenius_rate_constant">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.arrhenius_rate_constant">[docs]</a>
+<span class="k">def</span> <span class="nf">arrhenius_rate_constant</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">Ea</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the value of rate constant with the Arrhenius equation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T : Float</span>
+<span class="sd">        Temperature of reaction.</span>
+<span class="sd">    A : Float</span>
+<span class="sd">        Pre-exponential factor.</span>
+<span class="sd">    Ea : Float</span>
+<span class="sd">        Activation energy.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    k : Float</span>
+<span class="sd">        Rate constant for the Arrhenius equation.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">     The Arrhenius rate constant is given by:</span>
+<span class="sd">    </span>
+<span class="sd">     .. math:: k = A e^{ \left( \frac{-E_a}{RT} \right)}</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">A</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">Ea</span><span class="o">/</span><span class="p">(</span><span class="mf">8.31446261815324</span><span class="o">*</span><span class="n">T</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="rate_for_nth_order">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.rate_for_nth_order">[docs]</a>
+<span class="k">def</span> <span class="nf">rate_for_nth_order</span><span class="p">(</span><span class="n">extent</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the value of the rate of reaction for a nth order reaction.</span>
+<span class="sd">    </span>
+<span class="sd">    .. math:: \dfrac{ d\alpha }{dt} = A e^{ \left( \dfrac{-E_a}{RT} \right) } (1-\alpha)^n </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    extent : 1-D array</span>
+<span class="sd">        Extent of reaction.</span>
+<span class="sd">    T : 1-D array</span>
+<span class="sd">        Temperature of reaction.</span>
+<span class="sd">    A : Float</span>
+<span class="sd">        Pre-exponential factor of the reaction.</span>
+<span class="sd">    Ea : Float</span>
+<span class="sd">        Activation energy of the reaction.</span>
+<span class="sd">    n : Float</span>
+<span class="sd">        Order of reaction.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rate : 1-D array</span>
+<span class="sd">        Rate of reaction for a nth order reaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">arrhenius_rate_constant</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">extent</span><span class="p">)</span><span class="o">**</span><span class="n">n</span></div>
+
+
+
+
+<div class="viewcode-block" id="rate_for_kamal">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.rate_for_kamal">[docs]</a>
+<span class="k">def</span> <span class="nf">rate_for_kamal</span><span class="p">(</span><span class="n">extent</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">A2</span><span class="p">,</span><span class="n">E2</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the value of the rate of reaction for a Kamal equation.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">     extent : ndarray</span>
+<span class="sd">         Extent of reaction.</span>
+<span class="sd">     T : ndarray</span>
+<span class="sd">         Temperature of reaction.</span>
+<span class="sd">     A1 : float</span>
+<span class="sd">         Pre-exponential factor of the regular reaction.</span>
+<span class="sd">     E1 : float</span>
+<span class="sd">         Activation energy of the regular reaction.</span>
+<span class="sd">     A2 : float</span>
+<span class="sd">         Pre-exponential factor of the autocatalyzed reaction.</span>
+<span class="sd">     E2 : float</span>
+<span class="sd">         Activation energy of the autocatalyzed reaction.</span>
+<span class="sd">     m : float</span>
+<span class="sd">         Order of reaction for the autocatalyzed reaction.</span>
+<span class="sd">     n : float</span>
+<span class="sd">         Order of reaction for the regular reaction.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rate : ndarray</span>
+<span class="sd">        Rate of reaction for a Kamal equation.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">     The Kamal equation is given by:</span>
+<span class="sd">    </span>
+<span class="sd">     .. math:: \frac{d\alpha}{dt} = \left( A_1 e^{ \left( \frac{-E_1}{RT} \right)}  +  A_2 e^{ \left( \frac{-E_2}{RT} \right) } \alpha^m \right) (1-\alpha)^n</span>
+<span class="sd">     </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1]   G. J. Tsamasphyros, Th. K. Papathanassiou, et S. I. Markolefas, « Some Analytical Solutions of the Kamal Equation for Isothermal Curing With Applications to Composite Patch Repair », Journal of Engineering Materials and Technology, vol. 131, no 1, Dec. 2008, doi: 10.1115/1.3026550.</span>
+<span class="sd">     </span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt;  import time as t</span>
+<span class="sd">    &gt;&gt;&gt;  import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt;  import matplotlib.pyplot as plt</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt;  number_of_points = 10000</span>
+<span class="sd">    &gt;&gt;&gt;  time_points = np.linspace(0, 1800, number_of_points)  # 30 minutes</span>
+<span class="sd">    &gt;&gt;&gt;  temperatures = [</span>
+<span class="sd">        np.linspace(293, 443, number_of_points),  # 5°C/min</span>
+<span class="sd">        np.linspace(293, 593, number_of_points),  # 10°C/min</span>
+<span class="sd">        np.linspace(293, 743, number_of_points),  # 15°C/min</span>
+<span class="sd">        np.linspace(293, 1093, number_of_points)  # 20°C/min</span>
+<span class="sd">    ]</span>
+<span class="sd">    &gt;&gt;&gt;  conversions = []</span>
+<span class="sd">    &gt;&gt;&gt;  rates = []</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt;  fig, ax1 = plt.subplots(num=1)</span>
+<span class="sd">    &gt;&gt;&gt;  ax1_bis = ax1.twinx()</span>
+<span class="sd">    &gt;&gt;&gt;  ax1.set_xlabel(&quot;time&quot;)</span>
+<span class="sd">    &gt;&gt;&gt;  ax1.set_ylabel(&quot;conversion&quot;)</span>
+<span class="sd">    &gt;&gt;&gt;  ax1_bis.set_ylabel(&quot;rate&quot;)</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt;  for i, temperature in enumerate(temperatures):</span>
+<span class="sd">    &gt;&gt;&gt;      t0 = t.time()</span>
+<span class="sd">    &gt;&gt;&gt;      extent, rate = compute_extent_and_rate(time_points, temperature, rate_for_kamal, (1.666e8, 80000, 1.666e13, 120000, 1, 0.7))</span>
+<span class="sd">    &gt;&gt;&gt;      t1 = t.time()</span>
+<span class="sd">    &gt;&gt;&gt;      execution_time = t1 - t0</span>
+<span class="sd">    &gt;&gt;&gt;      print(&quot;Time:&quot;, execution_time, &quot;s&quot;)</span>
+<span class="sd">    &gt;&gt;&gt;      conversions.append(extent)</span>
+<span class="sd">    &gt;&gt;&gt;      rates.append(rate)</span>
+<span class="sd">    &gt;&gt;&gt;      ax1.plot(time_points, extent, label=f&quot;conversion for a heating rate of {(i+1)*5}°/min&quot;, linestyle=&#39;dotted&#39;)</span>
+<span class="sd">    &gt;&gt;&gt;      ax1_bis.plot(time_points, rate, label=f&quot;rate for a heating rate of {(i+1)*5}°/min&quot;)</span>
+<span class="sd">    &gt;&gt;&gt;      ax1.legend()</span>
+<span class="sd">    &gt;&gt;&gt;      ax1_bis.legend()</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt;  plt.show()</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">arrhenius_rate_constant</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">arrhenius_rate_constant</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">A2</span><span class="p">,</span><span class="n">E2</span><span class="p">)</span> <span class="o">*</span> <span class="n">extent</span><span class="o">**</span><span class="n">m</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">extent</span><span class="p">)</span><span class="o">**</span><span class="n">n</span></div>
+
+
+<div class="viewcode-block" id="rate_for_autocatalytic">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.rate_for_autocatalytic">[docs]</a>
+<span class="k">def</span> <span class="nf">rate_for_autocatalytic</span><span class="p">(</span><span class="n">extent</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">Ea</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the rate of reaction for an autocatalytic reaction.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    extent : ndarray</span>
+<span class="sd">        Extent of reaction.</span>
+<span class="sd">    T : ndarray</span>
+<span class="sd">        Temperature of reaction.</span>
+<span class="sd">    A : float</span>
+<span class="sd">        Pre-exponential factor of the reaction.</span>
+<span class="sd">    Ea : float</span>
+<span class="sd">        Activation energy of the reaction.</span>
+<span class="sd">    m : float</span>
+<span class="sd">        Order of reaction for the autocatalyzed reaction.</span>
+<span class="sd">    n : float</span>
+<span class="sd">        Order of reaction for the regular reaction.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rate : ndarray</span>
+<span class="sd">        Rate of reaction for an autocatalytic equation.     </span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">     The rate for an autocatalytic reaction is given by:</span>
+<span class="sd">    </span>
+<span class="sd">     .. math:: \frac{d\alpha}{dt} =  A e^{ \left( \frac{-E_a}{RT} \right)} \alpha^m (1-\alpha)^n</span>
+<span class="sd">     </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] M. R. Keenan, « Autocatalytic cure kinetics from DSC measurements: Zero initial cure rate », J. Appl. Polym. Sci., vol. 33, nᵒ 5, p. 1725‑1734, avr. 1987, doi: 10.1002/app.1987.070330525.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">extent</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Be careful, for an autocatalytic model the extent can&#39;t be inferior or equal to 0 !!! </span><span class="se">\n</span><span class="s2"> It would result in a rate of reaction equal to 0 and no reaction would occur.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">arrhenius_rate_constant</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">Ea</span><span class="p">)</span> <span class="o">*</span> <span class="n">extent</span><span class="o">**</span><span class="n">m</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">extent</span><span class="p">)</span><span class="o">**</span><span class="n">n</span></div>
+
+
+    
+<div class="viewcode-block" id="vitrification_WLF_rate">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.vitrification_WLF_rate">[docs]</a>
+<span class="k">def</span> <span class="nf">vitrification_WLF_rate</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">Tg</span><span class="p">,</span><span class="n">Ad</span><span class="p">,</span><span class="n">C1</span><span class="p">,</span><span class="n">C2</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the vitrification term for a WLF-like model.</span>
+<span class="sd">    </span>
+<span class="sd">    The vitrification term is given by the WLF model:</span>
+<span class="sd">    </span>
+<span class="sd">    .. math:: k_v = A_d e^{ \left( \frac{C_1(T - T_g(\alpha))}{C_2 + |T - T_g(\alpha)|} \right) }</span>
+<span class="sd">    </span>
+<span class="sd">    where:</span>
+<span class="sd">        * :math:`T` is the temperature of the reaction (in Kelvin). </span>
+<span class="sd">        * :math:`A_d` is the pre-exponential factor of the vitrification term</span>
+<span class="sd">        * :math:`C_1` is Constant 1 of the WLF model</span>
+<span class="sd">        * :math:`C_2` is Constant 2 of the WLF model</span>
+<span class="sd">        * :math:`T_g` is the glass transition temperature (in Kelvin).</span>
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">    </span>
+<span class="sd">    Usually, the glass transition temperature is determined by using the DiBenedetto equation.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T : array-like</span>
+<span class="sd">        Temperature of the reaction (in Kelvin)</span>
+<span class="sd">    Ad : float</span>
+<span class="sd">        Pre-exponential factor of the vitrification term</span>
+<span class="sd">    C1 : float</span>
+<span class="sd">        Constant 1 of the WLF model</span>
+<span class="sd">    C2 : float</span>
+<span class="sd">        Constant 2 of the WLF model</span>
+<span class="sd">    Tg : float</span>
+<span class="sd">        Glass transition temperature (in Kelvin)</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rate : array-like</span>
+<span class="sd">        Rate of the reaction</span>
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] G. Wisanrakkit et J. K. Gillham, &quot;The glass transition temperature (Tg) as an index of chemical</span>
+<span class="sd">    conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics&quot;,</span>
+<span class="sd">    Journal of Applied Polymer Science, vol. 41, no. 11-12, p. 2885-2929, 1990, doi: 10.1002/app.1990.070411129.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#Check if temperature of reaction is above glass transition temperature</span>
+    <span class="c1">#If so, the vitrification term is computed, else the rate is equal to 0</span>
+    <span class="k">return</span> <span class="n">Ad</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span> <span class="p">(</span><span class="n">C1</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">-</span><span class="n">Tg</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">C2</span><span class="o">+</span><span class="nb">abs</span><span class="p">(</span><span class="n">T</span><span class="o">-</span><span class="n">Tg</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="vitrification_WLF_rate_no_reaction_below_Tg">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.vitrification_WLF_rate_no_reaction_below_Tg">[docs]</a>
+<span class="k">def</span> <span class="nf">vitrification_WLF_rate_no_reaction_below_Tg</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">Tg</span><span class="p">,</span><span class="n">Ad</span><span class="p">,</span><span class="n">C1</span><span class="p">,</span><span class="n">C2</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the vitrification term for a WLF-like model when the reaction temperature is above Tg.</span>
+<span class="sd">    The vitrification term is equal to 0 when below Tg.</span>
+<span class="sd">    </span>
+<span class="sd">    .. math:: k_v = A_d e^{ \left( \dfrac{C_1(T-T_g(\alpha))}{C_2+ |T-T_g(\alpha)|} \right) }</span>
+
+<span class="sd">    Usually the glass transition temperature is determined by using the DiBenedetto equation</span>
+<span class="sd">    See: G. Wisanrakkit et J. K. Gillham, « The glass transition temperature (Tg) as an index of chemical conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics », Journal of Applied Polymer Science, vol. 41, nᵒ 11‑12, p. 2885‑2929, 1990, doi: 10.1002/app.1990.070411129.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T : Array-like</span>
+<span class="sd">       Temperature of reaction (in Kelvin)</span>
+<span class="sd">    Ad : Float</span>
+<span class="sd">        Pre-exponential factor of the vitrification term</span>
+<span class="sd">    C1 : Float</span>
+<span class="sd">        Constant 1 of WLF model</span>
+<span class="sd">    C2 : Float</span>
+<span class="sd">        Constant 2 of WLF model</span>
+<span class="sd">    Tg : Float</span>
+<span class="sd">        Glass transition temperature (in Kelvin)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Rate : Array-like</span>
+<span class="sd">        Rate of reaction</span>
+<span class="sd">        </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] G. Wisanrakkit et J. K. Gillham, &quot;The glass transition temperature (Tg) as an index of chemical</span>
+<span class="sd">    conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics&quot;,</span>
+<span class="sd">    Journal of Applied Polymer Science, vol. 41, no. 11-12, p. 2885-2929, 1990, doi: 10.1002/app.1990.070411129.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#Check if temperature of reaction is above glass transition temperature</span>
+    <span class="c1">#If so, the vitrification term is computed, else the rate is equal to 0</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span> <span class="n">T</span><span class="o">&gt;</span><span class="n">Tg</span><span class="p">,</span> <span class="n">Ad</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span> <span class="p">(</span><span class="n">C1</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">-</span><span class="n">Tg</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">C2</span><span class="o">+</span><span class="nb">abs</span><span class="p">(</span><span class="n">T</span><span class="o">-</span><span class="n">Tg</span><span class="p">))),</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="tg_diBennedetto">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.tg_diBennedetto">[docs]</a>
+<span class="k">def</span> <span class="nf">tg_diBennedetto</span><span class="p">(</span><span class="n">extent</span><span class="p">,</span><span class="n">Tg_0</span><span class="p">,</span><span class="n">Tg_inf</span><span class="p">,</span><span class="n">coeff</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the glass transition temperature using the DiBennedetto equation.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    alpha : array-like</span>
+<span class="sd">        conversion or extent of reaction</span>
+<span class="sd">    Tg_0 : Float</span>
+<span class="sd">        glass transition temperature of unreacted material</span>
+<span class="sd">    Tg_inf : Float</span>
+<span class="sd">        glass transition temperature of fully reacted material</span>
+<span class="sd">    coeff : Float</span>
+<span class="sd">        ratio of the changes in isobaric heat capacities at Tg of the fully reacted material and of the initial unreacted material</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Tg : array-like</span>
+<span class="sd">        Glass transition temperature</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The DiBennedetto equation is given by:</span>
+<span class="sd">        </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        Tg = Tg_{0} +  \dfrac{ (Tg_{\infty}-Tg_{0}). \lambda .\alpha}{1-(1-\lambda)\alpha} \\</span>
+<span class="sd">        with: \\</span>
+<span class="sd">        Tg_{0}: \textrm{The glass transition temperature of unreacted material} \\</span>
+<span class="sd">        Tg_{\infty}: \textrm{The glass transition temperature of completely cured material} \\</span>
+<span class="sd">        \lambda : \dfrac{\Delta C_{p_{\infty}}}{\Delta C_{p_{0}}} \textrm{the ratio of the changes in isobaric heat capacities at} \\</span>
+<span class="sd">        \textrm{Tg of the fully reacted material and of the initial unreacted material}\\</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Tg_0</span> <span class="o">+</span> <span class="p">(</span><span class="n">Tg_inf</span> <span class="o">-</span> <span class="n">Tg_0</span><span class="p">)</span><span class="o">*</span><span class="p">((</span><span class="n">coeff</span><span class="o">*</span><span class="n">extent</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">coeff</span><span class="p">)</span><span class="o">*</span><span class="n">extent</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="coupling_harmonic_mean">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.coupling_harmonic_mean">[docs]</a>
+<span class="k">def</span> <span class="nf">coupling_harmonic_mean</span><span class="p">(</span><span class="n">kc</span><span class="p">,</span><span class="n">kv</span><span class="p">,</span><span class="n">experimental_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the harmonic mean of a chemical rate and vitrification rate.</span>
+<span class="sd">    </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        \dfrac{ d\alpha }{dt} = \dfrac{1}{\dfrac{1}{k_c } + \dfrac{1}{k_v}} </span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    kc : 1-D array</span>
+<span class="sd">        Rate of chemical reaction</span>
+<span class="sd">    kv : 1-D array</span>
+<span class="sd">        Vitrification term</span>
+<span class="sd">    experimental_parameters : NoneType</span>
+<span class="sd">        NoneType argument to stick with guideline of function creation    </span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Rate : 1-D array</span>
+<span class="sd">        Rate of reaction</span>
+<span class="sd">        </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1]   G. Wisanrakkit et J. K. Gillham, « The glass transition temperature (Tg) as an index of chemical conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics », Journal of Applied Polymer Science, vol. 41, nᵒ 11‑12, p. 2885‑2929, 1990, doi: 10.1002/app.1990.070411129.</span>
+<span class="sd">     </span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="c1">#If kc or kv are equal to 0, then it returns 0</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="n">kc</span><span class="p">)</span><span class="o">+</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">kv</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">rate</span></div>
+
+
+<div class="viewcode-block" id="coupling_product">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.coupling_product">[docs]</a>
+<span class="k">def</span> <span class="nf">coupling_product</span><span class="p">(</span><span class="n">kc</span><span class="p">,</span><span class="n">kv</span><span class="p">,</span><span class="n">experimental_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the product of a chemical rate and vitrification rate.</span>
+<span class="sd">    </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        \dfrac{ d\alpha }{dt} = k_c * k_v</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    kc : 1-D array</span>
+<span class="sd">        Rate of chemical reaction</span>
+<span class="sd">    kv : 1-D array</span>
+<span class="sd">        Vitrification term</span>
+<span class="sd">    experimental_parameters : NoneType</span>
+<span class="sd">        NoneType argument to stick with guideline of function creation    </span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Rate : 1-D array</span>
+<span class="sd">        Rate of reaction</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#If kc or kv are equal to 0, then it returns 0</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="n">kc</span><span class="p">)</span><span class="o">+</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">kv</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">rate</span></div>
+
+
+
+<div class="viewcode-block" id="jac_for_rate_for_kamal">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.jac_for_rate_for_kamal">[docs]</a>
+<span class="k">def</span> <span class="nf">jac_for_rate_for_kamal</span><span class="p">(</span><span class="n">extent</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">E1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">E2</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Jacobian vector for the Kamal equation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    extent : float</span>
+<span class="sd">        Extent of the reaction.</span>
+<span class="sd">    T : float</span>
+<span class="sd">        Temperature in Kelvin.</span>
+<span class="sd">    A1 : float</span>
+<span class="sd">        Pre-exponential factor for reaction 1.</span>
+<span class="sd">    E1 : float</span>
+<span class="sd">        Activation energy for reaction 1 in J/mol.</span>
+<span class="sd">    A2 : float</span>
+<span class="sd">        Pre-exponential factor for reaction 2.</span>
+<span class="sd">    E2 : float</span>
+<span class="sd">        Activation energy for reaction 2 in J/mol.</span>
+<span class="sd">    m : int</span>
+<span class="sd">        Power term for reaction 2.</span>
+<span class="sd">    n : int</span>
+<span class="sd">        Power term for both reactions.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    jac : ndarray</span>
+<span class="sd">        Jacobian vector of shape (6,) representing the first derivatives</span>
+<span class="sd">        of the rate expression with respect to (A1, E1, A2, E2, m, n).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function computes the Jacobian vector for a rate expression</span>
+<span class="sd">    based on the extent of the reaction, temperature, pre-exponential</span>
+<span class="sd">    factors, activation energies, and power terms for two reactions.</span>
+<span class="sd">    The Jacobian vector represents the first derivatives of the rate</span>
+<span class="sd">    expression with respect to the extent of the reaction.</span>
+
+<span class="sd">    The Jacobian vector J is given by:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        J = \begin{bmatrix}</span>
+<span class="sd">        (1 - x)^n e^{-\frac{E_1}{RT}} \\</span>
+<span class="sd">        -\frac{A_1 (1 - x)^n e^{-\frac{E_1}{RT}}}{RT} \\</span>
+<span class="sd">        x^m (1 - x)^n e^{-\frac{E_2}{RT}} \\</span>
+<span class="sd">        -\frac{A_2 x^m (1 - x)^n e^{-\frac{E_2}{RT}}}{RT} \\</span>
+<span class="sd">        A_2 x^m (1 - x)^n \log(x) e^{-\frac{E_2}{RT}} \\</span>
+<span class="sd">        (1 - x)^n \log(1 - x) (A_2 x^m e^{-\frac{E_2}{RT}} + A_1 e^{-\frac{E_1}{RT}})</span>
+<span class="sd">        \end{bmatrix}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="mf">8.31446261815324</span>  <span class="c1"># Ideal gas constant</span>
+    
+    <span class="n">exp_E1_RT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">E1</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">T</span><span class="p">))</span>
+    <span class="n">exp_E2_RT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">E2</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">T</span><span class="p">))</span>
+    <span class="n">log_extent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">extent</span><span class="p">)</span>
+    <span class="n">log_1_minus_extent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">extent</span><span class="p">)</span>
+    <span class="n">extent_to_m</span> <span class="o">=</span> <span class="n">extent</span> <span class="o">**</span> <span class="n">m</span>
+    <span class="n">one_minus_extent_to_n</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">extent</span><span class="p">)</span> <span class="o">**</span> <span class="n">n</span>
+    
+    <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+    
+    <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">one_minus_extent_to_n</span> <span class="o">*</span> <span class="n">exp_E1_RT</span>
+    <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">A1</span> <span class="o">*</span> <span class="n">one_minus_extent_to_n</span> <span class="o">*</span> <span class="n">exp_E1_RT</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span>
+    <span class="n">jac</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">extent_to_m</span> <span class="o">*</span> <span class="n">one_minus_extent_to_n</span> <span class="o">*</span> <span class="n">exp_E2_RT</span>
+    <span class="n">jac</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">A2</span> <span class="o">*</span> <span class="n">extent_to_m</span> <span class="o">*</span> <span class="n">one_minus_extent_to_n</span> <span class="o">*</span> <span class="n">exp_E2_RT</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span>
+    <span class="n">jac</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">A2</span> <span class="o">*</span> <span class="n">extent_to_m</span> <span class="o">*</span> <span class="n">one_minus_extent_to_n</span> <span class="o">*</span> <span class="n">log_extent</span> <span class="o">*</span> <span class="n">exp_E2_RT</span>
+    <span class="n">jac</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">one_minus_extent_to_n</span> <span class="o">*</span> <span class="n">log_1_minus_extent</span> <span class="o">*</span> <span class="p">(</span><span class="n">A2</span> <span class="o">*</span> <span class="n">extent_to_m</span> <span class="o">*</span> <span class="n">exp_E2_RT</span> <span class="o">+</span> <span class="n">A1</span> <span class="o">*</span> <span class="n">exp_E1_RT</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">jac</span></div>
+
+
+
+<div class="viewcode-block" id="hess_for_rate_for_kamal">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.hess_for_rate_for_kamal">[docs]</a>
+<span class="k">def</span> <span class="nf">hess_for_rate_for_kamal</span><span class="p">(</span><span class="n">extent</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">E1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">E2</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Hessian matrix for the Kamal equation.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    extent : float</span>
+<span class="sd">        Extent of the reaction.</span>
+<span class="sd">    T : float</span>
+<span class="sd">        Temperature in Kelvin.</span>
+<span class="sd">    A1 : float</span>
+<span class="sd">        Pre-exponential factor for reaction 1.</span>
+<span class="sd">    E1 : float</span>
+<span class="sd">        Activation energy for reaction 1 in J/mol.</span>
+<span class="sd">    A2 : float</span>
+<span class="sd">        Pre-exponential factor for reaction 2.</span>
+<span class="sd">    E2 : float</span>
+<span class="sd">        Activation energy for reaction 2 in J/mol.</span>
+<span class="sd">    m : int</span>
+<span class="sd">        Power term for reaction 2.</span>
+<span class="sd">    n : int</span>
+<span class="sd">        Power term for both reactions.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    hessian : ndarray</span>
+<span class="sd">        Hessian matrix of shape (6, 6) representing the second derivatives</span>
+<span class="sd">        of the rate expression with respect to (A1, E1, A2, E2, m, n).</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The Hessian matrix H is given by:</span>
+<span class="sd">        </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        H = \begin{bmatrix}</span>
+<span class="sd">        0 &amp; -\frac{(1 - x)^n e^{-E_1/(RT)}}{RT} &amp; 0 &amp; 0 &amp; 0 &amp; (1 - x)^n \log(1 - x) e^{-E_1/(RT)} \\</span>
+<span class="sd">        -\frac{(1 - x)^n e^{-E_1/(RT)}}{RT} &amp; \frac{A_1 (1 - x)^n e^{-E_1/(RT)}}{(R^2 T^2)} &amp; 0 &amp; 0 &amp; 0 &amp; -\frac{A_1 (1 - x)^n \log(1 - x) e^{-E_1/(RT)}}{RT} \\</span>
+<span class="sd">        0 &amp; 0 &amp; 0 &amp; -\frac{x^m (1 - x)^n e^{-E_2/(RT)}}{RT} &amp; x^m (1 - x)^n \log(x) e^{-E_2/(RT)} &amp; x^m (1 - x)^n \log(1 - x) e^{-E_2/(RT)} \\</span>
+<span class="sd">        0 &amp; 0 &amp; -\frac{x^m (1 - x)^n e^{-E_2/(RT)}}{RT} &amp; \frac{A_2 x^m (1 - x)^n e^{-E_2/(RT)}}{(R^2 T^2)} &amp; -\frac{A_2 x^m (1 - x)^n \log(x) e^{-E_2/(RT)}}{RT} &amp; -\frac{A_2 x^m (1 - x)^n \log(1 - x) e^{-E_2/(RT)}}{RT} \\</span>
+<span class="sd">        0 &amp; 0 &amp; x^m (1 - x)^n \log(x) e^{-E_2/(RT)} &amp; -\frac{A_2 x^m (1 - x)^n \log(x) e^{-E_2/(RT)}}{RT} &amp; A_2 x^m (1 - x)^n \log^2(x) e^{-E_2/(RT)} &amp; A_2 x^m (1 - x)^n \log(1 - x) \log(x) e^{-E_2/(RT)} \\</span>
+<span class="sd">        (1 - x)^n \log(1 - x) e^{-E_1/(RT)} &amp; -\frac{A_1 (1 - x)^n \log(1 - x) e^{-E_1/(RT)}}{RT} &amp; x^m (1 - x)^n \log(1 - x) e^{-E_2/(RT)} &amp; -\frac{A_2 x^m (1 - x)^n \log(1 - x) e^{-E_2/(RT)}}{RT} &amp; A_2 x^m (1 - x)^n \log(1 - x) \log(x) e^{-E_2/(RT)} &amp; (1 - x)^n \log^2(1 - x) (A_2 x^m e^{-E_2/(RT)} + A_1 e^{-E_1/(RT)})</span>
+<span class="sd">        \end{bmatrix}</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="mf">8.31446261815324</span>  <span class="c1"># Ideal gas constant</span>
+    
+    <span class="n">exp_E1_RT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">E1</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">T</span><span class="p">))</span>
+    <span class="n">exp_E2_RT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">E2</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">T</span><span class="p">))</span>
+    <span class="n">log_1_minus_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">extent</span><span class="p">)</span>
+    <span class="n">log_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">extent</span><span class="p">)</span>
+    <span class="n">x_to_m</span> <span class="o">=</span> <span class="n">extent</span> <span class="o">**</span> <span class="n">m</span>
+    <span class="n">one_minus_x_to_n</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">extent</span><span class="p">)</span> <span class="o">**</span> <span class="n">n</span>
+    
+    <span class="n">hessian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">exp_E1_RT</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">log_1_minus_x</span> <span class="o">*</span> <span class="n">exp_E1_RT</span>
+    
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">hessian</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">A1</span> <span class="o">*</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">exp_E1_RT</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">A1</span> <span class="o">*</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">log_1_minus_x</span> <span class="o">*</span> <span class="n">exp_E1_RT</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span>
+    
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">x_to_m</span> <span class="o">*</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">exp_E2_RT</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_to_m</span> <span class="o">*</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">log_x</span> <span class="o">*</span> <span class="n">exp_E2_RT</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_to_m</span> <span class="o">*</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">log_1_minus_x</span> <span class="o">*</span> <span class="n">exp_E2_RT</span>
+    
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">A2</span> <span class="o">*</span> <span class="n">x_to_m</span> <span class="o">*</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">exp_E2_RT</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">A2</span> <span class="o">*</span> <span class="n">x_to_m</span> <span class="o">*</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">log_x</span> <span class="o">*</span> <span class="n">exp_E2_RT</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">A2</span> <span class="o">*</span> <span class="n">x_to_m</span> <span class="o">*</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">log_1_minus_x</span> <span class="o">*</span> <span class="n">exp_E2_RT</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span>
+    
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">hessian</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">hessian</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">A2</span> <span class="o">*</span> <span class="n">x_to_m</span> <span class="o">*</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">log_x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">exp_E2_RT</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">A2</span> <span class="o">*</span> <span class="n">x_to_m</span> <span class="o">*</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">log_1_minus_x</span> <span class="o">*</span> <span class="n">log_x</span> <span class="o">*</span> <span class="n">exp_E2_RT</span>
+    
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">hessian</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">hessian</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">hessian</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">hessian</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">hessian</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="n">hessian</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">one_minus_x_to_n</span> <span class="o">*</span> <span class="n">log_1_minus_x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">A2</span> <span class="o">*</span> <span class="n">x_to_m</span> <span class="o">*</span> <span class="n">exp_E2_RT</span> <span class="o">+</span> <span class="n">A1</span> <span class="o">*</span> <span class="n">exp_E1_RT</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">hessian</span></div>
+
+
+
+
+<div class="viewcode-block" id="compute_extent_and_rate">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.compute_extent_and_rate">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_extent_and_rate</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">rate_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rate_law_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vitrification_law_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tg_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tg_law_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coupling_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coupling_law_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initial_extent</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the evolution of extent and rate during a reaction, with or without vitrification.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    time : array-like</span>
+<span class="sd">        List or array containing the times during the reaction.</span>
+<span class="sd">    temperature : array-like</span>
+<span class="sd">        List or array containing the temperatures during the reaction.</span>
+<span class="sd">    rate_law : function</span>
+<span class="sd">        The rate law function that calculates the rate of reaction.</span>
+<span class="sd">    rate_law_args : tuple</span>
+<span class="sd">        Additional arguments to be passed to the rate law function.</span>
+<span class="sd">    vitrification_law : function, optional</span>
+<span class="sd">        The vitrification law function that calculates the vitrification term.</span>
+<span class="sd">    vitrification_args : tuple, optional</span>
+<span class="sd">        Additional arguments to be passed to the vitrification law function.</span>
+<span class="sd">    tg_law : function, optional</span>
+<span class="sd">        The glass transition temperature law function that calculates the Tg.</span>
+<span class="sd">    tg_law_args : tuple, optional</span>
+<span class="sd">        Additional arguments to be passed to the Tg law function.</span>
+<span class="sd">    coupling_law : function, optional</span>
+<span class="sd">        Law used to mix the rate of chemical reaction and rate of vitrification.</span>
+<span class="sd">    coupling_law_args : tuple, optional</span>
+<span class="sd">        Additional arguments to be passed to the coupling law function.</span>
+<span class="sd">    initial_extent : float, optional</span>
+<span class="sd">        The initial extent of reaction. Default is 0. It must be positive and inferior to 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    extent : ndarray</span>
+<span class="sd">        Evolution of extent during the reaction.</span>
+<span class="sd">    global_rate : ndarray</span>
+<span class="sd">        Evolution of the global rate of reaction.</span>
+<span class="sd">    chemical_rate : ndarray</span>
+<span class="sd">        Evolution of the chemical rate of reaction.</span>
+<span class="sd">    vitrification_term : ndarray, optional</span>
+<span class="sd">        Evolution of the vitrification rate of reaction (if vitrification parameters are provided).</span>
+<span class="sd">    tg : ndarray, optional</span>
+<span class="sd">        Evolution of the Tg (if Tg parameters are provided).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Importation of a module to display a progress bar for the finite difference</span>
+    <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+    
+    <span class="k">if</span> <span class="n">coupling_law</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rate_law</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="s2">&quot;Please, provide the rate law to use for computation or indicate &#39;None&#39; for the coupling law&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">vitrification_law</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="s2">&quot;Please, provide the vitrification law to use for computation or indicate &#39;None&#39; for the coupling law&quot;</span><span class="p">)</span>
+    <span class="c1"># The number of iterations for the finite difference is equal to the number of time points</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+    
+    <span class="c1"># Creation and initialization of numpy arrays</span>
+    <span class="n">extent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_extent</span>
+    
+    <span class="k">if</span> <span class="n">rate_law</span><span class="p">:</span>
+        <span class="n">chemical_rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">chemical_rate</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">rate_law</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">temperature</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">rate_law_args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tg_law</span><span class="p">:</span>
+        <span class="n">tg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">tg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">tg_law</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="o">*</span><span class="n">tg_law_args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vitrification_law</span><span class="p">:</span>
+        <span class="n">vitrification_term</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">vitrification_term</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">vitrification_law</span><span class="p">(</span><span class="n">temperature</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">tg</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="o">*</span><span class="n">vitrification_law_args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">coupling_law</span><span class="p">:</span>
+        <span class="n">global_rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>    
+        <span class="n">global_rate</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">coupling_law</span><span class="p">(</span><span class="n">chemical_rate</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vitrification_term</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">coupling_law_args</span><span class="p">)</span> <span class="k">if</span> <span class="n">vitrification_law</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">chemical_rate</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Progress&quot;</span><span class="p">):</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">time</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">coupling_law</span><span class="p">:</span>
+            <span class="n">extent_for_next_step</span> <span class="o">=</span> <span class="n">extent</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">global_rate</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">dt</span>  <span class="c1"># Compute extent for the next step</span>
+        <span class="k">elif</span> <span class="n">vitrification_law</span><span class="p">:</span>
+            <span class="n">extent_for_next_step</span> <span class="o">=</span> <span class="n">extent</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">vitrification_term</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">extent_for_next_step</span> <span class="o">=</span> <span class="n">extent</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">chemical_rate</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">dt</span>
+            
+        
+        <span class="k">if</span> <span class="n">extent_for_next_step</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">extent</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">coupling_law</span><span class="p">:</span> 
+                <span class="n">global_rate</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">rate_law</span><span class="p">:</span>
+                <span class="n">chemical_rate</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">tg_law</span><span class="p">:</span>
+                <span class="n">tg</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">vitrification_law</span><span class="p">:</span>
+                <span class="n">vitrification_term</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+            
+            <span class="k">break</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">extent</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">extent_for_next_step</span>  <span class="c1"># Update extent for the next step</span>
+            <span class="k">if</span> <span class="n">rate_law</span><span class="p">:</span>
+                <span class="n">chemical_rate</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rate_law</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">temperature</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">rate_law_args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">tg_law</span><span class="p">:</span>
+                <span class="n">tg</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">tg_law</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">tg_law_args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">vitrification_law</span><span class="p">:</span>
+                <span class="n">vitrification_term</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">vitrification_law</span><span class="p">(</span><span class="n">temperature</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">tg</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">vitrification_law_args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">coupling_law</span><span class="p">:</span>
+                <span class="n">global_rate</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">coupling_law</span><span class="p">(</span><span class="n">chemical_rate</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">vitrification_term</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">coupling_law_args</span><span class="p">)</span>
+
+        
+    <span class="c1"># Return appropriate results based on the provided parameters</span>
+    <span class="k">if</span> <span class="n">coupling_law</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tg_law</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">extent</span><span class="p">,</span> <span class="n">global_rate</span><span class="p">,</span> <span class="n">chemical_rate</span><span class="p">,</span> <span class="n">vitrification_term</span><span class="p">,</span> <span class="n">tg</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">extent</span><span class="p">,</span> <span class="n">global_rate</span><span class="p">,</span> <span class="n">chemical_rate</span><span class="p">,</span> <span class="n">vitrification_term</span><span class="p">,</span> <span class="kc">None</span>
+        
+    <span class="k">if</span> <span class="n">vitrification_law</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tg_law</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">extent</span><span class="p">,</span> <span class="n">vitrification_term</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">vitrification_term</span><span class="p">,</span> <span class="n">tg</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">extent</span><span class="p">,</span> <span class="n">vitrification_term</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">vitrification_term</span><span class="p">,</span> <span class="kc">None</span>
+        
+    <span class="k">if</span> <span class="n">rate_law</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tg_law</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">extent</span><span class="p">,</span> <span class="n">chemical_rate</span><span class="p">,</span> <span class="n">chemical_rate</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tg</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">extent</span><span class="p">,</span> <span class="n">chemical_rate</span><span class="p">,</span> <span class="n">chemical_rate</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;No law was given for calculations.&quot;</span><span class="p">)</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="compute_extent_and_rate_using_scipy">
+<a class="viewcode-back" href="../../src.html#src.kinetic_models.compute_extent_and_rate_using_scipy">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_extent_and_rate_using_scipy</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">temperature_program</span><span class="p">,</span> <span class="n">rate_law</span><span class="p">,</span> <span class="n">rate_law_args</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vitrification_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tg_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tg_law_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coupling_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coupling_law_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initial_extent</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute extent and rate using scipy&#39;s solve_ivp.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    t0 : float</span>
+<span class="sd">        Initial time.</span>
+<span class="sd">    tf : float</span>
+<span class="sd">        Final time.</span>
+<span class="sd">    temperature_program : callable</span>
+<span class="sd">        A function that takes time as input and returns temperature.</span>
+<span class="sd">    rate_law : callable</span>
+<span class="sd">        Rate law function.</span>
+<span class="sd">    rate_law_args : tuple</span>
+<span class="sd">        Arguments for the rate law function.</span>
+<span class="sd">    vitrification_law : callable</span>
+<span class="sd">        Vitrification law function.</span>
+<span class="sd">    vitrification_args : tuple</span>
+<span class="sd">        Arguments for the vitrification law function.</span>
+<span class="sd">    tg_law : callable</span>
+<span class="sd">        Tg law function.</span>
+<span class="sd">    tg_law_args : tuple</span>
+<span class="sd">        Arguments for the Tg law function.</span>
+<span class="sd">    coupling_law : callable</span>
+<span class="sd">        Coupling law function.</span>
+<span class="sd">    coupling_law_args : tuple</span>
+<span class="sd">        Arguments for the coupling law function.</span>
+<span class="sd">    initial_extent : float, optional</span>
+<span class="sd">        Initial extent. Default is 0.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    scipy.integrate.OdeResult</span>
+<span class="sd">        Solution object from solve_ivp.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">vitrification_law</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">tg_law</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please make sure to indicate a tg law since you have selected a vitrification law.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">vitrification_law</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">coupling_law</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please make sure to indicate a tg law since you have selected a vitrification law.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">coupling_law</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">vitrification_law</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please make sure to indicate a tg law since you have selected a vitrification law.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">coupling_law</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">tg_law</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please make sure to indicate a tg law since you have selected a vitrification law.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">tg_law</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">vitrification_law</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please make sure to indicate a tg law since you have selected a vitrification law.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">tg_law</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">coupling_law</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please make sure to indicate a tg law since you have selected a vitrification law.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">rate</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">extent</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the rate at a given time.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        t : float</span>
+<span class="sd">            Time.</span>
+<span class="sd">        extent : float</span>
+<span class="sd">            Current extent.</span>
+<span class="sd">        temperature : float</span>
+<span class="sd">            Current temperature.</span>
+<span class="sd">        *args : tuple</span>
+<span class="sd">            Additional arguments.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Rate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">rate_law</span><span class="p">(</span><span class="n">extent</span><span class="p">,</span> <span class="n">temperature_program</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="o">*</span><span class="n">rate_law_args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">vitrification_law</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tg</span> <span class="o">=</span> <span class="n">tg_law</span><span class="p">(</span><span class="n">extent</span><span class="p">,</span> <span class="o">*</span><span class="n">tg_law_args</span><span class="p">)</span>
+            <span class="n">vitrification_term</span> <span class="o">=</span> <span class="n">vitrification_law</span><span class="p">(</span><span class="n">temperature_program</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">tg</span><span class="p">,</span> <span class="o">*</span><span class="n">vitrification_args</span><span class="p">)</span>
+            <span class="n">rate</span> <span class="o">=</span> <span class="n">coupling_law</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">vitrification_term</span><span class="p">,</span> <span class="o">*</span><span class="n">coupling_law_args</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">rate</span>
+    
+    <span class="n">initial_extent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">initial_extent</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">solve_ivp</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="p">[</span><span class="n">t0</span><span class="p">,</span> <span class="n">tf</span><span class="p">],</span> <span class="n">initial_extent</span><span class="p">,</span>
+                                     <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">temperature_program</span><span class="p">,</span> <span class="o">*</span><span class="n">rate_law_args</span><span class="p">,</span>
+                                           <span class="n">vitrification_law</span><span class="p">,</span> <span class="o">*</span><span class="n">vitrification_args</span><span class="p">,</span>
+                                           <span class="n">tg_law</span><span class="p">,</span> <span class="o">*</span><span class="n">tg_law_args</span><span class="p">,</span>
+                                           <span class="n">coupling_law</span><span class="p">,</span> <span class="o">*</span><span class="n">coupling_law_args</span><span class="p">))</span></div>
+
+
+
+<span class="c1">#%% Example 1 - Kamal</span>
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="kn">import</span> <span class="nn">time</span> <span class="k">as</span> <span class="nn">t</span>
+    
+    <span class="n">number_of_points</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1800</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">)</span>  <span class="c1"># 30 minutes</span>
+    <span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="n">time</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">time</span><span class="p">]</span>
+    <span class="n">temperatures</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">293</span><span class="p">,</span> <span class="mi">443</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">),</span>  <span class="c1"># 5°C/min</span>
+                   <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">293</span><span class="p">,</span> <span class="mi">593</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">),</span>  <span class="c1"># 10°C/min</span>
+                   <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">293</span><span class="p">,</span> <span class="mi">743</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">),</span>  <span class="c1"># 15°C/min</span>
+                   <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">293</span><span class="p">,</span> <span class="mi">1093</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">)]</span>  <span class="c1"># 20°C/min</span>
+    <span class="n">conversions</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">rates</span><span class="o">=</span><span class="p">[]</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="n">ax1_bis</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;conversion&quot;</span><span class="p">)</span>
+    <span class="n">ax1_bis</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;rate&quot;</span><span class="p">)</span>
+    
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">temperatures</span><span class="p">)):</span>
+        <span class="n">t0</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">extent</span><span class="p">,</span><span class="n">rate</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">compute_extent_and_rate</span><span class="p">(</span><span class="n">time</span><span class="p">,</span>
+                                                    <span class="n">temperatures</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> 
+                                                    <span class="n">rate_law</span><span class="o">=</span><span class="n">rate_for_kamal</span><span class="p">,</span> 
+                                                    <span class="n">rate_law_args</span><span class="o">=</span><span class="p">(</span><span class="mf">1.666e8</span><span class="p">,</span><span class="mi">80000</span><span class="p">,</span><span class="mf">1.666e13</span><span class="p">,</span><span class="mi">120000</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.7</span><span class="p">))</span>
+        <span class="n">t1</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time: &quot;</span><span class="p">,</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="p">,</span><span class="s2">&quot;s&quot;</span><span class="p">)</span>
+        <span class="n">conversions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extent</span><span class="p">)</span>
+        <span class="n">rates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">extent</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;conversion for a heating rate of &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">((</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;°/min&quot;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">)</span>
+        <span class="n">ax1_bis</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">rate</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;rate for a heating rate of &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">((</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;°/min&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="n">ax1_bis</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+    
+
+    
+    
+    <span class="c1">#%% Test main kinetic models  </span>
+    
+    <span class="n">num_points</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1800</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_points</span><span class="p">))</span>
+    <span class="n">temperature</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">num_points</span><span class="p">),</span> <span class="mf">293.15</span><span class="p">)</span>
+    <span class="c1"># Chemical rate parameters</span>
+    <span class="n">A1</span> <span class="o">=</span> <span class="mf">1e10</span>
+    <span class="n">E1</span> <span class="o">=</span> <span class="mi">70000</span>
+    <span class="n">A2</span> <span class="o">=</span> <span class="mf">1e13</span>
+    <span class="n">E2</span> <span class="o">=</span> <span class="mi">85000</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="mf">0.45</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="c1"># Vitrification parameters extracted from [1] G. Wisanrakkit et J. K. Gillham, « The glass transition temperature (Tg) as an index of chemical conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics », Journal of Applied Polymer Science, vol. 41, nᵒ 11‑12, p. 2885‑2929, 1990, doi: 10.1002/app.1990.070411129.</span>
+    <span class="n">Ad</span> <span class="o">=</span> <span class="mf">30.64</span>
+    <span class="n">C1</span> <span class="o">=</span> <span class="mf">42.61</span>
+    <span class="n">C2</span> <span class="o">=</span> <span class="mf">51.6</span>
+    <span class="c1"># Tg parameters taken </span>
+    <span class="n">Tg0</span> <span class="o">=</span> <span class="o">-</span><span class="mi">100</span> <span class="o">+</span> <span class="mf">273.15</span>
+    <span class="n">Tginf</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">+</span> <span class="mf">273.15</span>
+    <span class="n">lmbd</span> <span class="o">=</span> <span class="mf">0.4</span>
+    
+    
+    <span class="n">extent_nth_order</span><span class="p">,</span> <span class="n">rate_nth_order</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tg_nth_order</span> <span class="o">=</span> <span class="n">compute_extent_and_rate</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> 
+                                                                                   <span class="n">temperature</span><span class="p">,</span> 
+                                                                                   <span class="n">rate_law</span><span class="o">=</span><span class="n">rate_for_nth_order</span><span class="p">,</span>
+                                                                                   <span class="n">rate_law_args</span><span class="o">=</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">n</span><span class="p">),</span>
+                                                                                   <span class="n">tg_law</span> <span class="o">=</span> <span class="n">tg_diBennedetto</span><span class="p">,</span>
+                                                                                   <span class="n">tg_law_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tg0</span><span class="p">,</span> <span class="n">Tginf</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">),</span>
+                                                                                   <span class="n">initial_extent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+    
+    <span class="n">extent_autocatalytic</span><span class="p">,</span> <span class="n">rate_autocatalytic</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tg_autocatalytic</span> <span class="o">=</span> <span class="n">compute_extent_and_rate</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> 
+                                                                                               <span class="n">temperature</span><span class="p">,</span>
+                                                                                               <span class="n">rate_law</span><span class="o">=</span><span class="n">rate_for_autocatalytic</span><span class="p">,</span> 
+                                                                                               <span class="n">rate_law_args</span><span class="o">=</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">),</span>
+                                                                                               <span class="n">tg_law</span> <span class="o">=</span> <span class="n">tg_diBennedetto</span><span class="p">,</span>
+                                                                                               <span class="n">tg_law_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tg0</span><span class="p">,</span> <span class="n">Tginf</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">),</span>
+                                                                                               <span class="n">initial_extent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+    
+    <span class="n">extent_kamal</span><span class="p">,</span> <span class="n">rate_kamal</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tg_kamal</span> <span class="o">=</span> <span class="n">compute_extent_and_rate</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> 
+                                                                 <span class="n">temperature</span><span class="p">,</span> 
+                                                                 <span class="n">rate_for_kamal</span><span class="p">,</span> 
+                                                                 <span class="n">rate_law_args</span><span class="o">=</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">A2</span><span class="p">,</span><span class="n">E2</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">),</span>
+                                                                 <span class="n">tg_law</span> <span class="o">=</span> <span class="n">tg_diBennedetto</span><span class="p">,</span>
+                                                                 <span class="n">tg_law_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tg0</span><span class="p">,</span> <span class="n">Tginf</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">),</span>
+                                                                 <span class="n">initial_extent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+    
+    <span class="n">extent_nth_order_vitrification</span><span class="p">,</span> <span class="n">rate_nth_order_vitrification</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tg_nth_order_vitrification</span> <span class="o">=</span> <span class="n">compute_extent_and_rate</span><span class="p">(</span><span class="n">time</span><span class="p">,</span>
+                                                                                                      <span class="n">temperature</span><span class="p">,</span>
+                                                                                                      <span class="n">rate_law</span><span class="o">=</span><span class="n">rate_for_nth_order</span><span class="p">,</span>
+                                                                                                      <span class="n">rate_law_args</span><span class="o">=</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">n</span><span class="p">),</span>
+                                                                                                      <span class="n">vitrification_law</span><span class="o">=</span><span class="n">vitrification_WLF_rate</span><span class="p">,</span>
+                                                                                                      <span class="n">vitrification_law_args</span><span class="o">=</span><span class="p">(</span><span class="n">Ad</span><span class="p">,</span><span class="n">C1</span><span class="p">,</span><span class="n">C2</span><span class="p">),</span>
+                                                                                                      <span class="n">tg_law</span> <span class="o">=</span> <span class="n">tg_diBennedetto</span><span class="p">,</span>
+                                                                                                      <span class="n">tg_law_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tg0</span><span class="p">,</span> <span class="n">Tginf</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">),</span>
+                                                                                                      <span class="n">coupling_law</span><span class="o">=</span><span class="n">coupling_harmonic_mean</span><span class="p">,</span>
+                                                                                                      <span class="n">coupling_law_args</span><span class="o">=</span><span class="p">(),</span>
+                                                                                                      <span class="n">initial_extent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+    
+    
+
+    
+    <span class="n">extent_nth_order_vitrification_no_reac</span><span class="p">,</span> <span class="n">rate_nth_order_vitrification_no_reac</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tg_nth_order_vitrification_no_reac</span> <span class="o">=</span> <span class="n">compute_extent_and_rate</span><span class="p">(</span><span class="n">time</span><span class="p">,</span>
+                                                                                                      <span class="n">temperature</span><span class="p">,</span>
+                                                                                                      <span class="n">rate_law</span><span class="o">=</span><span class="n">rate_for_nth_order</span><span class="p">,</span>
+                                                                                                      <span class="n">rate_law_args</span><span class="o">=</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">n</span><span class="p">),</span>
+                                                                                                      <span class="n">vitrification_law</span><span class="o">=</span><span class="n">vitrification_WLF_rate_no_reaction_below_Tg</span><span class="p">,</span>
+                                                                                                      <span class="n">vitrification_law_args</span><span class="o">=</span><span class="p">(</span><span class="n">Ad</span><span class="p">,</span><span class="n">C1</span><span class="p">,</span><span class="n">C2</span><span class="p">),</span>
+                                                                                                      <span class="n">tg_law</span> <span class="o">=</span> <span class="n">tg_diBennedetto</span><span class="p">,</span>
+                                                                                                      <span class="n">tg_law_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tg0</span><span class="p">,</span> <span class="n">Tginf</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">),</span>
+                                                                                                      <span class="n">coupling_law</span><span class="o">=</span><span class="n">coupling_harmonic_mean</span><span class="p">,</span>
+                                                                                                      <span class="n">coupling_law_args</span><span class="o">=</span><span class="p">(),</span>
+                                                                                                      <span class="n">initial_extent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+
+    
+    
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">extent_nth_order</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">extent_autocatalytic</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;autocatalytic&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">extent_kamal</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;kamal&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">extent_nth_order_vitrification</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order with vitrification&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">extent_nth_order_vitrification_no_reac</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order with vitrification_no_reac&quot;</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time (s)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Extent&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Comparison of the extent evolution for multiple kinetic models&quot;</span><span class="p">)</span>
+    
+    
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">rate_nth_order</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">rate_autocatalytic</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;autocatalytic&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">rate_kamal</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;kamal&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">rate_nth_order_vitrification</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order with vitrification&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">rate_nth_order_vitrification_no_reac</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order with vitrification_no_reac&quot;</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time (s)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Rate&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Comparison of the rate evolution for multiple kinetic models&quot;</span><span class="p">)</span>
+    
+    
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">temperature</span><span class="o">-</span> <span class="mf">273.15</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">tg_nth_order</span> <span class="o">-</span> <span class="mf">273.15</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">tg_autocatalytic</span> <span class="o">-</span> <span class="mf">273.15</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;autocatalytic&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">tg_kamal</span> <span class="o">-</span> <span class="mf">273.15</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;kamal&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">tg_nth_order_vitrification</span> <span class="o">-</span> <span class="mf">273.15</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order with vitrification&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="n">tg_nth_order_vitrification_no_reac</span> <span class="o">-</span> <span class="mf">273.15</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order with vitrification_no_reac&quot;</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time (s)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Tg&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Comparison of the Tg evolution for multiple kinetic models&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Save data to a text file</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;kinetic_data.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Time(s)</span><span class="se">\t</span><span class="s2">Temperature(K)</span><span class="se">\t</span><span class="s2">Extent_nth_order</span><span class="se">\t</span><span class="s2">Rate_nth_order</span><span class="se">\t</span><span class="s2">Tg_nth_order</span><span class="se">\t</span><span class="s2">Extent_autocatalytic</span><span class="se">\t</span><span class="s2">Rate_autocatalytic</span><span class="se">\t</span><span class="s2">Tg_autocatalytic</span><span class="se">\t</span><span class="s2">Extent_kamal</span><span class="se">\t</span><span class="s2">Rate_kamal</span><span class="se">\t</span><span class="s2">Tg_kamal</span><span class="se">\t</span><span class="s2">Extent_nth_order_vitrification</span><span class="se">\t</span><span class="s2">Rate_nth_order_vitrification</span><span class="se">\t</span><span class="s2">Tg_nth_order_vitrification</span><span class="se">\t</span><span class="s2">Extent_nth_order_vitrification_no_reac</span><span class="se">\t</span><span class="s2">Rate_nth_order_vitrification_no_reac</span><span class="se">\t</span><span class="s2">Tg_nth_order_vitrification_no_reac</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)):</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">time</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">temperature</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">extent_nth_order</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">rate_nth_order</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">tg_nth_order</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">extent_autocatalytic</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">rate_autocatalytic</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">tg_autocatalytic</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">extent_kamal</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">rate_kamal</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">tg_kamal</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">extent_nth_order_vitrification</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">rate_nth_order_vitrification</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">tg_nth_order_vitrification</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">extent_nth_order_vitrification_no_reac</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">rate_nth_order_vitrification_no_reac</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">tg_nth_order_vitrification_no_reac</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    
+    
+   
+    <span class="c1">#%% Convergence graph for multiple rate laws</span>
+    
+    <span class="k">def</span> <span class="nf">compute_trap_sums</span><span class="p">(</span><span class="n">numbers_of_points</span><span class="p">,</span> <span class="n">rate_law</span><span class="p">,</span> <span class="n">rate_law_args</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vitrification_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tg_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tg_law_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coupling_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coupling_law_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initial_extent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">):</span>
+        <span class="n">trap_sums</span> <span class="o">=</span> <span class="p">[]</span>
+    
+        <span class="k">for</span> <span class="n">num_points</span> <span class="ow">in</span> <span class="n">numbers_of_points</span><span class="p">:</span>
+            <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1800</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_points</span><span class="p">))</span>
+            <span class="n">temperature</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">num_points</span><span class="p">),</span> <span class="mi">443</span><span class="p">)</span>
+            <span class="n">extent</span><span class="p">,</span> <span class="n">rate</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_extent_and_rate</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">rate_law</span><span class="o">=</span><span class="n">rate_law</span><span class="p">,</span> <span class="n">rate_law_args</span><span class="o">=</span><span class="n">rate_law_args</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vitrification_law_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tg_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tg_law_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coupling_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coupling_law_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initial_extent</span><span class="o">=</span><span class="n">initial_extent</span><span class="p">)</span>
+            <span class="n">trap_sums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">time</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">trap_sums</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+    
+    <span class="n">A1</span> <span class="o">=</span> <span class="mf">1e10</span>
+    <span class="n">E1</span> <span class="o">=</span> <span class="mi">70000</span>
+    <span class="n">A2</span> <span class="o">=</span> <span class="mf">1e13</span>
+    <span class="n">E2</span> <span class="o">=</span> <span class="mi">85000</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="mf">0.45</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="c1"># Vitrification parameters extracted from [1] G. Wisanrakkit et J. K. Gillham, « The glass transition temperature (Tg) as an index of chemical conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics », Journal of Applied Polymer Science, vol. 41, nᵒ 11‑12, p. 2885‑2929, 1990, doi: 10.1002/app.1990.070411129.</span>
+    <span class="n">Ad</span> <span class="o">=</span> <span class="mf">30.64</span>
+    <span class="n">C1</span> <span class="o">=</span> <span class="mf">42.61</span>
+    <span class="n">C2</span> <span class="o">=</span> <span class="mf">51.6</span>
+    <span class="c1"># Tg parameters taken </span>
+    <span class="n">Tg0</span> <span class="o">=</span> <span class="o">-</span><span class="mi">100</span> <span class="o">+</span> <span class="mf">273.15</span>
+    <span class="n">Tginf</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">+</span> <span class="mf">273.15</span>
+    <span class="n">lmbd</span> <span class="o">=</span> <span class="mf">0.4</span>
+    
+    <span class="c1"># Compute trap_sums</span>
+    <span class="n">numbers_of_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
+    <span class="n">trap_sums_nth_order</span> <span class="o">=</span> <span class="n">compute_trap_sums</span><span class="p">(</span><span class="n">numbers_of_points</span><span class="p">,</span> <span class="n">rate_for_nth_order</span><span class="p">,</span> <span class="p">(</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">n</span><span class="p">),</span><span class="n">tg_law</span> <span class="o">=</span> <span class="n">tg_diBennedetto</span><span class="p">,</span> <span class="n">tg_law_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tg0</span><span class="p">,</span> <span class="n">Tginf</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">),</span><span class="n">initial_extent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">trap_sums_autocatalytic</span> <span class="o">=</span> <span class="n">compute_trap_sums</span><span class="p">(</span><span class="n">numbers_of_points</span><span class="p">,</span> <span class="n">rate_for_autocatalytic</span><span class="p">,</span> <span class="p">(</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">),</span><span class="n">tg_law</span> <span class="o">=</span> <span class="n">tg_diBennedetto</span><span class="p">,</span><span class="n">tg_law_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tg0</span><span class="p">,</span> <span class="n">Tginf</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">),</span><span class="n">initial_extent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">trap_sums_kamal</span> <span class="o">=</span> <span class="n">compute_trap_sums</span><span class="p">(</span><span class="n">numbers_of_points</span><span class="p">,</span> <span class="n">rate_for_kamal</span><span class="p">,</span> <span class="p">(</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">A2</span><span class="p">,</span><span class="n">E2</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">),</span><span class="n">tg_law</span> <span class="o">=</span> <span class="n">tg_diBennedetto</span><span class="p">,</span><span class="n">tg_law_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tg0</span><span class="p">,</span> <span class="n">Tginf</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">),</span><span class="n">initial_extent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">trap_sums_nth_order_vitrification</span> <span class="o">=</span> <span class="n">compute_trap_sums</span><span class="p">(</span><span class="n">numbers_of_points</span><span class="p">,</span> <span class="n">rate_for_nth_order</span><span class="p">,</span> <span class="p">(</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">n</span><span class="p">),</span> <span class="n">vitrification_law</span><span class="o">=</span><span class="n">vitrification_WLF_rate</span><span class="p">,</span> <span class="n">vitrification_args</span><span class="o">=</span><span class="p">(</span><span class="n">Ad</span><span class="p">,</span><span class="n">C1</span><span class="p">,</span><span class="n">C2</span><span class="p">),</span> <span class="n">tg_law</span> <span class="o">=</span> <span class="n">tg_diBennedetto</span><span class="p">,</span> <span class="n">tg_law_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tg0</span><span class="p">,</span> <span class="n">Tginf</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">),</span> <span class="n">coupling_law</span><span class="o">=</span><span class="n">coupling_harmonic_mean</span><span class="p">,</span> <span class="n">coupling_law_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">initial_extent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">trap_sums_nth_order_vitrification_no_reac</span> <span class="o">=</span> <span class="n">compute_trap_sums</span><span class="p">(</span><span class="n">numbers_of_points</span><span class="p">,</span> <span class="n">rate_for_nth_order</span><span class="p">,</span> <span class="p">(</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">n</span><span class="p">),</span> <span class="n">vitrification_law</span><span class="o">=</span><span class="n">vitrification_WLF_rate_no_reaction_below_Tg</span><span class="p">,</span> <span class="n">vitrification_args</span><span class="o">=</span><span class="p">(</span><span class="n">Ad</span><span class="p">,</span><span class="n">C1</span><span class="p">,</span><span class="n">C2</span><span class="p">),</span> <span class="n">tg_law</span> <span class="o">=</span> <span class="n">tg_diBennedetto</span><span class="p">,</span> <span class="n">tg_law_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tg0</span><span class="p">,</span> <span class="n">Tginf</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">),</span> <span class="n">coupling_law</span><span class="o">=</span><span class="n">coupling_harmonic_mean</span><span class="p">,</span> <span class="n">coupling_law_args</span><span class="o">=</span><span class="p">(),</span> <span class="n">initial_extent</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+    
+    <span class="c1"># Plot the convergence graph</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">numbers_of_points</span><span class="p">,</span><span class="n">trap_sums_nth_order</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order&quot;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">numbers_of_points</span><span class="p">,</span><span class="n">trap_sums_autocatalytic</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;autocatalytic&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">numbers_of_points</span><span class="p">,</span><span class="n">trap_sums_kamal</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;kamal&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">numbers_of_points</span><span class="p">,</span><span class="n">trap_sums_nth_order_vitrification</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order with vitrification&quot;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">numbers_of_points</span><span class="p">,</span><span class="n">trap_sums_nth_order_vitrification_no_reac</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;n-th order with vitrification_no_reac&quot;</span><span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Timestep (s)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Trapezoïdal sum&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Convergence for multiple kinetic models&quot;</span><span class="p">)</span>
+
+    
+    <span class="c1"># Show the plot</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Alan Tabore.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

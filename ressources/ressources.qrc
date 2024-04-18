@@ -1,0 +1,17 @@
+<RCC>
+  <qresource prefix="Icons">
+    <file>Icons/line-chart.png</file>
+    <file>Icons/autofill_2.png</file>
+    <file>Icons/left-chevron.png</file>
+    <file>Icons/right-chevron.png</file>
+    <file>Icons/analyzing.png</file>
+    <file>Icons/file_clean.png</file>
+    <file>Icons/folder.png</file>
+    <file>Icons/save.png</file>
+  </qresource>
+  <qresource prefix="Logos">
+    <file>Logos/KinOpt_logo.jpeg</file>
+    <file>Logos/logo_no_background.png</file>
+    <file>Logos/logo_no_background_with_outline.png</file>
+  </qresource>
+</RCC>

@@ -1,0 +1,1103 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>src package &#8212; kinopt 1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=362ab14a" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'src';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">kinopt 1.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="getting_started.html">
+                        Getting started
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="usage.html">
+                        Usage
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="modules.html">
+                        KinOpt modules
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="getting_started.html">
+                        Getting started
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="usage.html">
+                        Usage
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="modules.html">
+                        KinOpt modules
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">src package</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="src-package">
+<h1>src package<a class="headerlink" href="#src-package" title="Link to this heading">#</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
+</section>
+<section id="src-data-extraction-module">
+<h2>src.data_extraction module<a class="headerlink" href="#src-data-extraction-module" title="Link to this heading">#</a></h2>
+</section>
+<section id="src-interpolation-module">
+<h2>src.interpolation module<a class="headerlink" href="#src-interpolation-module" title="Link to this heading">#</a></h2>
+</section>
+<section id="src-isoconversional-methods-module">
+<h2>src.isoconversional_methods module<a class="headerlink" href="#src-isoconversional-methods-module" title="Link to this heading">#</a></h2>
+</section>
+<section id="src-kinetic-models-module">
+<h2>src.kinetic_models module<a class="headerlink" href="#src-kinetic-models-module" title="Link to this heading">#</a></h2>
+</section>
+<section id="module-kinopt_interface">
+<span id="src-kinopt-interface-module"></span><h2>src.kinopt_interface module<a class="headerlink" href="#module-kinopt_interface" title="Link to this heading">#</a></h2>
+<p>Created on Fri Mar  1 16:15:12 2024</p>
+<p>&#64;author: alan.tabore</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="kinopt_interface.Ui_MainWindow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kinopt_interface.</span></span><span class="sig-name descname"><span class="pre">Ui_MainWindow</span></span><a class="reference internal" href="_modules/kinopt_interface.html#Ui_MainWindow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinopt_interface.Ui_MainWindow" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="kinopt_interface.Ui_MainWindow.retranslateUi">
+<span class="sig-name descname"><span class="pre">retranslateUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">MainWindow</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinopt_interface.html#Ui_MainWindow.retranslateUi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinopt_interface.Ui_MainWindow.retranslateUi" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kinopt_interface.Ui_MainWindow.setupUi">
+<span class="sig-name descname"><span class="pre">setupUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">MainWindow</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinopt_interface.html#Ui_MainWindow.setupUi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinopt_interface.Ui_MainWindow.setupUi" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.main">
+<span id="src-main-module"></span><h2>src.main module<a class="headerlink" href="#module-src.main" title="Link to this heading">#</a></h2>
+<p>Created on Fri Feb 23 16:53:20 2024</p>
+<p>&#64;author: alan.tabore</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.main.MainWindow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">MainWindow</span></span><a class="reference internal" href="_modules/src/main.html#MainWindow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QMainWindow</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.autofill_isoconversional_analysis_parameters">
+<span class="sig-name descname"><span class="pre">autofill_isoconversional_analysis_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.autofill_isoconversional_analysis_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.autofill_isoconversional_analysis_parameters" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.autofill_models_parameters">
+<span class="sig-name descname"><span class="pre">autofill_models_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.autofill_models_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.autofill_models_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Autofill parameters in line edits for rate, vitrification, and coupling law models.</p>
+<p>Parameters:
+- self: The object instance.</p>
+<p>Returns:
+- None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.autofill_optimization_parameters">
+<span class="sig-name descname"><span class="pre">autofill_optimization_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.autofill_optimization_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.autofill_optimization_parameters" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.browse_files">
+<span class="sig-name descname"><span class="pre">browse_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.browse_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.browse_files" title="Link to this definition">#</a></dt>
+<dd><p>Open a file dialog to browse and select multiple files. Update the file paths list widget.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.clear_data_extraction_plots">
+<span class="sig-name descname"><span class="pre">clear_data_extraction_plots</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.clear_data_extraction_plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.clear_data_extraction_plots" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.clear_files">
+<span class="sig-name descname"><span class="pre">clear_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.clear_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.clear_files" title="Link to this definition">#</a></dt>
+<dd><p>Clear all the files in the listView_files object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.clear_isoconversional_formLayout_and_combobox">
+<span class="sig-name descname"><span class="pre">clear_isoconversional_formLayout_and_combobox</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.clear_isoconversional_formLayout_and_combobox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.clear_isoconversional_formLayout_and_combobox" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.clear_models_and_parameters_forms_and_combobox">
+<span class="sig-name descname"><span class="pre">clear_models_and_parameters_forms_and_combobox</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.clear_models_and_parameters_forms_and_combobox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.clear_models_and_parameters_forms_and_combobox" title="Link to this definition">#</a></dt>
+<dd><p>Clear all formLayouts and reset comboboxes and dictionaries storing line edits and parameters.</p>
+<p>Clears the rate, vitrification, coupling law, and tg formLayouts from all their widgets.
+Resets corresponding comboboxes and lists storing experimental parameters and parameters to optimize.</p>
+<p>Returns:
+- None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.clear_optimization_grids_and_combobox">
+<span class="sig-name descname"><span class="pre">clear_optimization_grids_and_combobox</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.clear_optimization_grids_and_combobox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.clear_optimization_grids_and_combobox" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.clear_results_files">
+<span class="sig-name descname"><span class="pre">clear_results_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.clear_results_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.clear_results_files" title="Link to this definition">#</a></dt>
+<dd><p>Clear all the files in the listView_files object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.clear_results_viewer_plots">
+<span class="sig-name descname"><span class="pre">clear_results_viewer_plots</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.clear_results_viewer_plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.clear_results_viewer_plots" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.display_error_in_optimization_thread">
+<span class="sig-name descname"><span class="pre">display_error_in_optimization_thread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.display_error_in_optimization_thread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.display_error_in_optimization_thread" title="Link to this definition">#</a></dt>
+<dd><p>Display the error that happened in the optimization thread.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>error_message</strong> (<em>TypeError</em>) – Error message returned by the optimization thread.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.display_selected_result_file">
+<span class="sig-name descname"><span class="pre">display_selected_result_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.display_selected_result_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.display_selected_result_file" title="Link to this definition">#</a></dt>
+<dd><p>Extract data from selected files and update GUI elements based on extraction results.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.extract_data">
+<span class="sig-name descname"><span class="pre">extract_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.extract_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.extract_data" title="Link to this definition">#</a></dt>
+<dd><p>Extract data from selected files and update GUI elements based on extraction results.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.get_associated_experimental_parameters">
+<span class="sig-name descname"><span class="pre">get_associated_experimental_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_of_experimental_arguments</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.get_associated_experimental_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.get_associated_experimental_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Retrieve the associated experimental parameters based on provided labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>labels_of_experimental_arguments</strong> (<em>list</em>) – List of labels for experimental parameters.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of experimental parameter values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.get_global_optimization_args_dict">
+<span class="sig-name descname"><span class="pre">get_global_optimization_args_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_optimization_method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.get_global_optimization_args_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.get_global_optimization_args_dict" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.get_isoconversional_method_args">
+<span class="sig-name descname"><span class="pre">get_isoconversional_method_args</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.get_isoconversional_method_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.get_isoconversional_method_args" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.get_local_optimization_args_dict">
+<span class="sig-name descname"><span class="pre">get_local_optimization_args_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_optimization_method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.get_local_optimization_args_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.get_local_optimization_args_dict" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.get_summary_info">
+<span class="sig-name descname"><span class="pre">get_summary_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.get_summary_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.get_summary_info" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.launch_isoconversional_analysis">
+<span class="sig-name descname"><span class="pre">launch_isoconversional_analysis</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.launch_isoconversional_analysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.launch_isoconversional_analysis" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.launch_optimization">
+<span class="sig-name descname"><span class="pre">launch_optimization</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.launch_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.launch_optimization" title="Link to this definition">#</a></dt>
+<dd><p>Launch the optimization process.</p>
+<p>This function checks the necessary conditions for optimization, assigns necessary parameters,
+and starts the optimization process in a separate thread.</p>
+<p>Parameters:
+- self: The object instance.</p>
+<p>Returns:
+- None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.load_results_files">
+<span class="sig-name descname"><span class="pre">load_results_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.load_results_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.load_results_files" title="Link to this definition">#</a></dt>
+<dd><p>Open a file dialog to browse and select multiple results files. Update the results file paths list widget.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.show_extracted_extent">
+<span class="sig-name descname"><span class="pre">show_extracted_extent</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.show_extracted_extent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.show_extracted_extent" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.show_extracted_rate">
+<span class="sig-name descname"><span class="pre">show_extracted_rate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.show_extracted_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.show_extracted_rate" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.show_extracted_result_extent">
+<span class="sig-name descname"><span class="pre">show_extracted_result_extent</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.show_extracted_result_extent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.show_extracted_result_extent" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.show_extracted_result_rate">
+<span class="sig-name descname"><span class="pre">show_extracted_result_rate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.show_extracted_result_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.show_extracted_result_rate" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.show_extracted_result_temperature">
+<span class="sig-name descname"><span class="pre">show_extracted_result_temperature</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.show_extracted_result_temperature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.show_extracted_result_temperature" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.show_extracted_temperature">
+<span class="sig-name descname"><span class="pre">show_extracted_temperature</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.show_extracted_temperature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.show_extracted_temperature" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.update_GUI_at_end_of_optimization">
+<span class="sig-name descname"><span class="pre">update_GUI_at_end_of_optimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.update_GUI_at_end_of_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.update_GUI_at_end_of_optimization" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.update_cost_functions_formLayout">
+<span class="sig-name descname"><span class="pre">update_cost_functions_formLayout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.update_cost_functions_formLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.update_cost_functions_formLayout" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.update_coupling_formLayout">
+<span class="sig-name descname"><span class="pre">update_coupling_formLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.update_coupling_formLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.update_coupling_formLayout" title="Link to this definition">#</a></dt>
+<dd><p>Update the entry boxes for rate parameters based on the selected rate model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> (<em>Event</em>) – The event that triggers the update.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.update_global_optimization_gridLayout">
+<span class="sig-name descname"><span class="pre">update_global_optimization_gridLayout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.update_global_optimization_gridLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.update_global_optimization_gridLayout" title="Link to this definition">#</a></dt>
+<dd><p>Update the global optimization grid layout based on selected optimization method.</p>
+<p>Retrieves parameters for the selected optimization method and creates corresponding input widgets
+in the grid layout for global optimization.</p>
+<p>Parameters:
+- self: The object instance.</p>
+<p>Returns:
+- None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.update_graph">
+<span class="sig-name descname"><span class="pre">update_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">increment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimated_remaining_seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.update_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.update_graph" title="Link to this definition">#</a></dt>
+<dd><p>Update the graph and output of the optimization process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>object</em>) – The object instance.</p></li>
+<li><p><strong>increment</strong> (<em>int</em>) – The current increment of the optimization process.</p></li>
+<li><p><strong>estimated_remaining_seconds</strong> (<em>int</em>) – The estimated remaining time for the optimization process.</p></li>
+<li><p><strong>x</strong> (<em>Any</em>) – Current optimization parameters.</p></li>
+<li><p><strong>*args</strong> (<em>tuple</em>) – Additional positional arguments.</p></li>
+<li><p><strong>**kwargs</strong> (<em>dict</em>) – Additional keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.update_isoconversional_formLayout">
+<span class="sig-name descname"><span class="pre">update_isoconversional_formLayout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.update_isoconversional_formLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.update_isoconversional_formLayout" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.update_local_optimization_gridLayout">
+<span class="sig-name descname"><span class="pre">update_local_optimization_gridLayout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.update_local_optimization_gridLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.update_local_optimization_gridLayout" title="Link to this definition">#</a></dt>
+<dd><p>Update the local optimization grid layout based on selected optimization method.</p>
+<p>Retrieves parameters for the selected optimization method and creates corresponding input widgets
+in the grid layout for local optimization.</p>
+<p>Parameters:
+- self: The object instance.</p>
+<p>Returns:
+- None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.update_progress_bar">
+<span class="sig-name descname"><span class="pre">update_progress_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.update_progress_bar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.update_progress_bar" title="Link to this definition">#</a></dt>
+<dd><p>Update the progress bar with the given progress value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>object</em>) – The object instance.</p></li>
+<li><p><strong>progress</strong> (<em>int</em>) – The value indicating the progress of the optimization process.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.update_rate_formLayout">
+<span class="sig-name descname"><span class="pre">update_rate_formLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.update_rate_formLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.update_rate_formLayout" title="Link to this definition">#</a></dt>
+<dd><p>Update the entry boxes for rate parameters based on the selected rate model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> (<em>Event</em>) – The event that triggers the update.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.update_tg_formLayout">
+<span class="sig-name descname"><span class="pre">update_tg_formLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.update_tg_formLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.update_tg_formLayout" title="Link to this definition">#</a></dt>
+<dd><p>Update the entry boxes for rate parameters based on the selected rate model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> (<em>Event</em>) – The event that triggers the update.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.MainWindow.update_vitrification_formLayout">
+<span class="sig-name descname"><span class="pre">update_vitrification_formLayout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#MainWindow.update_vitrification_formLayout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.MainWindow.update_vitrification_formLayout" title="Link to this definition">#</a></dt>
+<dd><p>Update the entry boxes for rate parameters based on the selected rate model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> (<em>Event</em>) – The event that triggers the update.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.main.OptimizationThread">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">OptimizationThread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_global_optimization</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_optimization</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_optimization_args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_local_optimization</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_optimization</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_optimization_args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experimental_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate_law</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experimental_args_for_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_parameters_to_optimize_for_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vitrification_law</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experimental_args_for_vitrification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_parameters_to_optimize_for_vitrification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coupling_law</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experimental_args_for_coupling</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tg_law</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experimental_args_for_tg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tg_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_function_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experimental_args_for_cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#OptimizationThread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.OptimizationThread" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QThread</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.main.OptimizationThread.end_of_optimization">
+<span class="sig-name descname"><span class="pre">end_of_optimization</span></span><a class="headerlink" href="#src.main.OptimizationThread.end_of_optimization" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.main.OptimizationThread.error_in_optimization_thread">
+<span class="sig-name descname"><span class="pre">error_in_optimization_thread</span></span><a class="headerlink" href="#src.main.OptimizationThread.error_in_optimization_thread" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.OptimizationThread.optimization_callback">
+<span class="sig-name descname"><span class="pre">optimization_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xk</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#OptimizationThread.optimization_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.OptimizationThread.optimization_callback" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.main.OptimizationThread.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#OptimizationThread.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.OptimizationThread.run" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.main.OptimizationThread.update_graph_signal">
+<span class="sig-name descname"><span class="pre">update_graph_signal</span></span><a class="headerlink" href="#src.main.OptimizationThread.update_graph_signal" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.main.OptimizationThread.update_progress_bar_signal">
+<span class="sig-name descname"><span class="pre">update_progress_bar_signal</span></span><a class="headerlink" href="#src.main.OptimizationThread.update_progress_bar_signal" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.get_functions_for_isoconversional_method">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">get_functions_for_isoconversional_method</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#get_functions_for_isoconversional_method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.get_functions_for_isoconversional_method" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.get_functions_for_kinetics">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">get_functions_for_kinetics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#get_functions_for_kinetics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.get_functions_for_kinetics" title="Link to this definition">#</a></dt>
+<dd><p>Get the functions related to kinetics from the kinetic module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing four lists:
+- rate_laws (list): List of functions related to rate laws.
+- vitrification_laws (list): List of functions related to vitrification laws.
+- tg_laws (list): List of functions related to tg laws.
+- coupling_laws (list): List of functions related to coupling laws.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.get_functions_for_optimization">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">get_functions_for_optimization</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#get_functions_for_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.get_functions_for_optimization" title="Link to this definition">#</a></dt>
+<dd><p>Get the parameters for a specified function in the kinetic module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tg_name</strong> (<em>str</em>) – The name of the function in the kinetic module.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The list of parameters for the specified function if found, otherwise None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.get_main_args_dict_and_options_dict">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">get_main_args_dict_and_options_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main_args_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#get_main_args_dict_and_options_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.get_main_args_dict_and_options_dict" title="Link to this definition">#</a></dt>
+<dd><p>Update the arguments dictionnary for the scipy.optimize.minimize() function with values existing in the arguments dictionnary of user selected method of optimization.</p>
+<p>For example, for the Nelder-Mead method, the arguments ‘bounds’ is both in the arguments of the main function and in the arguments specific to the method. It would be passed 2 times to the function, resulting in an error or conflict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>main_args_dict</strong> (<em>dict</em>) – Dictionnary containing the main arguments for scipy.optimize.minimize().</p></li>
+<li><p><strong>method_dict</strong> (<em>dict</em>) – Dictionary containing arguments specific to the method of minimization selected by the user.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.get_parameters_for_coupling">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">get_parameters_for_coupling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coupling_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#get_parameters_for_coupling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.get_parameters_for_coupling" title="Link to this definition">#</a></dt>
+<dd><p>Get the parameters for a specified coupling law in the kinetic module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coupling_name</strong> (<em>str</em>) – The name of the function in the kinetic module.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The list of parameters for the specified function if found, otherwise None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.get_parameters_for_isoconversional_method">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">get_parameters_for_isoconversional_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">isoconversional_method_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#get_parameters_for_isoconversional_method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.get_parameters_for_isoconversional_method" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.get_parameters_for_optimization">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">get_parameters_for_optimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimization_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#get_parameters_for_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.get_parameters_for_optimization" title="Link to this definition">#</a></dt>
+<dd><p>Get the optimization parameters for a specified optimization method.</p>
+<p>This function returns a dictionary containing the parameters and their types for the selected optimization method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimization_name</strong> (<em>str</em>) – The name of the optimization method.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary of parameters, their types, and whether they are optional.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.get_parameters_for_rate">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">get_parameters_for_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rate_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#get_parameters_for_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.get_parameters_for_rate" title="Link to this definition">#</a></dt>
+<dd><p>Get the parameters for a specified kinetic law in the kinetic module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rate_name</strong> (<em>str</em>) – The name of the function in the kinetic module.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The list of parameters for the specified function if found, otherwise None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.get_parameters_for_rss">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">get_parameters_for_rss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rss_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#get_parameters_for_rss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.get_parameters_for_rss" title="Link to this definition">#</a></dt>
+<dd><p>Get and clean the arguments of a specified function from a module.</p>
+<p>This function retrieves the arguments of a specified function and removes any undesired arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rss_name</strong> (<em>str</em>) – The name of the function to retrieve arguments from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>list</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of cleaned arguments.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.get_parameters_for_tg">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">get_parameters_for_tg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tg_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#get_parameters_for_tg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.get_parameters_for_tg" title="Link to this definition">#</a></dt>
+<dd><p>Get the parameters for a specified function in the kinetic module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tg_name</strong> (<em>str</em>) – The name of the function in the kinetic module.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The list of parameters for the specified function if found, otherwise None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.get_parameters_for_vitrification">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">get_parameters_for_vitrification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vitrification_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#get_parameters_for_vitrification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.get_parameters_for_vitrification" title="Link to this definition">#</a></dt>
+<dd><p>Get the parameters for a specified vitrifiaction law in the kinetic module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>vitrification_name</strong> (<em>str</em>) – The name of the function in the kinetic module.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The list of parameters for the specified function if found, otherwise None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.main.launch_extraction">
+<span class="sig-prename descclassname"><span class="pre">src.main.</span></span><span class="sig-name descname"><span class="pre">launch_extraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">','</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_lines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main.html#launch_extraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.main.launch_extraction" title="Link to this definition">#</a></dt>
+<dd><p>Launch the data extraction process and processes warning and info messages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_paths</strong> (<em>list</em>) – List of file paths to input txt or csv files containing DSC data.</p></li>
+<li><p><strong>delimiter</strong> (<em>str</em><em>, </em><em>optional</em>) – Delimiter used in the input files. Default is ‘,’.</p></li>
+<li><p><strong>has_header</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether the input files have headers. Default is False.</p></li>
+<li><p><strong>skip_lines</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of lines to skip at the beginning of each file. Default is 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>boolean: Indicates whether the extraction was successful (True) or not (False).</p></li>
+<li><p>str: String containing any warning or info messages.</p></li>
+<li><p>numpy.ndarray: Time data.</p></li>
+<li><p>numpy.ndarray: Temperature data.</p></li>
+<li><p>numpy.ndarray: Rate of reaction data.</p></li>
+<li><p>numpy.ndarray: Extent of reaction data.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="src-optimization-module">
+<h2>src.optimization module<a class="headerlink" href="#src-optimization-module" title="Link to this heading">#</a></h2>
+</section>
+<section id="module-src">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src" title="Link to this heading">#</a></h2>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#src-data-extraction-module">src.data_extraction module</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#src-interpolation-module">src.interpolation module</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#src-isoconversional-methods-module">src.isoconversional_methods module</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#src-kinetic-models-module">src.kinetic_models module</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-kinopt_interface">src.kinopt_interface module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kinopt_interface.Ui_MainWindow"><code class="docutils literal notranslate"><span class="pre">Ui_MainWindow</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#kinopt_interface.Ui_MainWindow.retranslateUi"><code class="docutils literal notranslate"><span class="pre">Ui_MainWindow.retranslateUi()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#kinopt_interface.Ui_MainWindow.setupUi"><code class="docutils literal notranslate"><span class="pre">Ui_MainWindow.setupUi()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-src.main">src.main module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow"><code class="docutils literal notranslate"><span class="pre">MainWindow</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.autofill_isoconversional_analysis_parameters"><code class="docutils literal notranslate"><span class="pre">MainWindow.autofill_isoconversional_analysis_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.autofill_models_parameters"><code class="docutils literal notranslate"><span class="pre">MainWindow.autofill_models_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.autofill_optimization_parameters"><code class="docutils literal notranslate"><span class="pre">MainWindow.autofill_optimization_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.browse_files"><code class="docutils literal notranslate"><span class="pre">MainWindow.browse_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.clear_data_extraction_plots"><code class="docutils literal notranslate"><span class="pre">MainWindow.clear_data_extraction_plots()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.clear_files"><code class="docutils literal notranslate"><span class="pre">MainWindow.clear_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.clear_isoconversional_formLayout_and_combobox"><code class="docutils literal notranslate"><span class="pre">MainWindow.clear_isoconversional_formLayout_and_combobox()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.clear_models_and_parameters_forms_and_combobox"><code class="docutils literal notranslate"><span class="pre">MainWindow.clear_models_and_parameters_forms_and_combobox()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.clear_optimization_grids_and_combobox"><code class="docutils literal notranslate"><span class="pre">MainWindow.clear_optimization_grids_and_combobox()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.clear_results_files"><code class="docutils literal notranslate"><span class="pre">MainWindow.clear_results_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.clear_results_viewer_plots"><code class="docutils literal notranslate"><span class="pre">MainWindow.clear_results_viewer_plots()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.display_error_in_optimization_thread"><code class="docutils literal notranslate"><span class="pre">MainWindow.display_error_in_optimization_thread()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.display_selected_result_file"><code class="docutils literal notranslate"><span class="pre">MainWindow.display_selected_result_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.extract_data"><code class="docutils literal notranslate"><span class="pre">MainWindow.extract_data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.get_associated_experimental_parameters"><code class="docutils literal notranslate"><span class="pre">MainWindow.get_associated_experimental_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.get_global_optimization_args_dict"><code class="docutils literal notranslate"><span class="pre">MainWindow.get_global_optimization_args_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.get_isoconversional_method_args"><code class="docutils literal notranslate"><span class="pre">MainWindow.get_isoconversional_method_args()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.get_local_optimization_args_dict"><code class="docutils literal notranslate"><span class="pre">MainWindow.get_local_optimization_args_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.get_summary_info"><code class="docutils literal notranslate"><span class="pre">MainWindow.get_summary_info()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.launch_isoconversional_analysis"><code class="docutils literal notranslate"><span class="pre">MainWindow.launch_isoconversional_analysis()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.launch_optimization"><code class="docutils literal notranslate"><span class="pre">MainWindow.launch_optimization()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.load_results_files"><code class="docutils literal notranslate"><span class="pre">MainWindow.load_results_files()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.show_extracted_extent"><code class="docutils literal notranslate"><span class="pre">MainWindow.show_extracted_extent()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.show_extracted_rate"><code class="docutils literal notranslate"><span class="pre">MainWindow.show_extracted_rate()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.show_extracted_result_extent"><code class="docutils literal notranslate"><span class="pre">MainWindow.show_extracted_result_extent()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.show_extracted_result_rate"><code class="docutils literal notranslate"><span class="pre">MainWindow.show_extracted_result_rate()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.show_extracted_result_temperature"><code class="docutils literal notranslate"><span class="pre">MainWindow.show_extracted_result_temperature()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.show_extracted_temperature"><code class="docutils literal notranslate"><span class="pre">MainWindow.show_extracted_temperature()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.update_GUI_at_end_of_optimization"><code class="docutils literal notranslate"><span class="pre">MainWindow.update_GUI_at_end_of_optimization()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.update_cost_functions_formLayout"><code class="docutils literal notranslate"><span class="pre">MainWindow.update_cost_functions_formLayout()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.update_coupling_formLayout"><code class="docutils literal notranslate"><span class="pre">MainWindow.update_coupling_formLayout()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.update_global_optimization_gridLayout"><code class="docutils literal notranslate"><span class="pre">MainWindow.update_global_optimization_gridLayout()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.update_graph"><code class="docutils literal notranslate"><span class="pre">MainWindow.update_graph()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.update_isoconversional_formLayout"><code class="docutils literal notranslate"><span class="pre">MainWindow.update_isoconversional_formLayout()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.update_local_optimization_gridLayout"><code class="docutils literal notranslate"><span class="pre">MainWindow.update_local_optimization_gridLayout()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.update_progress_bar"><code class="docutils literal notranslate"><span class="pre">MainWindow.update_progress_bar()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.update_rate_formLayout"><code class="docutils literal notranslate"><span class="pre">MainWindow.update_rate_formLayout()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.update_tg_formLayout"><code class="docutils literal notranslate"><span class="pre">MainWindow.update_tg_formLayout()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.MainWindow.update_vitrification_formLayout"><code class="docutils literal notranslate"><span class="pre">MainWindow.update_vitrification_formLayout()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.OptimizationThread"><code class="docutils literal notranslate"><span class="pre">OptimizationThread</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.OptimizationThread.end_of_optimization"><code class="docutils literal notranslate"><span class="pre">OptimizationThread.end_of_optimization</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.OptimizationThread.error_in_optimization_thread"><code class="docutils literal notranslate"><span class="pre">OptimizationThread.error_in_optimization_thread</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.OptimizationThread.optimization_callback"><code class="docutils literal notranslate"><span class="pre">OptimizationThread.optimization_callback()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.OptimizationThread.run"><code class="docutils literal notranslate"><span class="pre">OptimizationThread.run()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.OptimizationThread.update_graph_signal"><code class="docutils literal notranslate"><span class="pre">OptimizationThread.update_graph_signal</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.OptimizationThread.update_progress_bar_signal"><code class="docutils literal notranslate"><span class="pre">OptimizationThread.update_progress_bar_signal</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.get_functions_for_isoconversional_method"><code class="docutils literal notranslate"><span class="pre">get_functions_for_isoconversional_method()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.get_functions_for_kinetics"><code class="docutils literal notranslate"><span class="pre">get_functions_for_kinetics()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.get_functions_for_optimization"><code class="docutils literal notranslate"><span class="pre">get_functions_for_optimization()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.get_main_args_dict_and_options_dict"><code class="docutils literal notranslate"><span class="pre">get_main_args_dict_and_options_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.get_parameters_for_coupling"><code class="docutils literal notranslate"><span class="pre">get_parameters_for_coupling()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.get_parameters_for_isoconversional_method"><code class="docutils literal notranslate"><span class="pre">get_parameters_for_isoconversional_method()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.get_parameters_for_optimization"><code class="docutils literal notranslate"><span class="pre">get_parameters_for_optimization()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.get_parameters_for_rate"><code class="docutils literal notranslate"><span class="pre">get_parameters_for_rate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.get_parameters_for_rss"><code class="docutils literal notranslate"><span class="pre">get_parameters_for_rss()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.get_parameters_for_tg"><code class="docutils literal notranslate"><span class="pre">get_parameters_for_tg()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.get_parameters_for_vitrification"><code class="docutils literal notranslate"><span class="pre">get_parameters_for_vitrification()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#src.main.launch_extraction"><code class="docutils literal notranslate"><span class="pre">launch_extraction()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#src-optimization-module">src.optimization module</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-src">Module contents</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/src.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Alan Tabore.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

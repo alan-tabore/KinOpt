@@ -1,0 +1,717 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>optimization &#8212; kinopt 1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/optimization';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">kinopt 1.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../getting_started.html">
+                        Getting started
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../usage.html">
+                        Usage
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../modules.html">
+                        KinOpt modules
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../getting_started.html">
+                        Getting started
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../usage.html">
+                        Usage
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../modules.html">
+                        KinOpt modules
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">optimization</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for optimization</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module defines functions for optimizing kinetic models and calculating residuals.</span>
+
+<span class="sd">Author: alan.tabore</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="model">
+<a class="viewcode-back" href="../optimization.html#optimization.model">[docs]</a>
+<span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rate_law</span><span class="p">,</span> <span class="n">experimental_args_for_rate</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_rate</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="p">,</span> <span class="n">experimental_args_for_vitrification</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_vitrification</span><span class="p">,</span> <span class="n">coupling_law</span><span class="p">,</span> <span class="n">experimental_args_for_coupling</span><span class="p">,</span> <span class="n">tg_law</span><span class="p">,</span> <span class="n">experimental_args_for_tg</span><span class="p">,</span> <span class="n">tg_args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the overall reaction rate considering both reaction and vitrification.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array-like</span>
+<span class="sd">        Parameter values for the kinetic model.</span>
+<span class="sd">    rate_law : function</span>
+<span class="sd">        The rate law function for the reaction.</span>
+<span class="sd">    experimental_args_for_rate : tuple</span>
+<span class="sd">        Experimental arguments for the rate law function.</span>
+<span class="sd">    number_of_parameters_to_optimize_for_rate : int</span>
+<span class="sd">        Number of parameters to optimize for the rate law.</span>
+<span class="sd">    vitrification_law : function</span>
+<span class="sd">        The vitrification law function.</span>
+<span class="sd">    experimental_args_for_vitrification : tuple</span>
+<span class="sd">        Experimental arguments for the vitrification law function.</span>
+<span class="sd">    number_of_parameters_to_optimize_for_vitrification : int</span>
+<span class="sd">        Number of parameters to optimize for the vitrification law.</span>
+<span class="sd">    coupling_law : function</span>
+<span class="sd">        The coupling law for reaction and vitrification.</span>
+<span class="sd">    experimental_args_for_coupling : tuple</span>
+<span class="sd">        Experimental arguments for the coupling law function.</span>
+<span class="sd">    tg_law : function</span>
+<span class="sd">        The glass transition temperature (tg) law function.</span>
+<span class="sd">    experimental_args_for_tg : tuple</span>
+<span class="sd">        Experimental arguments for the tg law function.</span>
+<span class="sd">    tg_args : tuple</span>
+<span class="sd">        Additional arguments for the tg law function.</span>
+<span class="sd">    </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    global_rate : float</span>
+<span class="sd">        Overall global rate considering both reaction and vitrification.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">rate_law</span><span class="p">:</span>
+        <span class="n">rate_of_reaction</span> <span class="o">=</span> <span class="n">rate_law</span><span class="p">(</span><span class="o">*</span><span class="n">experimental_args_for_rate</span><span class="p">,</span> <span class="o">*</span><span class="n">x</span><span class="p">[:</span><span class="n">number_of_parameters_to_optimize_for_rate</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">coupling_law</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rate_of_reaction</span>
+    <span class="k">if</span> <span class="n">tg_law</span><span class="p">:</span>
+        <span class="n">tg</span> <span class="o">=</span> <span class="n">tg_law</span><span class="p">(</span><span class="o">*</span><span class="n">experimental_args_for_tg</span><span class="p">,</span> <span class="o">*</span><span class="n">tg_args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vitrification_law</span><span class="p">:</span>
+        <span class="n">rate_of_vitrification</span> <span class="o">=</span> <span class="n">vitrification_law</span><span class="p">(</span><span class="o">*</span><span class="n">experimental_args_for_vitrification</span><span class="p">,</span> <span class="n">tg</span><span class="p">,</span> <span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">number_of_parameters_to_optimize_for_rate</span><span class="p">:</span><span class="n">number_of_parameters_to_optimize_for_rate</span><span class="o">+</span><span class="n">number_of_parameters_to_optimize_for_vitrification</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">coupling_law</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rate_of_vitrification</span>
+    <span class="k">if</span> <span class="n">coupling_law</span><span class="p">:</span>
+        <span class="n">global_rate</span> <span class="o">=</span> <span class="n">coupling_law</span><span class="p">(</span><span class="n">rate_of_reaction</span><span class="p">,</span> <span class="n">rate_of_vitrification</span><span class="p">,</span> <span class="n">experimental_args_for_coupling</span><span class="p">,</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">number_of_parameters_to_optimize_for_rate</span><span class="o">+</span><span class="n">number_of_parameters_to_optimize_for_vitrification</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="n">global_rate</span></div>
+
+
+
+<div class="viewcode-block" id="rss_standard">
+<a class="viewcode-back" href="../optimization.html#optimization.rss_standard">[docs]</a>
+<span class="k">def</span> <span class="nf">rss_standard</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">experimental_rate</span><span class="p">,</span> <span class="n">rate_law</span><span class="p">,</span> <span class="n">experimental_args_for_rate</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_rate</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="p">,</span> <span class="n">experimental_args_for_vitrification</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_vitrification</span><span class="p">,</span> <span class="n">coupling_law</span><span class="p">,</span> <span class="n">experimental_args_for_coupling</span><span class="p">,</span> <span class="n">tg_law</span><span class="p">,</span> <span class="n">experimental_args_for_tg</span><span class="p">,</span> <span class="n">tg_args</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the residual sum of squares (RSS).</span>
+<span class="sd">    </span>
+<span class="sd">    .. math:: RSS= \sum (y_{exp_{i}}-f(x_i))^2</span>
+<span class="sd">    </span>
+<span class="sd">    with :math:`y_{exp_{i}}` the i-th value of experimental rate and :math:`f(x_i)` the value of rate computed using the given kinetic model :math:`f` and the i-th parameter vector :math:`x_i`.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array-like</span>
+<span class="sd">        Vector with parameter values to optimize for the kinetic model.</span>
+<span class="sd">    experimental_rate : array-like</span>
+<span class="sd">        Experimental reaction rate data.</span>
+<span class="sd">    rate_law : function</span>
+<span class="sd">        The rate law function for the reaction.</span>
+<span class="sd">    experimental_args_for_rate : tuple</span>
+<span class="sd">        Experimental arguments for the rate law function.</span>
+<span class="sd">    number_of_parameters_to_optimize_for_rate : int</span>
+<span class="sd">        Number of parameters to optimize for the rate law.</span>
+<span class="sd">    vitrification_law : function</span>
+<span class="sd">        The vitrification law function.</span>
+<span class="sd">    experimental_args_for_vitrification : tuple</span>
+<span class="sd">        Experimental arguments for the vitrification law function.</span>
+<span class="sd">    tg_law : function</span>
+<span class="sd">        The glass transition temperature (tg) law function.</span>
+<span class="sd">    experimental_args_for_tg : tuple</span>
+<span class="sd">        Experimental arguments for the tg law function.</span>
+<span class="sd">    tg_args : tuple</span>
+<span class="sd">        Additional arguments for the tg law function.</span>
+<span class="sd">    coupling_law_for_reaction_and_vitrification : function</span>
+<span class="sd">        The coupling law for reaction and vitrification.</span>
+<span class="sd">    coupling_law_for_reaction_and_vitrification_args : tuple</span>
+<span class="sd">        Additional arguments for the coupling law function.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rss : float</span>
+<span class="sd">        Residual sum of squares (RSS).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Calculate model rate using the defined model function</span>
+    <span class="n">model_rate</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rate_law</span><span class="p">,</span> <span class="n">experimental_args_for_rate</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_rate</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="p">,</span> <span class="n">experimental_args_for_vitrification</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_vitrification</span><span class="p">,</span> <span class="n">coupling_law</span><span class="p">,</span> <span class="n">experimental_args_for_coupling</span><span class="p">,</span> <span class="n">tg_law</span><span class="p">,</span> <span class="n">experimental_args_for_tg</span><span class="p">,</span> <span class="n">tg_args</span><span class="p">)</span>
+    <span class="c1"># Calculate the difference between model rate and experimental rate</span>
+    <span class="n">dif</span> <span class="o">=</span> <span class="n">model_rate</span> <span class="o">-</span> <span class="n">experimental_rate</span>
+    <span class="c1"># Calculate the RSS by summing the squared differences</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dif</span><span class="p">,</span> <span class="n">dif</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="rss_mean">
+<a class="viewcode-back" href="../optimization.html#optimization.rss_mean">[docs]</a>
+<span class="k">def</span> <span class="nf">rss_mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">experimental_rate</span><span class="p">,</span> <span class="n">rate_law</span><span class="p">,</span> <span class="n">experimental_args_for_rate</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_rate</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="p">,</span> <span class="n">experimental_args_for_vitrification</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_vitrification</span><span class="p">,</span> <span class="n">coupling_law</span><span class="p">,</span> <span class="n">experimental_args_for_coupling</span><span class="p">,</span> <span class="n">tg_law</span><span class="p">,</span> <span class="n">experimental_args_for_tg</span><span class="p">,</span> <span class="n">tg_args</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the mean squared error.</span>
+<span class="sd">    </span>
+<span class="sd">    .. math:: \overline{RSS}= \frac{\sum (y_{exp_{i}}-f(x_i))^2}{n}</span>
+<span class="sd">    </span>
+<span class="sd">    with :math:`y_{exp_{i}}` the i-th value of experimental rate and :math:`f(x_i)` the value of rate computed using the given kinetic model :math:`f` and the i-th parameter vector :math:`x_i` and :math:`n` the number of points.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array-like</span>
+<span class="sd">        Vector with parameter values to optimize for the kinetic model.</span>
+<span class="sd">    experimental_rate : array-like</span>
+<span class="sd">        Experimental reaction rate data.</span>
+<span class="sd">    rate_law : function</span>
+<span class="sd">        The rate law function for the reaction.</span>
+<span class="sd">    experimental_args_for_rate : tuple</span>
+<span class="sd">        Experimental arguments for the rate law function.</span>
+<span class="sd">    number_of_parameters_to_optimize_for_rate : int</span>
+<span class="sd">        Number of parameters to optimize for the rate law.</span>
+<span class="sd">    vitrification_law : function</span>
+<span class="sd">        The vitrification law function.</span>
+<span class="sd">    experimental_args_for_vitrification : tuple</span>
+<span class="sd">        Experimental arguments for the vitrification law function.</span>
+<span class="sd">    tg_law : function</span>
+<span class="sd">        The glass transition temperature (tg) law function.</span>
+<span class="sd">    experimental_args_for_tg : tuple</span>
+<span class="sd">        Experimental arguments for the tg law function.</span>
+<span class="sd">    tg_args : tuple</span>
+<span class="sd">        Additional arguments for the tg law function.</span>
+<span class="sd">    coupling_law_for_reaction_and_vitrification : function</span>
+<span class="sd">        The coupling law for reaction and vitrification.</span>
+<span class="sd">    coupling_law_for_reaction_and_vitrification_args : tuple</span>
+<span class="sd">        Additional arguments for the coupling law function.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rss : float</span>
+<span class="sd">        Mean of residual sum of squares (RSS).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Calculate model rate using the defined model function</span>
+    <span class="n">model_rate</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rate_law</span><span class="p">,</span> <span class="n">experimental_args_for_rate</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_rate</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="p">,</span> <span class="n">experimental_args_for_vitrification</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_vitrification</span><span class="p">,</span> <span class="n">coupling_law</span><span class="p">,</span> <span class="n">experimental_args_for_coupling</span><span class="p">,</span> <span class="n">tg_law</span><span class="p">,</span> <span class="n">experimental_args_for_tg</span><span class="p">,</span> <span class="n">tg_args</span><span class="p">)</span>
+    <span class="c1"># Calculate the difference between model rate and experimental rate</span>
+    <span class="n">dif</span> <span class="o">=</span> <span class="n">model_rate</span> <span class="o">-</span> <span class="n">experimental_rate</span>
+    <span class="c1"># Calculate the RSS by summing the squared differences</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dif</span><span class="p">,</span> <span class="n">dif</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">dif</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="rss_increase_of_small_extents_impact">
+<a class="viewcode-back" href="../optimization.html#optimization.rss_increase_of_small_extents_impact">[docs]</a>
+<span class="k">def</span> <span class="nf">rss_increase_of_small_extents_impact</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">experimental_rate</span><span class="p">,</span> <span class="n">rate_law</span><span class="p">,</span> <span class="n">experimental_args_for_rate</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_rate</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="p">,</span> <span class="n">experimental_args_for_vitrification</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_vitrification</span><span class="p">,</span> <span class="n">coupling_law</span><span class="p">,</span> <span class="n">experimental_args_for_coupling</span><span class="p">,</span> <span class="n">tg_law</span><span class="p">,</span> <span class="n">experimental_args_for_tg</span><span class="p">,</span> <span class="n">tg_args</span><span class="p">,</span> <span class="n">extent</span><span class="p">,</span> <span class="n">extent_limit</span><span class="p">,</span> <span class="n">amplification_factor</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the modified residual sum of squares (RSS) with an impact increase for small extents.</span>
+
+<span class="sd">    This function calculates the mean squared error with modifications based on the extent of the reaction.</span>
+<span class="sd">    For extents smaller than a specified limit, the differences between the model rate and experimental rate</span>
+<span class="sd">    are amplified by a given factor before computing the RSS.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array-like</span>
+<span class="sd">        Vector with parameter values to optimize for the kinetic model.</span>
+<span class="sd">    experimental_rate : array-like</span>
+<span class="sd">        Experimental reaction rate data.</span>
+<span class="sd">    rate_law : function</span>
+<span class="sd">        The rate law function for the reaction.</span>
+<span class="sd">    experimental_args_for_rate : tuple</span>
+<span class="sd">        Experimental arguments for the rate law function.</span>
+<span class="sd">    number_of_parameters_to_optimize_for_rate : int</span>
+<span class="sd">        Number of parameters to optimize for the rate law.</span>
+<span class="sd">    vitrification_law : function</span>
+<span class="sd">        The vitrification law function.</span>
+<span class="sd">    experimental_args_for_vitrification : tuple</span>
+<span class="sd">        Experimental arguments for the vitrification law function.</span>
+<span class="sd">    tg_law : function</span>
+<span class="sd">        The glass transition temperature (tg) law function.</span>
+<span class="sd">    experimental_args_for_tg : tuple</span>
+<span class="sd">        Experimental arguments for the tg law function.</span>
+<span class="sd">    tg_args : tuple</span>
+<span class="sd">        Additional arguments for the tg law function.</span>
+<span class="sd">    extent : array-like</span>
+<span class="sd">        Extent of the reaction.</span>
+<span class="sd">    extent_limit : float</span>
+<span class="sd">        Threshold value for the extent. Extents smaller than this limit will have an impact amplification.</span>
+<span class="sd">    amplification_factor : float</span>
+<span class="sd">        Factor by which the differences are amplified for extents smaller than the limit.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    modified_rss : float</span>
+<span class="sd">        Modified mean of residual sum of squares (RSS).</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The modified RSS is calculated as follows:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \overline{RSS_{mod}} = \frac{\sum \left(\left(A*\left(y_{exp_{i}}(\alpha&lt;\alpha_{lim})-f(x_i,\alpha&lt;\alpha_{lim})\right)\right)^2\right)+\sum \left(\left(y_{exp_{i}}(\alpha\ge\alpha_{lim})-f(x_i,\alpha\ge\alpha_{lim})\right)^2\right)}{n}</span>
+
+<span class="sd">    where :math:`A` is the amplification factor, :math:`y_{exp_{i}}(\alpha&lt;\alpha_{lim})` and :math:`y_{exp_{i}}(\alpha\ge\alpha_{lim})` are the experimental rates for extents smaller and larger than or equal to the limit respectively,</span>
+<span class="sd">    :math:`f(x_i,\alpha&lt;\alpha_{lim})` is the model rate for extents smaller than the limit, :math:`f(x_i,\alpha\ge\alpha_{lim})` is the model rate for extents larger than or equal to the limit, and :math:`n` is the number of points.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Calculate model rate using the defined model function</span>
+    <span class="n">model_rate</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rate_law</span><span class="p">,</span> <span class="n">experimental_args_for_rate</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_rate</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="p">,</span> <span class="n">experimental_args_for_vitrification</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_vitrification</span><span class="p">,</span> <span class="n">coupling_law</span><span class="p">,</span> <span class="n">experimental_args_for_coupling</span><span class="p">,</span> <span class="n">tg_law</span><span class="p">,</span> <span class="n">experimental_args_for_tg</span><span class="p">,</span> <span class="n">tg_args</span><span class="p">)</span>
+    
+    <span class="c1"># Calculate the difference between model rate and experimental rate</span>
+    <span class="n">dif</span> <span class="o">=</span> <span class="n">model_rate</span> <span class="o">-</span> <span class="n">experimental_rate</span>
+    
+    <span class="c1"># Modify the differences based on the extent limit</span>
+    <span class="n">modified_dif</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">extent</span> <span class="o">&lt;</span> <span class="n">extent_limit</span><span class="p">,</span> <span class="n">dif</span> <span class="o">*</span> <span class="n">amplification_factor</span><span class="p">,</span> <span class="n">dif</span><span class="p">)</span>
+    
+    <span class="c1"># Calculate the modified RSS by summing the squared differences</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">modified_dif</span><span class="p">,</span> <span class="n">modified_dif</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">modified_dif</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="rss_increase_of_small_rates_impact_with_zones">
+<a class="viewcode-back" href="../optimization.html#optimization.rss_increase_of_small_rates_impact_with_zones">[docs]</a>
+<span class="k">def</span> <span class="nf">rss_increase_of_small_rates_impact_with_zones</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">experimental_rate</span><span class="p">,</span> <span class="n">rate_law</span><span class="p">,</span> <span class="n">experimental_args_for_rate</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_rate</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="p">,</span> <span class="n">experimental_args_for_vitrification</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_vitrification</span><span class="p">,</span> <span class="n">coupling_law</span><span class="p">,</span> <span class="n">experimental_args_for_coupling</span><span class="p">,</span> <span class="n">tg_law</span><span class="p">,</span> <span class="n">experimental_args_for_tg</span><span class="p">,</span> <span class="n">tg_args</span><span class="p">,</span> <span class="n">fraction_to_amplify</span><span class="p">,</span> <span class="n">amplification_factor</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the modified residual sum of squares (RSS) with an impact increase for small rates in specific zones.</span>
+<span class="sd">    </span>
+<span class="sd">    This function calculates the mean squared error with modifications based on the experimental rate.</span>
+<span class="sd">    For zones where the experimental rate is small compared to the maximum experimental rate,</span>
+<span class="sd">    the differences between the model rate and experimental rate are amplified by a given factor before computing the RSS.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array-like</span>
+<span class="sd">        Vector with parameter values to optimize for the kinetic model.</span>
+<span class="sd">    experimental_rate : array-like</span>
+<span class="sd">        Experimental reaction rate data.</span>
+<span class="sd">    rate_law : function</span>
+<span class="sd">        The rate law function for the reaction.</span>
+<span class="sd">    experimental_args_for_rate : tuple</span>
+<span class="sd">        Experimental arguments for the rate law function.</span>
+<span class="sd">    number_of_parameters_to_optimize_for_rate : int</span>
+<span class="sd">        Number of parameters to optimize for the rate law.</span>
+<span class="sd">    vitrification_law : function</span>
+<span class="sd">        The vitrification law function.</span>
+<span class="sd">    experimental_args_for_vitrification : tuple</span>
+<span class="sd">        Experimental arguments for the vitrification law function.</span>
+<span class="sd">    tg_law : function</span>
+<span class="sd">        The glass transition temperature (tg) law function.</span>
+<span class="sd">    experimental_args_for_tg : tuple</span>
+<span class="sd">        Experimental arguments for the tg law function.</span>
+<span class="sd">    tg_args : tuple</span>
+<span class="sd">        Additional arguments for the tg law function.</span>
+<span class="sd">    fraction_to_amplify : float</span>
+<span class="sd">        Fraction of the maximum experimental rate to consider as the threshold for amplification.</span>
+<span class="sd">    amplification_factor : float</span>
+<span class="sd">        Factor by which the differences are amplified for rates below the threshold.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    modified_rss : float</span>
+<span class="sd">        Modified mean of residual sum of squares (RSS).</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The modified RSS is calculated as follows:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \overline{RSS_{mod}} = \frac{\left(\sum \left(\text{{modified_dif}}^2\right)\right)}{n}</span>
+
+<span class="sd">    where :math:`y_{exp_{i}}` is the experimental rate and :math:`f(x_i)` is the model rate,</span>
+<span class="sd">    and :math:`n` is the number of points.</span>
+
+<span class="sd">    The difference :math:`\text{{dif}}_i` is modified as follows:</span>
+<span class="sd">    </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        \text{{modified_dif}}_i = </span>
+<span class="sd">        \begin{cases}</span>
+<span class="sd">        \left(y_{exp_{i}}-f(x_i)\right) \times A, &amp; \text{if } y_i &lt; \frac{{\max(y)}}{p} \\</span>
+<span class="sd">        y_{exp_{i}}-f(x_i), &amp; \text{otherwise}</span>
+<span class="sd">        \end{cases}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Calculate the maximum experimental rate</span>
+    <span class="n">max_exp_rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">experimental_rate</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">experimental_rate</span><span class="p">))</span>
+    
+    <span class="c1"># Calculate the model rate using provided laws and arguments</span>
+    <span class="n">model_rate</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rate_law</span><span class="p">,</span> <span class="n">experimental_args_for_rate</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_rate</span><span class="p">,</span> <span class="n">vitrification_law</span><span class="p">,</span> <span class="n">experimental_args_for_vitrification</span><span class="p">,</span> <span class="n">number_of_parameters_to_optimize_for_vitrification</span><span class="p">,</span> <span class="n">coupling_law</span><span class="p">,</span> <span class="n">experimental_args_for_coupling</span><span class="p">,</span> <span class="n">tg_law</span><span class="p">,</span> <span class="n">experimental_args_for_tg</span><span class="p">,</span> <span class="n">tg_args</span><span class="p">)</span>
+    
+    <span class="c1"># Calculate the difference between model rate and experimental rate</span>
+    <span class="n">dif</span> <span class="o">=</span> <span class="n">model_rate</span> <span class="o">-</span> <span class="n">experimental_rate</span>
+    
+    <span class="c1"># Modify the difference in certain zones where experimental rate is small</span>
+    <span class="n">modified_dif</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">experimental_rate</span> <span class="o">&lt;</span> <span class="n">max_exp_rate</span><span class="o">/</span><span class="n">fraction_to_amplify</span><span class="p">,</span> <span class="n">dif</span><span class="o">*</span><span class="n">amplification_factor</span><span class="p">,</span> <span class="n">dif</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">modified_dif</span><span class="p">,</span> <span class="n">modified_dif</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">modified_dif</span><span class="p">)</span></div>
+
+
+
+
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You&#39;ve run the optimization module.&quot;</span><span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Alan Tabore.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

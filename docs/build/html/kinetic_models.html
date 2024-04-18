@@ -1,0 +1,931 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Kinetic models module &#8212; kinopt 1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=362ab14a" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'kinetic_models';</script>
+    <link rel="icon" href="_static/logo_no_background_with_outline.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Optimization module" href="optimization.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo_no_background_with_outline.png" class="logo__image only-light" alt="kinopt 1.0 documentation - Home"/>
+    <script>document.write(`<img src="_static/logo_no_background_with_outline.png" class="logo__image only-dark" alt="kinopt 1.0 documentation - Home"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="getting_started.html">
+                        Getting started
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="usage.html">
+                        Usage
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="modules.html">
+                        KinOpt modules
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="getting_started.html">
+                        Getting started
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="usage.html">
+                        Usage
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="modules.html">
+                        KinOpt modules
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="data_extraction.html">Data extraction module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpolation.html">Interpolation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="isoconversional_methods.html">Isoconversional methods module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimization.html">Optimization module</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Kinetic models module</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="modules.html" class="nav-link">KinOpt modules</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Kinetic...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-kinetic_models">
+<span id="kinetic-models-module"></span><h1>Kinetic models module<a class="headerlink" href="#module-kinetic_models" title="Link to this heading">#</a></h1>
+<p>The kinetic models module provides functions for simulating chemical reaction kinetics using various kinetic models.
+To create the global kinetic of reaction, multiple elements are available:</p>
+<ul class="simple">
+<li><p>rate model : describing the rate of purely chemical reaction</p></li>
+<li><p>vitrification model : describing a rate depending on vitrification and diffusion phenomenon</p></li>
+<li><p>coupling law : describing the relation between rate model and vitrification model</p></li>
+<li><p>tg law : describing the evolution of glass transition temperature with respect to extent</p></li>
+</ul>
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.arrhenius_rate_constant">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">arrhenius_rate_constant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ea</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#arrhenius_rate_constant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.arrhenius_rate_constant" title="Link to this definition">#</a></dt>
+<dd><p>Compute the value of rate constant with the Arrhenius equation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> (<em>Float</em>) – Temperature of reaction.</p></li>
+<li><p><strong>A</strong> (<em>Float</em>) – Pre-exponential factor.</p></li>
+<li><p><strong>Ea</strong> (<em>Float</em>) – Activation energy.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>k</strong> – Rate constant for the Arrhenius equation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Float</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The Arrhenius rate constant is given by:</p>
+<div class="math notranslate nohighlight">
+\[k = A e^{ \left( \frac{-E_a}{RT} \right)}\]</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.compute_extent_and_rate">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">compute_extent_and_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate_law</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate_law_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vitrification_law</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vitrification_law_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tg_law</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tg_law_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coupling_law</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coupling_law_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#compute_extent_and_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.compute_extent_and_rate" title="Link to this definition">#</a></dt>
+<dd><p>Compute the evolution of extent and rate during a reaction, with or without vitrification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> (<em>array-like</em>) – List or array containing the times during the reaction.</p></li>
+<li><p><strong>temperature</strong> (<em>array-like</em>) – List or array containing the temperatures during the reaction.</p></li>
+<li><p><strong>rate_law</strong> (<em>function</em>) – The rate law function that calculates the rate of reaction.</p></li>
+<li><p><strong>rate_law_args</strong> (<em>tuple</em>) – Additional arguments to be passed to the rate law function.</p></li>
+<li><p><strong>vitrification_law</strong> (<em>function</em><em>, </em><em>optional</em>) – The vitrification law function that calculates the vitrification term.</p></li>
+<li><p><strong>vitrification_args</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Additional arguments to be passed to the vitrification law function.</p></li>
+<li><p><strong>tg_law</strong> (<em>function</em><em>, </em><em>optional</em>) – The glass transition temperature law function that calculates the Tg.</p></li>
+<li><p><strong>tg_law_args</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Additional arguments to be passed to the Tg law function.</p></li>
+<li><p><strong>coupling_law</strong> (<em>function</em><em>, </em><em>optional</em>) – Law used to mix the rate of chemical reaction and rate of vitrification.</p></li>
+<li><p><strong>coupling_law_args</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Additional arguments to be passed to the coupling law function.</p></li>
+<li><p><strong>initial_extent</strong> (<em>float</em><em>, </em><em>optional</em>) – The initial extent of reaction. Default is 0. It must be positive and inferior to 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>extent</strong> (<em>ndarray</em>) – Evolution of extent during the reaction.</p></li>
+<li><p><strong>global_rate</strong> (<em>ndarray</em>) – Evolution of the global rate of reaction.</p></li>
+<li><p><strong>chemical_rate</strong> (<em>ndarray</em>) – Evolution of the chemical rate of reaction.</p></li>
+<li><p><strong>vitrification_term</strong> (<em>ndarray, optional</em>) – Evolution of the vitrification rate of reaction (if vitrification parameters are provided).</p></li>
+<li><p><strong>tg</strong> (<em>ndarray, optional</em>) – Evolution of the Tg (if Tg parameters are provided).</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.compute_extent_and_rate_using_scipy">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">compute_extent_and_rate_using_scipy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature_program</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate_law</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate_law_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vitrification_law</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vitrification_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tg_law</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tg_law_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coupling_law</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coupling_law_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#compute_extent_and_rate_using_scipy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.compute_extent_and_rate_using_scipy" title="Link to this definition">#</a></dt>
+<dd><p>Compute extent and rate using scipy’s solve_ivp.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t0</strong> (<em>float</em>) – Initial time.</p></li>
+<li><p><strong>tf</strong> (<em>float</em>) – Final time.</p></li>
+<li><p><strong>temperature_program</strong> (<em>callable</em>) – A function that takes time as input and returns temperature.</p></li>
+<li><p><strong>rate_law</strong> (<em>callable</em>) – Rate law function.</p></li>
+<li><p><strong>rate_law_args</strong> (<em>tuple</em>) – Arguments for the rate law function.</p></li>
+<li><p><strong>vitrification_law</strong> (<em>callable</em>) – Vitrification law function.</p></li>
+<li><p><strong>vitrification_args</strong> (<em>tuple</em>) – Arguments for the vitrification law function.</p></li>
+<li><p><strong>tg_law</strong> (<em>callable</em>) – Tg law function.</p></li>
+<li><p><strong>tg_law_args</strong> (<em>tuple</em>) – Arguments for the Tg law function.</p></li>
+<li><p><strong>coupling_law</strong> (<em>callable</em>) – Coupling law function.</p></li>
+<li><p><strong>coupling_law_args</strong> (<em>tuple</em>) – Arguments for the coupling law function.</p></li>
+<li><p><strong>initial_extent</strong> (<em>float</em><em>, </em><em>optional</em>) – Initial extent. Default is 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Solution object from solve_ivp.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>scipy.integrate.OdeResult</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.coupling_harmonic_mean">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">coupling_harmonic_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experimental_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#coupling_harmonic_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.coupling_harmonic_mean" title="Link to this definition">#</a></dt>
+<dd><p>Return the harmonic mean of a chemical rate and vitrification rate.</p>
+<div class="math notranslate nohighlight">
+\[\dfrac{ d\alpha }{dt} = \dfrac{1}{\dfrac{1}{k_c } + \dfrac{1}{k_v}}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kc</strong> (<em>1-D array</em>) – Rate of chemical reaction</p></li>
+<li><p><strong>kv</strong> (<em>1-D array</em>) – Vitrification term</p></li>
+<li><p><strong>experimental_parameters</strong> (<em>NoneType</em>) – NoneType argument to stick with guideline of function creation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Rate</strong> – Rate of reaction</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>1-D array</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>[1]   G. Wisanrakkit et J. K. Gillham, « The glass transition temperature (Tg) as an index of chemical conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics », Journal of Applied Polymer Science, vol. 41, nᵒ 11‑12, p. 2885‑2929, 1990, doi: 10.1002/app.1990.070411129.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.coupling_product">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">coupling_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experimental_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#coupling_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.coupling_product" title="Link to this definition">#</a></dt>
+<dd><p>Return the product of a chemical rate and vitrification rate.</p>
+<div class="math notranslate nohighlight">
+\[\dfrac{ d\alpha }{dt} = k_c * k_v\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kc</strong> (<em>1-D array</em>) – Rate of chemical reaction</p></li>
+<li><p><strong>kv</strong> (<em>1-D array</em>) – Vitrification term</p></li>
+<li><p><strong>experimental_parameters</strong> (<em>NoneType</em>) – NoneType argument to stick with guideline of function creation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Rate</strong> – Rate of reaction</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>1-D array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.hess_for_rate_for_kamal">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">hess_for_rate_for_kamal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#hess_for_rate_for_kamal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.hess_for_rate_for_kamal" title="Link to this definition">#</a></dt>
+<dd><p>Compute the Hessian matrix for the Kamal equation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extent</strong> (<em>float</em>) – Extent of the reaction.</p></li>
+<li><p><strong>T</strong> (<em>float</em>) – Temperature in Kelvin.</p></li>
+<li><p><strong>A1</strong> (<em>float</em>) – Pre-exponential factor for reaction 1.</p></li>
+<li><p><strong>E1</strong> (<em>float</em>) – Activation energy for reaction 1 in J/mol.</p></li>
+<li><p><strong>A2</strong> (<em>float</em>) – Pre-exponential factor for reaction 2.</p></li>
+<li><p><strong>E2</strong> (<em>float</em>) – Activation energy for reaction 2 in J/mol.</p></li>
+<li><p><strong>m</strong> (<em>int</em>) – Power term for reaction 2.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Power term for both reactions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>hessian</strong> – Hessian matrix of shape (6, 6) representing the second derivatives
+of the rate expression with respect to (A1, E1, A2, E2, m, n).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The Hessian matrix H is given by:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}H = \begin{bmatrix}
+0 &amp; -\frac{(1 - x)^n e^{-E_1/(RT)}}{RT} &amp; 0 &amp; 0 &amp; 0 &amp; (1 - x)^n \log(1 - x) e^{-E_1/(RT)} \\
+-\frac{(1 - x)^n e^{-E_1/(RT)}}{RT} &amp; \frac{A_1 (1 - x)^n e^{-E_1/(RT)}}{(R^2 T^2)} &amp; 0 &amp; 0 &amp; 0 &amp; -\frac{A_1 (1 - x)^n \log(1 - x) e^{-E_1/(RT)}}{RT} \\
+0 &amp; 0 &amp; 0 &amp; -\frac{x^m (1 - x)^n e^{-E_2/(RT)}}{RT} &amp; x^m (1 - x)^n \log(x) e^{-E_2/(RT)} &amp; x^m (1 - x)^n \log(1 - x) e^{-E_2/(RT)} \\
+0 &amp; 0 &amp; -\frac{x^m (1 - x)^n e^{-E_2/(RT)}}{RT} &amp; \frac{A_2 x^m (1 - x)^n e^{-E_2/(RT)}}{(R^2 T^2)} &amp; -\frac{A_2 x^m (1 - x)^n \log(x) e^{-E_2/(RT)}}{RT} &amp; -\frac{A_2 x^m (1 - x)^n \log(1 - x) e^{-E_2/(RT)}}{RT} \\
+0 &amp; 0 &amp; x^m (1 - x)^n \log(x) e^{-E_2/(RT)} &amp; -\frac{A_2 x^m (1 - x)^n \log(x) e^{-E_2/(RT)}}{RT} &amp; A_2 x^m (1 - x)^n \log^2(x) e^{-E_2/(RT)} &amp; A_2 x^m (1 - x)^n \log(1 - x) \log(x) e^{-E_2/(RT)} \\
+(1 - x)^n \log(1 - x) e^{-E_1/(RT)} &amp; -\frac{A_1 (1 - x)^n \log(1 - x) e^{-E_1/(RT)}}{RT} &amp; x^m (1 - x)^n \log(1 - x) e^{-E_2/(RT)} &amp; -\frac{A_2 x^m (1 - x)^n \log(1 - x) e^{-E_2/(RT)}}{RT} &amp; A_2 x^m (1 - x)^n \log(1 - x) \log(x) e^{-E_2/(RT)} &amp; (1 - x)^n \log^2(1 - x) (A_2 x^m e^{-E_2/(RT)} + A_1 e^{-E_1/(RT)})
+\end{bmatrix}\end{split}\]</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.jac_for_rate_for_kamal">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">jac_for_rate_for_kamal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#jac_for_rate_for_kamal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.jac_for_rate_for_kamal" title="Link to this definition">#</a></dt>
+<dd><p>Compute the Jacobian vector for the Kamal equation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extent</strong> (<em>float</em>) – Extent of the reaction.</p></li>
+<li><p><strong>T</strong> (<em>float</em>) – Temperature in Kelvin.</p></li>
+<li><p><strong>A1</strong> (<em>float</em>) – Pre-exponential factor for reaction 1.</p></li>
+<li><p><strong>E1</strong> (<em>float</em>) – Activation energy for reaction 1 in J/mol.</p></li>
+<li><p><strong>A2</strong> (<em>float</em>) – Pre-exponential factor for reaction 2.</p></li>
+<li><p><strong>E2</strong> (<em>float</em>) – Activation energy for reaction 2 in J/mol.</p></li>
+<li><p><strong>m</strong> (<em>int</em>) – Power term for reaction 2.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Power term for both reactions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>jac</strong> – Jacobian vector of shape (6,) representing the first derivatives
+of the rate expression with respect to (A1, E1, A2, E2, m, n).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function computes the Jacobian vector for a rate expression
+based on the extent of the reaction, temperature, pre-exponential
+factors, activation energies, and power terms for two reactions.
+The Jacobian vector represents the first derivatives of the rate
+expression with respect to the extent of the reaction.</p>
+<p>The Jacobian vector J is given by:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}J = \begin{bmatrix}
+(1 - x)^n e^{-\frac{E_1}{RT}} \\
+-\frac{A_1 (1 - x)^n e^{-\frac{E_1}{RT}}}{RT} \\
+x^m (1 - x)^n e^{-\frac{E_2}{RT}} \\
+-\frac{A_2 x^m (1 - x)^n e^{-\frac{E_2}{RT}}}{RT} \\
+A_2 x^m (1 - x)^n \log(x) e^{-\frac{E_2}{RT}} \\
+(1 - x)^n \log(1 - x) (A_2 x^m e^{-\frac{E_2}{RT}} + A_1 e^{-\frac{E_1}{RT}})
+\end{bmatrix}\end{split}\]</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.rate_for_autocatalytic">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">rate_for_autocatalytic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ea</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#rate_for_autocatalytic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.rate_for_autocatalytic" title="Link to this definition">#</a></dt>
+<dd><p>Compute the rate of reaction for an autocatalytic reaction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extent</strong> (<em>ndarray</em>) – Extent of reaction.</p></li>
+<li><p><strong>T</strong> (<em>ndarray</em>) – Temperature of reaction.</p></li>
+<li><p><strong>A</strong> (<em>float</em>) – Pre-exponential factor of the reaction.</p></li>
+<li><p><strong>Ea</strong> (<em>float</em>) – Activation energy of the reaction.</p></li>
+<li><p><strong>m</strong> (<em>float</em>) – Order of reaction for the autocatalyzed reaction.</p></li>
+<li><p><strong>n</strong> (<em>float</em>) – Order of reaction for the regular reaction.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>rate</strong> – Rate of reaction for an autocatalytic equation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The rate for an autocatalytic reaction is given by:</p>
+<div class="math notranslate nohighlight">
+\[\frac{d\alpha}{dt} =  A e^{ \left( \frac{-E_a}{RT} \right)} \alpha^m (1-\alpha)^n\]</div>
+<p class="rubric">References</p>
+<p>[1] M. R. Keenan, « Autocatalytic cure kinetics from DSC measurements: Zero initial cure rate », J. Appl. Polym. Sci., vol. 33, nᵒ 5, p. 1725‑1734, avr. 1987, doi: 10.1002/app.1987.070330525.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.rate_for_kamal">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">rate_for_kamal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#rate_for_kamal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.rate_for_kamal" title="Link to this definition">#</a></dt>
+<dd><p>Compute the value of the rate of reaction for a Kamal equation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extent</strong> (<em>ndarray</em>) – Extent of reaction.</p></li>
+<li><p><strong>T</strong> (<em>ndarray</em>) – Temperature of reaction.</p></li>
+<li><p><strong>A1</strong> (<em>float</em>) – Pre-exponential factor of the regular reaction.</p></li>
+<li><p><strong>E1</strong> (<em>float</em>) – Activation energy of the regular reaction.</p></li>
+<li><p><strong>A2</strong> (<em>float</em>) – Pre-exponential factor of the autocatalyzed reaction.</p></li>
+<li><p><strong>E2</strong> (<em>float</em>) – Activation energy of the autocatalyzed reaction.</p></li>
+<li><p><strong>m</strong> (<em>float</em>) – Order of reaction for the autocatalyzed reaction.</p></li>
+<li><p><strong>n</strong> (<em>float</em>) – Order of reaction for the regular reaction.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>rate</strong> – Rate of reaction for a Kamal equation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The Kamal equation is given by:</p>
+<div class="math notranslate nohighlight">
+\[\frac{d\alpha}{dt} = \left( A_1 e^{ \left( \frac{-E_1}{RT} \right)}  +  A_2 e^{ \left( \frac{-E_2}{RT} \right) } \alpha^m \right) (1-\alpha)^n\]</div>
+<p class="rubric">References</p>
+<p>[1]   G. J. Tsamasphyros, Th. K. Papathanassiou, et S. I. Markolefas, « Some Analytical Solutions of the Kamal Equation for Isothermal Curing With Applications to Composite Patch Repair », Journal of Engineering Materials and Technology, vol. 131, no 1, Dec. 2008, doi: 10.1115/1.3026550.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span> <span class="kn">import</span> <span class="nn">time</span> <span class="k">as</span> <span class="nn">t</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">number_of_points</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">time_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1800</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">)</span>  <span class="c1"># 30 minutes</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">temperatures</span> <span class="o">=</span> <span class="p">[</span>
+<span class="go">    np.linspace(293, 443, number_of_points),  # 5°C/min</span>
+<span class="go">    np.linspace(293, 593, number_of_points),  # 10°C/min</span>
+<span class="go">    np.linspace(293, 743, number_of_points),  # 15°C/min</span>
+<span class="go">    np.linspace(293, 1093, number_of_points)  # 20°C/min</span>
+<span class="go">]</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">conversions</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">rates</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">ax1_bis</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;conversion&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">ax1_bis</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;rate&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">temperatures</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>     <span class="n">t0</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span>     <span class="n">extent</span><span class="p">,</span> <span class="n">rate</span> <span class="o">=</span> <span class="n">compute_extent_and_rate</span><span class="p">(</span><span class="n">time_points</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">rate_for_kamal</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.666e8</span><span class="p">,</span> <span class="mi">80000</span><span class="p">,</span> <span class="mf">1.666e13</span><span class="p">,</span> <span class="mi">120000</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span>     <span class="n">t1</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span>     <span class="n">execution_time</span> <span class="o">=</span> <span class="n">t1</span> <span class="o">-</span> <span class="n">t0</span>
+<span class="gp">&gt;&gt;&gt; </span>     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time:&quot;</span><span class="p">,</span> <span class="n">execution_time</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>     <span class="n">conversions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extent</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>     <span class="n">rates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>     <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_points</span><span class="p">,</span> <span class="n">extent</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;conversion for a heating rate of </span><span class="si">{</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="si">}</span><span class="s2">°/min&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>     <span class="n">ax1_bis</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_points</span><span class="p">,</span> <span class="n">rate</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;rate for a heating rate of </span><span class="si">{</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="si">}</span><span class="s2">°/min&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>     <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span>     <span class="n">ax1_bis</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.rate_for_nth_order">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">rate_for_nth_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#rate_for_nth_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.rate_for_nth_order" title="Link to this definition">#</a></dt>
+<dd><p>Compute the value of the rate of reaction for a nth order reaction.</p>
+<div class="math notranslate nohighlight">
+\[\dfrac{ d\alpha }{dt} = A e^{ \left( \dfrac{-E_a}{RT} \right) } (1-\alpha)^n\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extent</strong> (<em>1-D array</em>) – Extent of reaction.</p></li>
+<li><p><strong>T</strong> (<em>1-D array</em>) – Temperature of reaction.</p></li>
+<li><p><strong>A</strong> (<em>Float</em>) – Pre-exponential factor of the reaction.</p></li>
+<li><p><strong>Ea</strong> (<em>Float</em>) – Activation energy of the reaction.</p></li>
+<li><p><strong>n</strong> (<em>Float</em>) – Order of reaction.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>rate</strong> – Rate of reaction for a nth order reaction.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>1-D array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.tg_diBennedetto">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">tg_diBennedetto</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tg_0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tg_inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#tg_diBennedetto"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.tg_diBennedetto" title="Link to this definition">#</a></dt>
+<dd><p>Compute the glass transition temperature using the DiBennedetto equation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha</strong> (<em>array-like</em>) – conversion or extent of reaction</p></li>
+<li><p><strong>Tg_0</strong> (<em>Float</em>) – glass transition temperature of unreacted material</p></li>
+<li><p><strong>Tg_inf</strong> (<em>Float</em>) – glass transition temperature of fully reacted material</p></li>
+<li><p><strong>coeff</strong> (<em>Float</em>) – ratio of the changes in isobaric heat capacities at Tg of the fully reacted material and of the initial unreacted material</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Tg</strong> – Glass transition temperature</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The DiBennedetto equation is given by:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}Tg = Tg_{0} +  \dfrac{ (Tg_{\infty}-Tg_{0}). \lambda .\alpha}{1-(1-\lambda)\alpha} \\
+with: \\
+Tg_{0}: \textrm{The glass transition temperature of unreacted material} \\
+Tg_{\infty}: \textrm{The glass transition temperature of completely cured material} \\
+\lambda : \dfrac{\Delta C_{p_{\infty}}}{\Delta C_{p_{0}}} \textrm{the ratio of the changes in isobaric heat capacities at} \\
+\textrm{Tg of the fully reacted material and of the initial unreacted material}\\\end{split}\]</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.vitrification_WLF_rate">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">vitrification_WLF_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#vitrification_WLF_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.vitrification_WLF_rate" title="Link to this definition">#</a></dt>
+<dd><p>Compute the vitrification term for a WLF-like model.</p>
+<p>The vitrification term is given by the WLF model:</p>
+<div class="math notranslate nohighlight">
+\[k_v = A_d e^{ \left( \frac{C_1(T - T_g(\alpha))}{C_2 + |T - T_g(\alpha)|} \right) }\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(T\)</span> is the temperature of the reaction (in Kelvin).</p></li>
+<li><p><span class="math notranslate nohighlight">\(A_d\)</span> is the pre-exponential factor of the vitrification term</p></li>
+<li><p><span class="math notranslate nohighlight">\(C_1\)</span> is Constant 1 of the WLF model</p></li>
+<li><p><span class="math notranslate nohighlight">\(C_2\)</span> is Constant 2 of the WLF model</p></li>
+<li><p><span class="math notranslate nohighlight">\(T_g\)</span> is the glass transition temperature (in Kelvin).</p></li>
+</ul>
+</dd>
+</dl>
+<p>Usually, the glass transition temperature is determined by using the DiBenedetto equation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> (<em>array-like</em>) – Temperature of the reaction (in Kelvin)</p></li>
+<li><p><strong>Ad</strong> (<em>float</em>) – Pre-exponential factor of the vitrification term</p></li>
+<li><p><strong>C1</strong> (<em>float</em>) – Constant 1 of the WLF model</p></li>
+<li><p><strong>C2</strong> (<em>float</em>) – Constant 2 of the WLF model</p></li>
+<li><p><strong>Tg</strong> (<em>float</em>) – Glass transition temperature (in Kelvin)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>rate</strong> – Rate of the reaction</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>[1] G. Wisanrakkit et J. K. Gillham, “The glass transition temperature (Tg) as an index of chemical
+conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics”,
+Journal of Applied Polymer Science, vol. 41, no. 11-12, p. 2885-2929, 1990, doi: 10.1002/app.1990.070411129.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinetic_models.vitrification_WLF_rate_no_reaction_below_Tg">
+<span class="sig-prename descclassname"><span class="pre">kinetic_models.</span></span><span class="sig-name descname"><span class="pre">vitrification_WLF_rate_no_reaction_below_Tg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kinetic_models.html#vitrification_WLF_rate_no_reaction_below_Tg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kinetic_models.vitrification_WLF_rate_no_reaction_below_Tg" title="Link to this definition">#</a></dt>
+<dd><p>Compute the vitrification term for a WLF-like model when the reaction temperature is above Tg.
+The vitrification term is equal to 0 when below Tg.</p>
+<div class="math notranslate nohighlight">
+\[k_v = A_d e^{ \left( \dfrac{C_1(T-T_g(\alpha))}{C_2+ |T-T_g(\alpha)|} \right) }\]</div>
+<p>Usually the glass transition temperature is determined by using the DiBenedetto equation
+See: G. Wisanrakkit et J. K. Gillham, « The glass transition temperature (Tg) as an index of chemical conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics », Journal of Applied Polymer Science, vol. 41, nᵒ 11‑12, p. 2885‑2929, 1990, doi: 10.1002/app.1990.070411129.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> (<em>Array-like</em>) – Temperature of reaction (in Kelvin)</p></li>
+<li><p><strong>Ad</strong> (<em>Float</em>) – Pre-exponential factor of the vitrification term</p></li>
+<li><p><strong>C1</strong> (<em>Float</em>) – Constant 1 of WLF model</p></li>
+<li><p><strong>C2</strong> (<em>Float</em>) – Constant 2 of WLF model</p></li>
+<li><p><strong>Tg</strong> (<em>Float</em>) – Glass transition temperature (in Kelvin)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Rate</strong> – Rate of reaction</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Array-like</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>[1] G. Wisanrakkit et J. K. Gillham, “The glass transition temperature (Tg) as an index of chemical
+conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics”,
+Journal of Applied Polymer Science, vol. 41, no. 11-12, p. 2885-2929, 1990, doi: 10.1002/app.1990.070411129.</p>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="optimization.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Optimization module</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.arrhenius_rate_constant"><code class="docutils literal notranslate"><span class="pre">arrhenius_rate_constant()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.compute_extent_and_rate"><code class="docutils literal notranslate"><span class="pre">compute_extent_and_rate()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.compute_extent_and_rate_using_scipy"><code class="docutils literal notranslate"><span class="pre">compute_extent_and_rate_using_scipy()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.coupling_harmonic_mean"><code class="docutils literal notranslate"><span class="pre">coupling_harmonic_mean()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.coupling_product"><code class="docutils literal notranslate"><span class="pre">coupling_product()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.hess_for_rate_for_kamal"><code class="docutils literal notranslate"><span class="pre">hess_for_rate_for_kamal()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.jac_for_rate_for_kamal"><code class="docutils literal notranslate"><span class="pre">jac_for_rate_for_kamal()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.rate_for_autocatalytic"><code class="docutils literal notranslate"><span class="pre">rate_for_autocatalytic()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.rate_for_kamal"><code class="docutils literal notranslate"><span class="pre">rate_for_kamal()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.rate_for_nth_order"><code class="docutils literal notranslate"><span class="pre">rate_for_nth_order()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.tg_diBennedetto"><code class="docutils literal notranslate"><span class="pre">tg_diBennedetto()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.vitrification_WLF_rate"><code class="docutils literal notranslate"><span class="pre">vitrification_WLF_rate()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kinetic_models.vitrification_WLF_rate_no_reaction_below_Tg"><code class="docutils literal notranslate"><span class="pre">vitrification_WLF_rate_no_reaction_below_Tg()</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/kinetic_models.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Alan Tabore.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+src package
+===========
+
+Submodules
+----------
+
+src.data\_extraction module
+---------------------------
+
+
+
+src.interpolation module
+------------------------
+
+
+
+src.isoconversional\_methods module
+-----------------------------------
+
+
+
+src.kinetic\_models module
+--------------------------
+
+
+
+src.kinopt\_interface module
+----------------------------
+
+.. automodule:: kinopt_interface
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.main module
+---------------
+
+.. automodule:: src.main
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.optimization module
+-----------------------
+
+
+
+Module contents
+---------------
+
+.. automodule:: src
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,1119 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>isoconversional_methods &#8212; kinopt 1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/isoconversional_methods';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/KinOpt_logo.jpeg" class="logo__image only-light" alt="kinopt 1.0 documentation - Home"/>
+    <script>document.write(`<img src="../_static/KinOpt_logo.jpeg" class="logo__image only-dark" alt="kinopt 1.0 documentation - Home"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../getting_started.html">
+                        Getting started
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../usage.html">
+                        Usage
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../modules.html">
+                        KinOpt modules
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../getting_started.html">
+                        Getting started
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../usage.html">
+                        Usage
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../modules.html">
+                        KinOpt modules
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">isoconversio...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for isoconversional_methods</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module defines functions for performing isoconversional analysis.</span>
+
+<span class="sd">The isoconversional methods function all starts with &#39;isoconversional_analysis&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">bisect</span> <span class="kn">import</span> <span class="n">bisect_left</span>
+<span class="kn">import</span> <span class="nn">scipy.optimize</span>
+<span class="kn">import</span> <span class="nn">time</span> <span class="k">as</span> <span class="nn">time_module</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">interpolation</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+
+
+
+<div class="viewcode-block" id="check_boundaries">
+<a class="viewcode-back" href="../isoconversional_methods.html#isoconversional_methods.check_boundaries">[docs]</a>
+<span class="k">def</span> <span class="nf">check_boundaries</span><span class="p">(</span><span class="n">minimum</span><span class="p">,</span> <span class="n">maximum</span><span class="p">,</span> <span class="n">list_of_real_convs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if the specified conversion boundaries are within the valid range of the input data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    minimum : float</span>
+<span class="sd">        Minimum conversion level to check.</span>
+<span class="sd">    maximum : float</span>
+<span class="sd">        Maximum conversion level to check.</span>
+<span class="sd">    list_of_real_convs : list of numpy.ndarray</span>
+<span class="sd">        List of NumPy arrays containing conversion data for multiple experiments.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">    </span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the specified boundaries are outside the valid range of the input data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">conv_data</span> <span class="ow">in</span> <span class="n">list_of_real_convs</span><span class="p">:</span>
+        <span class="n">min_conv_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">conv_data</span><span class="p">)</span>
+        <span class="n">max_conv_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">conv_data</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">minimum</span> <span class="o">&lt;</span> <span class="n">min_conv_data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The minimum conversion you want to analyze (</span><span class="si">{</span><span class="n">minimum</span><span class="si">}</span><span class="s2">) is lower than the minimum in the data (</span><span class="si">{</span><span class="n">min_conv_data</span><span class="si">}</span><span class="s2">). Please increase the value of the minimum conversion.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">maximum</span> <span class="o">&gt;</span> <span class="n">max_conv_data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The maximum conversion you want to analyze (</span><span class="si">{</span><span class="n">maximum</span><span class="si">}</span><span class="s2">) is higher than the maximum in the data (</span><span class="si">{</span><span class="n">max_conv_data</span><span class="si">}</span><span class="s2">). Please lower the value of the maximum conversion.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="find_closest_value">
+<a class="viewcode-back" href="../isoconversional_methods.html#isoconversional_methods.find_closest_value">[docs]</a>
+<span class="k">def</span> <span class="nf">find_closest_value</span><span class="p">(</span><span class="n">target_value</span><span class="p">,</span> <span class="n">sorted_array</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the closest value to the target_value in a sorted NumPy array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target_value : float</span>
+<span class="sd">        The value to find the closest value to.</span>
+<span class="sd">    sorted_array : numpy.ndarray</span>
+<span class="sd">        A sorted NumPy array of numbers.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple: A tuple containing two elements:</span>
+<span class="sd">        - closest_index (int): The index of the closest value in the array.</span>
+<span class="sd">        - closest_value (float): The closest value in the array.</span>
+
+<span class="sd">    If two numbers are equally close, the smallest number is returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sorted_array</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input array must not be empty.&quot;</span><span class="p">)</span>
+        
+    <span class="c1"># Find the index where target_value should be inserted in the sorted array</span>
+    <span class="n">insert_index</span> <span class="o">=</span> <span class="n">bisect_left</span><span class="p">(</span><span class="n">sorted_array</span><span class="p">,</span> <span class="n">target_value</span><span class="p">)</span>
+
+    <span class="c1"># If target_value is smaller than or equal to the first element of the array</span>
+    <span class="k">if</span> <span class="n">insert_index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sorted_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># If target_value is larger than or equal to the last element of the array</span>
+    <span class="k">if</span> <span class="n">insert_index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sorted_array</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">sorted_array</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sorted_array</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Calculate the differences only once</span>
+    <span class="n">prev_index</span> <span class="o">=</span> <span class="n">insert_index</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">next_index</span> <span class="o">=</span> <span class="n">insert_index</span>
+
+    <span class="n">prev_value</span><span class="p">,</span> <span class="n">next_value</span> <span class="o">=</span> <span class="n">sorted_array</span><span class="p">[</span><span class="n">prev_index</span><span class="p">],</span> <span class="n">sorted_array</span><span class="p">[</span><span class="n">next_index</span><span class="p">]</span>
+
+    <span class="c1"># Check which value is closer to target_value and return it</span>
+    <span class="k">if</span> <span class="n">next_value</span> <span class="o">-</span> <span class="n">target_value</span> <span class="o">&lt;</span> <span class="n">target_value</span> <span class="o">-</span> <span class="n">prev_value</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">next_index</span><span class="p">,</span> <span class="n">next_value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">prev_index</span><span class="p">,</span> <span class="n">prev_value</span></div>
+
+    
+    
+
+
+
+<div class="viewcode-block" id="get_data_at_conversion">
+<a class="viewcode-back" href="../isoconversional_methods.html#isoconversional_methods.get_data_at_conversion">[docs]</a>
+<span class="k">def</span> <span class="nf">get_data_at_conversion</span><span class="p">(</span><span class="n">target_conversion</span><span class="p">,</span> <span class="n">conversions</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract data before the target conversion for each dataset.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target_conversion : float</span>
+<span class="sd">        The target conversion value.</span>
+<span class="sd">    conversions : list of numpy.ndarray</span>
+<span class="sd">        List of NumPy arrays containing conversion data.</span>
+<span class="sd">    times : list of numpy.ndarray</span>
+<span class="sd">        List of NumPy arrays containing time data.</span>
+<span class="sd">    temperatures : list of numpy.ndarray</span>
+<span class="sd">        List of NumPy arrays containing temperature data.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        A tuple containing three lists:</span>
+<span class="sd">        - new_conversions (list of numpy.ndarray): List of NumPy arrays with data up to target_conversion.</span>
+<span class="sd">        - new_times (list of numpy.ndarray): List of NumPy arrays with corresponding time data.</span>
+<span class="sd">        - new_temperatures (list of numpy.ndarray): List of NumPy arrays with corresponding temperature data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">new_conversions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">new_times</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">new_temperatures</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">conversions</span><span class="p">)):</span>
+        <span class="c1"># Find the index and value of the closest conversion value</span>
+        <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">find_closest_value</span><span class="p">(</span><span class="n">target_conversion</span><span class="p">,</span> <span class="n">conversions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        
+        <span class="c1"># Append data up to and including the closest conversion value</span>
+        <span class="n">new_conversions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conversions</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">new_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">new_temperatures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temperatures</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">new_conversions</span><span class="p">,</span> <span class="n">new_times</span><span class="p">,</span> <span class="n">new_temperatures</span></div>
+
+
+
+<div class="viewcode-block" id="get_index_area_of_calculation">
+<a class="viewcode-back" href="../isoconversional_methods.html#isoconversional_methods.get_index_area_of_calculation">[docs]</a>
+<span class="k">def</span> <span class="nf">get_index_area_of_calculation</span><span class="p">(</span><span class="n">conversion_lists</span><span class="p">,</span> <span class="n">list_of_points_for_analysis</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the indexes of the interval of calculation for the modified integral J.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    conversion_lists : List</span>
+<span class="sd">        List with conversions at different heating rates (one list element for one heating rate)</span>
+<span class="sd">    list_of_points_for_analysis : List</span>
+<span class="sd">        List containing all the point of conversion at which the activation energy will be calculated</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        return an error if starting point is smaller than step</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    index_list : List</span>
+<span class="sd">        Return the indexes of the interval of calculation for the modified integral J</span>
+<span class="sd">        </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] S. Vyazovkin, « Modification of the integral isoconversional method to account for variation in the activation energy », Journal of Computational Chemistry, vol. 22, nᵒ 2, p. 178‑183, 2001, doi: 10.1002/1096-987X(20010130)22:2&lt;178::AID-JCC5&gt;3.0.CO;2-#.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">index_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">conversions_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">conversion_lists</span><span class="p">)</span>
+    
+    <span class="c1"># Compute the difference between values of experimental conversions</span>
+    <span class="n">delta_alpha_exp</span> <span class="o">=</span> <span class="n">conversions_array</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">conversions_array</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="c1"># Compute the minimum delta to use for analysis</span>
+    
+    <span class="c1"># The same point must not be analyzed 2 times, so the analysis delta must </span>
+    <span class="c1"># be greater than the maximum delta between experimental conversions.</span>
+    <span class="n">min_delta_alpha_analysis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">delta_alpha_exp</span><span class="p">)</span>
+    
+    <span class="n">min_alpha_analysis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">conversions_array</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">min_delta_alpha_analysis</span>
+    
+    <span class="n">delta_analysis</span> <span class="o">=</span> <span class="n">list_of_points_for_analysis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">list_of_points_for_analysis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">max_alpha_analysis</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">conversions_array</span><span class="p">[:,</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="p">(</span><span class="n">list_of_points_for_analysis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">delta_analysis</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">list_of_points_for_analysis</span><span class="p">))</span> <span class="p">])</span>
+    
+    
+    
+    <span class="k">if</span> <span class="n">list_of_points_for_analysis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_alpha_analysis</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">The minimum conversion for your analysis points is too low.</span><span class="se">\n</span><span class="s1">Current minimum conversion = </span><span class="si">{</span><span class="n">list_of_points_for_analysis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s1">Minimum conversion allowed = </span><span class="si">{</span><span class="n">min_alpha_analysis</span><span class="si">}</span><span class="se">\n</span><span class="s1">Please increase the minimum conversion to analyze.&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+                         
+    <span class="k">if</span> <span class="n">list_of_points_for_analysis</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">max_alpha_analysis</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">The maximum conversion for your analysis points is too high.</span><span class="se">\n</span><span class="s1">Current maximum conversion = </span><span class="si">{</span><span class="n">list_of_points_for_analysis</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s1">Maximum conversion allowed for </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_of_points_for_analysis</span><span class="p">))</span><span class="si">}</span><span class="s1"> points = </span><span class="si">{</span><span class="n">max_alpha_analysis</span><span class="si">}</span><span class="se">\n</span><span class="s1">Please decrease the maximum conversion to analyze.&#39;</span><span class="p">)</span>
+        <span class="k">return</span>                 
+    
+    <span class="k">if</span> <span class="n">delta_analysis</span> <span class="o">&lt;</span> <span class="n">min_delta_alpha_analysis</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">The step between your analysis points is too high.</span><span class="se">\n</span><span class="s1">Current step = </span><span class="si">{</span><span class="n">delta_analysis</span><span class="si">}</span><span class="se">\n</span><span class="s1">Minimum step = </span><span class="si">{</span><span class="n">min_delta_alpha_analysis</span><span class="si">}</span><span class="se">\n</span><span class="s1">Please reduce the number of points you want to analyze.&#39;</span><span class="p">)</span>
+        <span class="k">return</span>                 
+    
+    <span class="n">start_value</span> <span class="o">=</span> <span class="n">list_of_points_for_analysis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">delta_analysis</span>
+        
+                
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">conversion_lists</span><span class="p">)):</span>
+        <span class="n">index_of_start_value</span><span class="p">,</span> <span class="n">value_of_start_value</span> <span class="o">=</span> <span class="n">find_closest_value</span><span class="p">(</span>
+            <span class="n">start_value</span><span class="p">,</span> <span class="n">conversion_lists</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">index_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">index_of_start_value</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_of_points_for_analysis</span><span class="p">)):</span>
+            <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">find_closest_value</span><span class="p">(</span>
+                <span class="n">list_of_points_for_analysis</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">conversion_lists</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">index_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">index_list</span></div>
+
+
+
+<div class="viewcode-block" id="get_data_in_interval">
+<a class="viewcode-back" href="../isoconversional_methods.html#isoconversional_methods.get_data_in_interval">[docs]</a>
+<span class="k">def</span> <span class="nf">get_data_in_interval</span><span class="p">(</span><span class="n">conversion_lists</span><span class="p">,</span> <span class="n">time_lists</span><span class="p">,</span> <span class="n">temperature_lists</span><span class="p">,</span> <span class="n">list_of_points_for_analysis</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the conversion, time and temperature lists for each heating and for each interval of calculation.</span>
+<span class="sd">    </span>
+<span class="sd">    1st level of the list corresponds to heating rate</span>
+<span class="sd">    2nd level of the list corresponds to interval of calculation</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    conversion_lists : List</span>
+<span class="sd">        List with conversions at different heating rates (one list element for one heating rate).</span>
+<span class="sd">    time_lists : List</span>
+<span class="sd">        List with times at different heating rates (one list element for one heating rate)</span>
+<span class="sd">    temperature_lists : List</span>
+<span class="sd">        List with temperatures at different heating rates (one list element for one heating rate)</span>
+<span class="sd">    list_of_points_for_analysis : List</span>
+<span class="sd">        List containing all the point of conversion at which the activation energy will be calculated</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_list_of_conversions : List</span>
+<span class="sd">        List with conversions at different heating rates for different intervals</span>
+<span class="sd">    new_list_of_times : List</span>
+<span class="sd">        List with times at different heating rates for different intervals</span>
+<span class="sd">    new_list_of_temperatures : List</span>
+<span class="sd">        List with temperatures at different heating rates for different intervals</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">new_list_of_conversions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">new_list_of_times</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">new_list_of_temperatures</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">index_list</span> <span class="o">=</span> <span class="n">get_index_area_of_calculation</span><span class="p">(</span>
+        <span class="n">conversion_lists</span><span class="p">,</span> <span class="n">list_of_points_for_analysis</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">index_list</span><span class="p">)):</span>
+        <span class="n">new_list_of_conversions</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="n">new_list_of_times</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="n">new_list_of_temperatures</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">index_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">new_list_of_conversions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">conversion_lists</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">index_list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]:</span><span class="n">index_list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span>
+            <span class="n">new_list_of_times</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">time_lists</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">index_list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]:</span><span class="n">index_list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span>
+            <span class="n">new_list_of_temperatures</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">temperature_lists</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">index_list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]:</span><span class="n">index_list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span>
+        
+    
+
+    <span class="k">return</span> <span class="n">new_list_of_conversions</span><span class="p">,</span> <span class="n">new_list_of_times</span><span class="p">,</span> <span class="n">new_list_of_temperatures</span></div>
+
+
+
+            
+            
+    
+
+<div class="viewcode-block" id="compute_integral_J">
+<a class="viewcode-back" href="../isoconversional_methods.html#isoconversional_methods.compute_integral_J">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_integral_J</span><span class="p">(</span><span class="n">Ea</span><span class="p">,</span> <span class="n">time_array</span><span class="p">,</span> <span class="n">temperature_array</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the integral described in Vyazovkin&#39;s paper.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Ea : float</span>
+<span class="sd">        Activation energy for the reaction.</span>
+<span class="sd">    time_array : numpy.ndarray</span>
+<span class="sd">        NumPy array of time intervals for the DSC scan.</span>
+<span class="sd">    temperature_array : numpy.ndarray</span>
+<span class="sd">        NumPy array of temperatures during the DSC scan.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The computed integral value.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The integral is computed using the following formula:</span>
+<span class="sd">    </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        J = \int_{t_0}^{t_f} e^{-\frac{E_a}{R\cdot T(t)}} \cdot dt</span>
+
+<span class="sd">    where:</span>
+<span class="sd">        - J is the computed integral value.</span>
+<span class="sd">        - Ea is the activation energy for the reaction.</span>
+<span class="sd">        - R is the universal gas constant (8.314 J/(mol·K)).</span>
+<span class="sd">        - T(t) is the temperature at time t during the DSC scan.</span>
+<span class="sd">        - :math:`t_0` and :math:`t_f` are the initial and final times in the time_array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="mf">8.314</span>  <span class="c1"># Universal gas constant</span>
+
+    <span class="c1"># Calculate the average temperature between adjacent time points</span>
+    <span class="n">avg_temperatures</span> <span class="o">=</span> <span class="p">(</span><span class="n">temperature_array</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">temperature_array</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># Calculate the differences in time</span>
+    <span class="n">time_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">time_array</span><span class="p">)</span>
+
+    <span class="c1"># Calculate the contributions using the Arrhenius equation</span>
+    <span class="n">contributions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">Ea</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">avg_temperatures</span><span class="p">))</span> <span class="o">*</span> <span class="n">time_diff</span>
+
+    <span class="c1"># Compute the integral using the trapezoidal rule</span>
+    <span class="n">integral_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">contributions</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">integral_value</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="compute_function_to_minimize">
+<a class="viewcode-back" href="../isoconversional_methods.html#isoconversional_methods.compute_function_to_minimize">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_function_to_minimize</span><span class="p">(</span><span class="n">Ea</span><span class="p">,</span> <span class="n">time_arrays</span><span class="p">,</span> <span class="n">temperature_arrays</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the function to minimize described in Vyazovkin&#39;s paper.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Ea : float</span>
+<span class="sd">        Activation energy for which the function will be computed.</span>
+<span class="sd">    time_arrays : list of numpy.ndarray</span>
+<span class="sd">        List of NumPy arrays containing time data for multiple experiments.</span>
+<span class="sd">    temperature_arrays : list of numpy.ndarray</span>
+<span class="sd">        List of NumPy arrays containing temperature data for multiple experiments.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Value of the function for the given activation energy.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The function to minimize is computed using the following formula:</span>
+<span class="sd">    </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        F(E_a) = \sum_{i=1}^{N} \sum_{k=1, k \neq i}^{N} \frac{J_i}{J_k}</span>
+
+<span class="sd">    where:</span>
+<span class="sd">        - :math:`F(E_a)` is the computed function to minimize.</span>
+<span class="sd">        - N is the number of experiments.</span>
+<span class="sd">        - :math:`J_i` and :math:`J_k` are the integrals computed using the Vyazovkin formula for experiments i and k.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num_experiments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_arrays</span><span class="p">)</span>
+    
+    <span class="c1"># Calculate integrals for all experiments and store them in integrals_J list</span>
+    <span class="n">integrals_J</span> <span class="o">=</span> <span class="p">[</span><span class="n">compute_integral_J</span><span class="p">(</span><span class="n">Ea</span><span class="p">,</span> <span class="n">time_arrays</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">temperature_arrays</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_experiments</span><span class="p">)]</span>
+    
+    <span class="c1"># Create a 2D array to store ratios of integrals</span>
+    <span class="n">ratios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_experiments</span><span class="p">,</span> <span class="n">num_experiments</span><span class="p">))</span>
+
+    <span class="c1"># Calculate the ratios of integrals using NumPy broadcasting</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_experiments</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_experiments</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">k</span><span class="p">:</span>
+                <span class="n">ratios</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">integrals_J</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">integrals_J</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+    <span class="c1"># Sum all ratios to compute the function to minimize</span>
+    <span class="n">func_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ratios</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">func_sum</span></div>
+
+
+
+
+
+
+<div class="viewcode-block" id="isoconversional_analysis_vyazovkin_method">
+<a class="viewcode-back" href="../isoconversional_methods.html#isoconversional_methods.isoconversional_analysis_vyazovkin_method">[docs]</a>
+<span class="k">def</span> <span class="nf">isoconversional_analysis_vyazovkin_method</span><span class="p">(</span><span class="n">conv_lists</span><span class="p">,</span> <span class="n">time_lists</span><span class="p">,</span> <span class="n">temperature_lists</span><span class="p">,</span> <span class="n">initial_guess</span><span class="p">,</span> <span class="n">min_conv</span><span class="p">,</span> <span class="n">max_conv</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the energy of activation for multiple conversions using the Vyazovkin method with a BFGS optimization algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    conv_lists : list of numpy.ndarray</span>
+<span class="sd">        List containing a list of evolution of conversion for various heating rates (n, m) with n the number of heating rates and m the number of conversion points.</span>
+<span class="sd">    time_lists : list of numpy.ndarray</span>
+<span class="sd">        List containing a list of evolution of time for various heating rates (n, m) with n the number of heating rates and m the number of time points.</span>
+<span class="sd">    temperature_lists : list of numpy.ndarray</span>
+<span class="sd">        List containing a list of evolution of temperature for various heating rates (n, m) with n the number of heating rates and m the number of temperature points.</span>
+<span class="sd">    initial_guess : float</span>
+<span class="sd">        Initial guess of the activation energy for the first desired conversion.</span>
+<span class="sd">    min_conv : float</span>
+<span class="sd">        Minimum conversion at which the activation energy will be computed.</span>
+<span class="sd">    max_conv : float</span>
+<span class="sd">        Maximum conversion at which the activation energy will be computed.</span>
+<span class="sd">    number_of_points : int</span>
+<span class="sd">        Number of conversion points at which the activation energy will be computed.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    conv_values : numpy.ndarray</span>
+<span class="sd">        Array containing conversion points at which activation energy was assessed.</span>
+<span class="sd">    Ea_calculated : numpy.ndarray</span>
+<span class="sd">        Array containing assessed activation energy.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">        It is crucial to provide interpolated data based on the conversion for stability. Without interpolation,</span>
+<span class="sd">        this method may produce unreliable results.</span>
+<span class="sd">        </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] S. Vyazovkin, « Evaluation of activation energy of thermally stimulated solid-state reactions under arbitrary variation of temperature », Journal of Computational Chemistry, vol. 18, nᵒ 3, p. 393‑402, 1997, doi: 10.1002/(SICI)1096-987X(199702)18:3&lt;393::AID-JCC9&gt;3.0.CO;2-P.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t_start</span> <span class="o">=</span> <span class="n">time_module</span><span class="o">.</span><span class="n">process_time</span><span class="p">()</span>
+    
+    <span class="c1"># Check boundaries and data integrity</span>
+    <span class="n">check_boundaries</span><span class="p">(</span><span class="n">min_conv</span><span class="p">,</span> <span class="n">max_conv</span><span class="p">,</span> <span class="n">conv_lists</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Progress of optimization:&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Create an array of conversion levels to sample</span>
+    <span class="n">conv_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">min_conv</span><span class="p">,</span> <span class="n">max_conv</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">number_of_points</span><span class="p">))</span>
+    
+    <span class="c1"># Create an empty array to store the activation energies obtained after optimization</span>
+    <span class="n">Ea_calculated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">number_of_points</span><span class="p">))</span>
+    
+    <span class="c1"># Initialize initial_guess</span>
+    <span class="n">current_guess</span> <span class="o">=</span> <span class="n">initial_guess</span>
+
+    <span class="c1"># Iterates through conv_values while displaying a progress bar</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">conv_value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">conv_values</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">100</span><span class="p">)):</span>
+        <span class="c1"># Extract conversion, time, and temperature required to compute the integrals J</span>
+        <span class="n">conv</span><span class="p">,</span> <span class="n">time_</span><span class="p">,</span> <span class="n">temperature</span> <span class="o">=</span> <span class="n">get_data_at_conversion</span><span class="p">(</span><span class="n">conv_value</span><span class="p">,</span> <span class="n">conv_lists</span><span class="p">,</span> <span class="n">time_lists</span><span class="p">,</span> <span class="n">temperature_lists</span><span class="p">)</span>
+
+        <span class="c1"># Perform minimization of function described in the article using BFGS method</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">compute_function_to_minimize</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">current_guess</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">time_</span><span class="p">,</span> <span class="n">temperature</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;BFGS&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;gtol&#39;</span><span class="p">:</span> <span class="mf">1e-15</span><span class="p">})</span>
+
+        <span class="c1"># Store the calculated activation energy</span>
+        <span class="n">Ea_calculated</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span>
+
+        <span class="c1"># Update the current_guess for the next optimization step</span>
+        <span class="n">current_guess</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span>
+
+    <span class="n">t_stop</span> <span class="o">=</span> <span class="n">time_module</span><span class="o">.</span><span class="n">process_time</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done! It took&quot;</span><span class="p">,</span> <span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">,</span> <span class="s2">&quot;s for the optimization to be performed&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">conv_values</span><span class="p">,</span> <span class="n">Ea_calculated</span></div>
+
+
+
+
+
+
+
+
+<div class="viewcode-block" id="isoconversional_analysis_advanced_vyazovkin_method">
+<a class="viewcode-back" href="../isoconversional_methods.html#isoconversional_methods.isoconversional_analysis_advanced_vyazovkin_method">[docs]</a>
+<span class="k">def</span> <span class="nf">isoconversional_analysis_advanced_vyazovkin_method</span><span class="p">(</span><span class="n">conv_lists</span><span class="p">,</span> <span class="n">time_lists</span><span class="p">,</span> <span class="n">temperature_lists</span><span class="p">,</span> <span class="n">initial_guess</span><span class="p">,</span> <span class="n">min_conv</span><span class="p">,</span> <span class="n">max_conv</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the energy of activation for multiple conversions using the advanced Vyazovkin method with a Broyden-Fletcher-Goldfarb-Shanno algorithm to find the optimal Ea.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    conv_lists : list of numpy.ndarray</span>
+<span class="sd">        List containing a list of evolution of conversion for various heating rates (n, m) with n the number of heating rates and m the number of conversion points.</span>
+<span class="sd">    time_lists : list of numpy.ndarray</span>
+<span class="sd">        List containing a list of evolution of time for various heating rates (n, m) with n the number of heating rates and m the number of time points.</span>
+<span class="sd">    temperature_lists : list of numpy.ndarray</span>
+<span class="sd">        List containing a list of evolution of temperature for various heating rates (n, m) with n the number of heating rates and m the number of temperature points.</span>
+<span class="sd">    initial_guess : float</span>
+<span class="sd">        Initial guess of the activation energy for the first desired conversion.</span>
+<span class="sd">    min_conv : float</span>
+<span class="sd">        Minimum conversion at which the activation energy will be computed.</span>
+<span class="sd">    max_conv : float</span>
+<span class="sd">        Maximum conversion at which the activation energy will be computed.</span>
+<span class="sd">    number_of_points : int</span>
+<span class="sd">        Number of conversion points at which the activation energy will be computed.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    conv_values : numpy.ndarray</span>
+<span class="sd">        Array containing conversion points at which activation energy was assessed.</span>
+<span class="sd">    Ea_calculated : list</span>
+<span class="sd">        List containing assessed activation energy.</span>
+<span class="sd">    average_time_at_calculation_point : list</span>
+<span class="sd">        List containing the average time of all heating programs at the conversion points at which activation energy was assessed.</span>
+<span class="sd">    average_temperature_at_calculation_point : list</span>
+<span class="sd">        List containing the average temperature of all heating programs at the conversion points at which activation energy was assessed.</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">        It is crucial to provide interpolated data based on the conversion for stability. Without interpolation,</span>
+<span class="sd">        this method may produce unreliable results.</span>
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] S. Vyazovkin, « Modification of the integral isoconversional method to account for variation in the activation energy », Journal of Computational Chemistry, vol. 22, nᵒ 2, p. 178‑183, 2001, doi: 10.1002/1096-987X(20010130)22:2&lt;178::AID-JCC5&gt;3.0.CO;2-#.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t_start</span> <span class="o">=</span> <span class="n">time_module</span><span class="o">.</span><span class="n">process_time</span><span class="p">()</span>
+    
+    <span class="c1"># Check boundaries and data integrity</span>
+    <span class="n">check_boundaries</span><span class="p">(</span><span class="n">min_conv</span><span class="p">,</span> <span class="n">max_conv</span><span class="p">,</span> <span class="n">conv_lists</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Progress of optimization:&quot;</span><span class="p">)</span>
+    <span class="n">conv_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">min_conv</span><span class="p">,</span> <span class="n">max_conv</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">number_of_points</span><span class="p">))</span>
+    <span class="n">Ea_calculated</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">average_time_at_calculation_point</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">average_temperature_at_calculation_point</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1"># Separate data into intervals</span>
+    <span class="n">conversions_intervals</span><span class="p">,</span> <span class="n">times_intervals</span><span class="p">,</span> <span class="n">temperatures_intervals</span> <span class="o">=</span> <span class="n">get_data_in_interval</span><span class="p">(</span><span class="n">conv_lists</span><span class="p">,</span> <span class="n">time_lists</span><span class="p">,</span> <span class="n">temperature_lists</span><span class="p">,</span> <span class="n">conv_values</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">conv_values</span><span class="p">)),</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="c1"># Get the experimental data for the computation of the function to minimize</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="n">heating_rate</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">heating_rate</span> <span class="ow">in</span> <span class="n">times_intervals</span><span class="p">]</span>
+        <span class="n">temperatures</span> <span class="o">=</span> <span class="p">[</span><span class="n">heating_rate</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">heating_rate</span> <span class="ow">in</span> <span class="n">temperatures_intervals</span><span class="p">]</span>
+        
+        <span class="n">result</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">compute_function_to_minimize</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">initial_guess</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">times</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;BFGS&#39;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;gtol&#39;</span><span class="p">:</span> <span class="mf">1e-15</span><span class="p">})</span>
+
+        <span class="n">Ea_calculated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">t_stop</span> <span class="o">=</span> <span class="n">time_module</span><span class="o">.</span><span class="n">process_time</span><span class="p">()</span>
+    
+    <span class="c1"># Calculate average time and temperature at each calculation point</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">temperatures_intervals</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="n">time_sum</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">temp_sum</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">temperatures_intervals</span><span class="p">)):</span>
+            <span class="n">time_sum</span> <span class="o">+=</span> <span class="n">times_intervals</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">temp_sum</span> <span class="o">+=</span> <span class="n">temperatures_intervals</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">average_time_at_calculation_point</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time_sum</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">temperatures_intervals</span><span class="p">))</span>
+        <span class="n">average_temperature_at_calculation_point</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp_sum</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">temperatures_intervals</span><span class="p">))</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done! It took &quot;</span><span class="p">,</span> <span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">,</span> <span class="s2">&quot;s for the optimization to be performed&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">conv_values</span><span class="p">,</span> <span class="n">Ea_calculated</span><span class="p">,</span> <span class="n">average_time_at_calculation_point</span><span class="p">,</span> <span class="n">average_temperature_at_calculation_point</span></div>
+
+
+
+
+<div class="viewcode-block" id="isoconversional_analysis_friedman_method">
+<a class="viewcode-back" href="../isoconversional_methods.html#isoconversional_methods.isoconversional_analysis_friedman_method">[docs]</a>
+<span class="k">def</span> <span class="nf">isoconversional_analysis_friedman_method</span><span class="p">(</span><span class="n">conv_lists</span><span class="p">,</span> <span class="n">rate_lists</span><span class="p">,</span> <span class="n">temperature_lists</span><span class="p">,</span> <span class="n">min_conv</span><span class="p">,</span> <span class="n">max_conv</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    conv_lists : list of numpy.ndarray</span>
+<span class="sd">        List containing a list of evolution of conversion for various heating rates (n, m) with n the number of heating rates and m the number of conversion points.</span>
+<span class="sd">    rate_lists : list of numpy.ndarray</span>
+<span class="sd">        List containing a list of evolution of temperature for various heating rates (n, m) with n the number of heating rates and m the number of temperature points.</span>
+<span class="sd">    temperature_lists : list of numpy.ndarray</span>
+<span class="sd">        List containing a list of evolution of temperature for various heating rates (n, m) with n the number of heating rates and m the number of temperature points.</span>
+<span class="sd">    min_conv : Float</span>
+<span class="sd">        Minimum conversion at which the activation energy will be computed.</span>
+<span class="sd">    max_conv : Float</span>
+<span class="sd">        Maximum conversion at which the activation energy will be computed.</span>
+<span class="sd">    number_of_points : Float</span>
+<span class="sd">        Number of conversion points at which the activation energy will be computed. </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    conv_list : List</span>
+<span class="sd">        List containing conversion points at which activation energy was assessed.</span>
+<span class="sd">    Ea_calculated : List</span>
+<span class="sd">        List containing assessed activation energy.</span>
+<span class="sd">    Intercept : List</span>
+<span class="sd">        List containing the intercept from the linear regressions </span>
+<span class="sd">        of ln(dx/dt) as function of 1/T.</span>
+<span class="sd">        </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] N. Sbirrazzuoli, « Is the Friedman Method Applicable to Transformations with Temperature Dependent Reaction Heat? », Macromolecular Chemistry and Physics, vol. 208, nᵒ 14, p. 1592‑1597, 2007, doi: 10.1002/macp.200700100.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>  
+    <span class="n">t_start</span> <span class="o">=</span> <span class="n">time_module</span><span class="o">.</span><span class="n">process_time</span><span class="p">()</span>
+    
+    <span class="c1"># Check boundaries and data integrity</span>
+    <span class="n">check_boundaries</span><span class="p">(</span><span class="n">min_conv</span><span class="p">,</span> <span class="n">max_conv</span><span class="p">,</span> <span class="n">conv_lists</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Progress of optimization:&quot;</span><span class="p">)</span>
+    
+    <span class="n">conv_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">min_conv</span><span class="p">,</span> <span class="n">max_conv</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">number_of_points</span><span class="p">))</span>  <span class="c1">#Creates the list of conversion points at which the activation energy will be computed</span>
+    <span class="n">Ea_calculated</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">intercept</span><span class="o">=</span><span class="p">[]</span>
+    
+    
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">conv_list</span><span class="p">)),</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="n">one_over_T</span><span class="o">=</span><span class="p">[]</span>
+        <span class="n">rate</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">conv_lists</span><span class="p">)):</span>
+            <span class="n">index</span><span class="p">,</span><span class="n">value</span><span class="o">=</span><span class="n">find_closest_value</span><span class="p">(</span><span class="n">conv_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">conv_lists</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+            <span class="n">one_over_T</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">temperature_lists</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">index</span><span class="p">])</span>
+            <span class="n">rate</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rate_lists</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">linregress</span><span class="p">(</span><span class="n">one_over_T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rate</span><span class="p">))</span>
+        <span class="n">Ea_calculated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">slope</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="mf">8.314</span><span class="p">))</span>
+        <span class="n">intercept</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">intercept</span><span class="p">)</span>
+    
+    
+    <span class="n">t_stop</span> <span class="o">=</span> <span class="n">time_module</span><span class="o">.</span><span class="n">process_time</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done! It took &quot;</span><span class="p">,</span> <span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">,</span> <span class="s2">&quot;s for the analysis to be performed&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">conv_list</span><span class="p">,</span> <span class="n">Ea_calculated</span><span class="p">,</span> <span class="n">intercept</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>   
+    
+    <span class="kn">import</span> <span class="nn">kinetic_models</span> <span class="k">as</span> <span class="nn">km</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="kn">import</span> <span class="nn">interpolation</span> <span class="k">as</span> <span class="nn">interp</span>
+    <span class="n">color_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tab:blue&#39;</span><span class="p">,</span> <span class="s1">&#39;tab:orange&#39;</span><span class="p">,</span> <span class="s1">&#39;tab:green&#39;</span><span class="p">,</span> <span class="s1">&#39;tab:red&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;tab:purple&#39;</span><span class="p">,</span> <span class="s1">&#39;tab:brown&#39;</span><span class="p">,</span> <span class="s1">&#39;tab:pink&#39;</span><span class="p">,</span> <span class="s1">&#39;tab:grey&#39;</span><span class="p">,</span> <span class="s1">&#39;tab:olive&#39;</span><span class="p">,</span> <span class="s1">&#39;tab:cyan&#39;</span><span class="p">]</span>
+    <span class="n">linestyle</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dashed&#39;</span><span class="p">,</span> <span class="p">]</span>
+    <span class="n">marker</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;o&#39;</span><span class="p">]</span>
+    
+
+    <span class="n">number_of_points</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="n">time_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">)</span>  <span class="c1"># 30 minutes</span>
+    <span class="n">time_lists</span> <span class="o">=</span> <span class="p">[</span><span class="n">time_list</span><span class="p">,</span> <span class="n">time_list</span><span class="p">,</span> <span class="n">time_list</span><span class="p">,</span> <span class="n">time_list</span><span class="p">]</span>
+    <span class="n">temperatures</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">293</span><span class="p">,</span> <span class="mi">443</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">),</span>  <span class="c1"># 5°C/min</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">293</span><span class="p">,</span> <span class="mi">593</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">),</span>  <span class="c1"># 10°C/min</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">293</span><span class="p">,</span> <span class="mi">743</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">),</span>  <span class="c1"># 15°C/min</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">293</span><span class="p">,</span> <span class="mi">893</span><span class="p">,</span> <span class="n">number_of_points</span><span class="p">)]</span>  <span class="c1"># 20°C/min</span>
+    <span class="n">A1</span> <span class="o">=</span> <span class="mf">1e10</span>
+    <span class="n">E1</span> <span class="o">=</span> <span class="mi">70000</span>
+    <span class="n">A2</span> <span class="o">=</span> <span class="mf">1e13</span>
+    <span class="n">E2</span> <span class="o">=</span> <span class="mi">85000</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="mf">0.45</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+    
+    <span class="n">conversions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">rates</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">time_lists</span><span class="p">)):</span>
+        <span class="n">extent</span><span class="p">,</span> <span class="n">rate</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">km</span><span class="o">.</span><span class="n">compute_extent_and_rate</span><span class="p">(</span><span class="n">time_lists</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> 
+                                                           <span class="n">temperatures</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                                           <span class="n">rate_law</span><span class="o">=</span><span class="n">km</span><span class="o">.</span><span class="n">rate_for_kamal</span><span class="p">,</span>
+                                                           <span class="n">rate_law_args</span><span class="o">=</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span><span class="n">E1</span><span class="p">,</span><span class="n">A2</span><span class="p">,</span><span class="n">E2</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">conversions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extent</span><span class="p">)</span>
+        <span class="n">rates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span>
+
+    
+    <span class="n">linear_conversions</span><span class="p">,</span> <span class="n">linear_times</span><span class="p">,</span> <span class="n">linear_temperatures</span><span class="p">,</span> <span class="n">linear_rates</span> <span class="o">=</span> <span class="n">interp</span><span class="o">.</span><span class="n">linear_interpolation</span><span class="p">(</span><span class="n">conversions</span><span class="p">,</span><span class="n">time_lists</span><span class="p">,</span><span class="n">temperatures</span><span class="p">,</span><span class="n">rates</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
+
+    
+    
+
+    
+    <span class="n">conv_friedman</span><span class="p">,</span> <span class="n">Ea_friedman</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">isoconversional_analysis_friedman_method</span><span class="p">(</span><span class="n">linear_conversions</span><span class="p">,</span> 
+                                                                             <span class="n">linear_rates</span><span class="p">,</span> 
+                                                                             <span class="n">linear_temperatures</span><span class="p">,</span>
+                                                                             <span class="mf">0.01</span><span class="p">,</span>
+                                                                             <span class="mf">0.99</span><span class="p">,</span>
+                                                                             <span class="mi">100</span><span class="p">)</span>
+
+
+
+
+    <span class="n">conv_vyazovkin</span><span class="p">,</span> <span class="n">Ea_vyazovkin</span> <span class="o">=</span> <span class="n">isoconversional_analysis_vyazovkin_method</span><span class="p">(</span><span class="n">linear_conversions</span><span class="p">,</span> 
+                                                                             <span class="n">linear_rates</span><span class="p">,</span> 
+                                                                             <span class="n">linear_temperatures</span><span class="p">,</span>
+                                                                             <span class="mi">50000</span><span class="p">,</span>
+                                                                             <span class="mf">0.01</span><span class="p">,</span>
+                                                                             <span class="mf">0.99</span><span class="p">,</span>
+                                                                             <span class="mi">100</span><span class="p">)</span>
+
+    <span class="n">conv_advanced_vyazovkin</span><span class="p">,</span> <span class="n">Ea_advanced_vyazovkin</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">isoconversional_analysis_advanced_vyazovkin_method</span><span class="p">(</span><span class="n">linear_conversions</span><span class="p">,</span> 
+                                                                                                            <span class="n">linear_rates</span><span class="p">,</span> 
+                                                                                                            <span class="n">linear_temperatures</span><span class="p">,</span>
+                                                                                                            <span class="mi">50000</span><span class="p">,</span>
+                                                                                                            <span class="mf">0.01</span><span class="p">,</span>
+                                                                                                            <span class="mf">0.99</span><span class="p">,</span>
+                                                                                                            <span class="mi">250</span><span class="p">)</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">linear_times</span><span class="p">)):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">linear_times</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">linear_rates</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    
+    
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">conv_friedman</span><span class="p">,</span><span class="n">Ea_friedman</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Friedman method&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">conv_vyazovkin</span><span class="p">,</span> <span class="n">Ea_vyazovkin</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Vyazovkin method&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">conv_advanced_vyazovkin</span><span class="p">,</span> <span class="n">Ea_advanced_vyazovkin</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Advanced Vyazovkin method&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+    
+   
+
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Alan Tabore.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

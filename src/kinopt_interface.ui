@@ -1,0 +1,1273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1181</width>
+    <height>911</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>KinOpt</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../ressources/ressources.qrc">
+    <normaloff>:/Logos/Logos/logo_no_background_with_outline.png</normaloff>:/Logos/Logos/logo_no_background_with_outline.png</iconset>
+  </property>
+  <property name="iconSize">
+   <size>
+    <width>40</width>
+    <height>40</height>
+   </size>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_6">
+    <item>
+     <widget class="QWidget" name="widget_output_of_optimization" native="true">
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <widget class="QWidget" name="widget_output_of_optimization_window_title" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <spacer name="horizontalSpacer_output_of_optimization">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_output_of_optimization">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Output of optimization</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_output_of_optimization_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="textEdit_output_of_optimization">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>150</height>
+          </size>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QProgressBar" name="progressBar">
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="textVisible">
+          <bool>true</bool>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="invertedAppearance">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_remaing_time">
+         <property name="text">
+          <string>Estimated remaining time: (No optimization running)</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="widget_visualization" native="true">
+      <layout class="QVBoxLayout" name="verticalLayout_8">
+       <item>
+        <widget class="QWidget" name="widget_visualization_window_title" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_9">
+          <item>
+           <spacer name="horizontalSpacer_visualization">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_visualization">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Visualization</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_visualization_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTabWidget" name="tabWidget_visualization">
+         <property name="minimumSize">
+          <size>
+           <width>400</width>
+           <height>400</height>
+          </size>
+         </property>
+         <property name="tabShape">
+          <enum>QTabWidget::Rounded</enum>
+         </property>
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+         <property name="movable">
+          <bool>false</bool>
+         </property>
+         <widget class="QWidget" name="tab_data_extraction_visualization">
+          <attribute name="title">
+           <string>Data extraction</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_data_extraction_visualization">
+           <item>
+            <widget class="QStackedWidget" name="stackedWidget_data_extraction">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="currentIndex">
+              <number>2</number>
+             </property>
+             <widget class="QWidget" name="page_data_extraction_rate">
+              <layout class="QVBoxLayout" name="verticalLayout_data_extraction_rate"/>
+             </widget>
+             <widget class="QWidget" name="page_data_extraction_extent">
+              <layout class="QVBoxLayout" name="verticalLayout_data_extraction_extent"/>
+             </widget>
+             <widget class="QWidget" name="page_data_extraction_temperature">
+              <layout class="QVBoxLayout" name="verticalLayout_data_extraction_temperature"/>
+             </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="widget_buttons_selection_data_extraction" native="true">
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <widget class="QPushButton" name="pushButton_data_extraction_rate">
+                <property name="text">
+                 <string>Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_data_extraction_extent">
+                <property name="text">
+                 <string>Extent</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_data_extraction_temperature">
+                <property name="text">
+                 <string>Temperature</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab_isoconversional_analysis_visualization">
+          <attribute name="title">
+           <string>Isoconversional analysis</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_16">
+           <item>
+            <widget class="QWidget" name="widget_isoconversional_analysis_visualization" native="true">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_isoconversional_analysis"/>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab_optimization_visualization">
+          <attribute name="title">
+           <string>Optimization</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_17">
+           <item>
+            <widget class="QWidget" name="widget_optimization_visualization" native="true">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_optimization"/>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab_results_viewer_visualization">
+          <attribute name="title">
+           <string>Result file</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_15">
+           <item>
+            <widget class="QStackedWidget" name="stackedWidget_results_viewer">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="page_results_viewer_rate">
+              <layout class="QVBoxLayout" name="verticalLayout_results_viewer_rate"/>
+             </widget>
+             <widget class="QWidget" name="page_results_viewer_extent">
+              <layout class="QVBoxLayout" name="verticalLayout_results_viewer_extent"/>
+             </widget>
+             <widget class="QWidget" name="page_results_viewer_temperature">
+              <layout class="QVBoxLayout" name="verticalLayout_results_viewer_temperature"/>
+             </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="widget_buttons_selection_results_viewer" native="true">
+             <layout class="QHBoxLayout" name="horizontalLayout_11">
+              <item>
+               <widget class="QPushButton" name="pushButton_results_viewer_rate">
+                <property name="text">
+                 <string>Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_results_viewer_extent">
+                <property name="text">
+                 <string>Extent</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_results_viewer_temperature">
+                <property name="text">
+                 <string>Temperature</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QDockWidget" name="dockWidgetData_extraction">
+   <property name="minimumSize">
+    <size>
+     <width>352</width>
+     <height>281</height>
+    </size>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <property name="windowTitle">
+    <string>Data extraction</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetOpenFileContents">
+    <layout class="QVBoxLayout" name="verticalLayout_9">
+     <item>
+      <widget class="QWidget" name="widget_table_view_files" native="true">
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <item>
+         <widget class="QListView" name="listView_files">
+          <property name="toolTip">
+           <string>List of all the files to use.</string>
+          </property>
+          <property name="dragEnabled">
+           <bool>false</bool>
+          </property>
+          <property name="dragDropOverwriteMode">
+           <bool>false</bool>
+          </property>
+          <property name="dragDropMode">
+           <enum>QAbstractItemView::NoDragDrop</enum>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>false</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::MultiSelection</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget_button_files" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_11">
+           <item>
+            <spacer name="verticalSpacer_data_extraction_1">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_add_files">
+             <property name="text">
+              <string>Add file(s)</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../ressources/ressources.qrc">
+               <normaloff>:/Icons/Icons/folder.png</normaloff>:/Icons/Icons/folder.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>30</width>
+               <height>30</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_clear_all_files">
+             <property name="text">
+              <string>Clear all files</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../ressources/ressources.qrc">
+               <normaloff>:/Icons/Icons/file_clean.png</normaloff>:/Icons/Icons/file_clean.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>30</width>
+               <height>30</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_data_extraction_2">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QWidget" name="widget_data_extraction" native="true">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>140</height>
+        </size>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QWidget" name="widget_data_extraction_options" native="true">
+          <layout class="QFormLayout" name="formLayout">
+           <property name="sizeConstraint">
+            <enum>QLayout::SetMinimumSize</enum>
+           </property>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_numbers_of_lines_to_skip">
+             <property name="text">
+              <string>Number of lines to skip:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_delimiter">
+             <property name="text">
+              <string>Delimiter:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="checkBox_file_has_headers">
+             <property name="text">
+              <string>File has headers</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="lineEdit_number_of_lines_to_skip">
+             <property name="toolTip">
+              <string>(If &quot;file has headers&quot; is selected, the number of lines to skip must not include the header line.)</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="lineEdit_delimiter">
+             <property name="toolTip">
+              <string>(for tab separator, indicate 'tab' or '\t')</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget_data_extraction_buttons" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_10">
+           <item>
+            <spacer name="verticalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_extract_data">
+             <property name="text">
+              <string>Extract data</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../ressources/ressources.qrc">
+               <normaloff>:/Icons/Icons/analyzing.png</normaloff>:/Icons/Icons/analyzing.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>30</width>
+               <height>30</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_5">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dockWidgetIsoconversionalAnalysis">
+   <property name="minimumSize">
+    <size>
+     <width>359</width>
+     <height>173</height>
+    </size>
+   </property>
+   <property name="windowTitle">
+    <string>Isoconversional analysis</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_IsoconversionalAnalysis">
+    <layout class="QVBoxLayout" name="verticalLayout_12">
+     <item>
+      <widget class="QWidget" name="widget_IsoconversionalAnalysisMethods" native="true">
+       <layout class="QVBoxLayout" name="isoconversional_method_layout">
+        <item>
+         <widget class="QLabel" name="label_IsoconversionalAnalysisMethods">
+          <property name="text">
+           <string>Isoconversional methods:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="comboBox_isoconversional_analysis_methods"/>
+        </item>
+        <item>
+         <layout class="QFormLayout" name="formLayout_isoconversional_analysis"/>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QWidget" name="widget_IsoconversionalAnalysisButtons" native="true">
+       <layout class="QHBoxLayout" name="horizontalLayout_8">
+        <item>
+         <widget class="QPushButton" name="pushButton_autofill_isoconversional">
+          <property name="text">
+           <string>Autofill</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_clear_isoconversional">
+          <property name="text">
+           <string>Clear</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_launch_isoconversional_analysis">
+          <property name="text">
+           <string>Launch Isoconversional analysis</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dockWidgetOptimization">
+   <property name="minimumSize">
+    <size>
+     <width>110</width>
+     <height>192</height>
+    </size>
+   </property>
+   <property name="windowTitle">
+    <string>Optimization</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_Optimization">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QToolBox" name="toolBox_models_and_optimization_parameters">
+       <property name="frameShape">
+        <enum>QFrame::NoFrame</enum>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="page_models_and_parameters">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>192</width>
+          <height>747</height>
+         </rect>
+        </property>
+        <attribute name="label">
+         <string>Models and parameters</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QScrollArea" name="scrollArea_models_and_parameters">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="widgetResizable">
+            <bool>true</bool>
+           </property>
+           <widget class="QWidget" name="scrollAreaWidgetContents_models_and_parameters">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>172</width>
+              <height>680</height>
+             </rect>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <item>
+              <widget class="QLabel" name="label_rate_model">
+               <property name="text">
+                <string>Rate model:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboBox_rate_model"/>
+             </item>
+             <item>
+              <layout class="QFormLayout" name="formLayout_rate"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_vitrification_model">
+               <property name="text">
+                <string>Vitrification model:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboBox_vitrification_model"/>
+             </item>
+             <item>
+              <layout class="QFormLayout" name="formLayout_vitrification"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_coupling_law">
+               <property name="text">
+                <string>Coupling law:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboBox_coupling_law"/>
+             </item>
+             <item>
+              <layout class="QFormLayout" name="formLayout_coupling_law"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_tg_law">
+               <property name="text">
+                <string>Tg law:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboBox_tg_law"/>
+             </item>
+             <item>
+              <layout class="QFormLayout" name="formLayout_tg"/>
+             </item>
+             <item>
+              <spacer name="verticalSpacer">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_models_and_parameters_buttons" native="true">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QPushButton" name="pushButton_autofill_models_and_parameters">
+              <property name="text">
+               <string>Autofill</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_clear_models_and_parameters">
+              <property name="text">
+               <string>Clear</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="page_optimization_methods_and_parameters">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>192</width>
+          <height>260</height>
+         </rect>
+        </property>
+        <attribute name="label">
+         <string>Optimization method and parameters</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QScrollArea" name="scrollArea_optimization_methods">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>195</height>
+            </size>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="widgetResizable">
+            <bool>true</bool>
+           </property>
+           <widget class="QWidget" name="scrollAreaWidgetContents_optimization_methods">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>150</width>
+              <height>177</height>
+             </rect>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0,0,0,0,0,0,0,0,0">
+             <item>
+              <widget class="QLabel" name="label_global_optimization_methods">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>13</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Global optimization method:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboBox_global_optimization_methods"/>
+             </item>
+             <item>
+              <layout class="QGridLayout" name="gridLayout_global_optimization"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_local_optimization_methods">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>13</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Local optimization method:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboBox_local_optimization_methods"/>
+             </item>
+             <item>
+              <layout class="QGridLayout" name="gridLayout_local_optimization"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_cost_functions">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>13</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Cost function</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboBox_cost_functions"/>
+             </item>
+             <item>
+              <layout class="QGridLayout" name="gridLayout_cost_functions"/>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_optimization_methods_buttons" native="true">
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <widget class="QPushButton" name="pushButton_autofill_optimization">
+              <property name="text">
+               <string>Autofill</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_clear_optimization">
+              <property name="text">
+               <string>Clear</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_launch_optimization">
+       <property name="text">
+        <string>Start optimization</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1181</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <widget class="QMenu" name="menuPanes">
+     <property name="title">
+      <string>Panes</string>
+     </property>
+     <addaction name="actionData_extraction"/>
+     <addaction name="actionIsoconversional_analysis"/>
+     <addaction name="actionOptimization"/>
+     <addaction name="actionResults_viewer"/>
+    </widget>
+    <addaction name="menuPanes"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuView"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QDockWidget" name="dockWidgetResultsViewer">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="windowTitle">
+    <string>Results viewer</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_ResultsViewer">
+    <layout class="QVBoxLayout" name="verticalLayout_13">
+     <item>
+      <widget class="QWidget" name="widget_result_files" native="true">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QListView" name="listView_result_files">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget_results_viewer_buttons" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_22">
+           <item>
+            <widget class="QPushButton" name="pushButton_load_result_files">
+             <property name="text">
+              <string>Load result file(s)</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../ressources/ressources.qrc">
+               <normaloff>:/Icons/Icons/folder.png</normaloff>:/Icons/Icons/folder.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>30</width>
+               <height>30</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_clear_result_files">
+             <property name="text">
+              <string>Clear all files</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../ressources/ressources.qrc">
+               <normaloff>:/Icons/Icons/file_clean.png</normaloff>:/Icons/Icons/file_clean.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>30</width>
+               <height>30</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_display_result_files">
+             <property name="text">
+              <string>Display selected result file</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../ressources/ressources.qrc">
+               <normaloff>:/Icons/Icons/line-chart.png</normaloff>:/Icons/Icons/line-chart.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>30</width>
+               <height>30</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QWidget" name="widget_result_file_content" native="true">
+       <layout class="QVBoxLayout" name="verticalLayout_14">
+        <item>
+         <widget class="QLabel" name="label_result_file">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Result file:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTextEdit" name="textEdit_result_file_content">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <action name="actionKinOpt_documentation">
+   <property name="text">
+    <string>KinOpt documentation</string>
+   </property>
+  </action>
+  <action name="actionScipy_documentation">
+   <property name="text">
+    <string>Scipy documentation</string>
+   </property>
+  </action>
+  <action name="actionData_extraction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Data extraction</string>
+   </property>
+  </action>
+  <action name="actionIsoconversional_analysis">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Isoconversional analysis</string>
+   </property>
+  </action>
+  <action name="actionOptimization">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Optimization</string>
+   </property>
+  </action>
+  <action name="actionDocumentation">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Documentation</string>
+   </property>
+  </action>
+  <action name="actionResults_viewer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Results viewer</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../ressources/ressources.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actionData_extraction</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>dockWidgetData_extraction</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>192</x>
+     <y>292</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionOptimization</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>dockWidgetOptimization</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>977</x>
+     <y>295</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionIsoconversional_analysis</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>dockWidgetIsoconversionalAnalysis</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>192</x>
+     <y>716</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_launch_isoconversional_analysis</sender>
+   <signal>clicked()</signal>
+   <receiver>widget_isoconversional_analysis_visualization</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>289</x>
+     <y>689</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>620</x>
+     <y>660</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_extract_data</sender>
+   <signal>clicked()</signal>
+   <receiver>stackedWidget_data_extraction</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>309</x>
+     <y>483</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>620</x>
+     <y>637</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_launch_optimization</sender>
+   <signal>clicked()</signal>
+   <receiver>widget_optimization_visualization</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>980</x>
+     <y>548</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>620</x>
+     <y>660</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kinopt"
+version = "1.0"
+dynamic = ["version"]
+dependencies = [
+  "matplotlib",
+  "numpy",
+  "PyQt5",
+  "PyQt5-Qt5",
+  "PyQt5-sip",
+  "QtPy",
+  "scipy",
+  "tqdm",
+]
+requires-python = ">= 3.9"
+authors = [{name = "Alan Tabore", email = "alan.tabore@gmail.com"}]
+description = "KinOpt - A Kinetics Optimization Software"
+readme = "README.md"
+license = {file = "LICENSE"}
