@@ -7,7 +7,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.abspath("../../"))
-sys.path.insert(0, os.path.abspath("../../src"))
+sys.path.insert(0, os.path.abspath("../../kinopt/src"))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -41,6 +41,6 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
-html_logo = '../../ressources/Logos/logo_no_background_with_outline.png'
-html_favicon = '../../ressources/Logos/logo_no_background_with_outline.ico'
+html_logo = '../../kinopt/ressources/Logos/logo_no_background_with_outline.png'
+html_favicon = '../../kinopt/ressources/Logos/logo_no_background_with_outline.ico'
 
