@@ -5,7 +5,6 @@ build-backend = "hatchling.build"
 [project]
 name = "kinopt"
 version = "1.0"
-dynamic = ["version"]
 dependencies = [
   "matplotlib",
   "numpy",
