@@ -407,6 +407,6 @@ FodyWeavers.xsd
 .pylint.d/GUI1.stats
 .spyproject/config/workspace-Alanou.ini
 .vscode/settings.json
-data/*.txt
-data/*.csv
-results/*.txt
+kinopt/data/*.txt
+kinopt/data/*.csv
+kinopt/results/*.txt
