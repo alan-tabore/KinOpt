@@ -41,9 +41,9 @@ def extract_dsc_data_multiple_files(file_paths, delimiter=',', has_header=False,
         for file_path in file_paths:
             # Load data from the file
             if has_header:
-                data = np.loadtxt(file_path, delimiter=delimiter, skiprows=1 + skip_lines)  # Skip the header and specified lines
+                data = np.genfromtxt(file_path, delimiter=delimiter, skip_header=1 + skip_lines)  # Skip the header and specified lines
             else:
-                data = np.loadtxt(file_path, delimiter=delimiter, skiprows=skip_lines)
+                data = np.genfromtxt(file_path, delimiter=delimiter, skip_header=skip_lines)
             
             # Separate columns from the data
             time = data[:, 0]
