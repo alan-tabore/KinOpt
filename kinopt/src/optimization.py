@@ -111,7 +111,7 @@ def rss_mean(x, experimental_rate, rate_law, experimental_args_for_rate, number_
     r"""
     Calculate the mean squared error.
     
-    .. math:: \overline{RSS}= \frac{\sum (y_{exp_{i}}-f(x_i))^2}{n}
+    .. math:: \overline{RSS}= \frac{\sum (f(x_i)-y_{exp_{i}})^2}{n}
     
     with :math:`y_{exp_{i}}` the i-th value of experimental rate and :math:`f(x_i)` the value of rate computed using the given kinetic model :math:`f` and the i-th parameter vector :math:`x_i` and :math:`n` the number of points.
     
@@ -154,6 +154,53 @@ def rss_mean(x, experimental_rate, rate_law, experimental_args_for_rate, number_
     dif = model_rate - experimental_rate
     # Calculate the RSS by summing the squared differences
     return np.dot(dif, dif)/len(dif)
+
+def rss_relative(x, experimental_rate, rate_law, experimental_args_for_rate, number_of_parameters_to_optimize_for_rate, vitrification_law, experimental_args_for_vitrification, number_of_parameters_to_optimize_for_vitrification, coupling_law, experimental_args_for_coupling, tg_law, experimental_args_for_tg, tg_args):
+    r"""
+    Compute the cost function based on the relaitve difference between the experimental rate and model rate.
+    
+    .. math:: Cost = \sum \left( \frac{f(x_i) - y_{\text{exp}_i}}{y_{\text{exp}_i}} \right)^2
+    
+    with :math:`y_{exp_{i}}` the i-th value of experimental rate and :math:`f(x_i)` the value of rate computed using the given kinetic model :math:`f` and the i-th parameter vector :math:`x_i`.
+    
+    Parameters
+    ----------
+    x : array-like
+        Vector with parameter values to optimize for the kinetic model.
+    experimental_rate : array-like
+        Experimental reaction rate data.
+    rate_law : function
+        The rate law function for the reaction.
+    experimental_args_for_rate : tuple
+        Experimental arguments for the rate law function.
+    number_of_parameters_to_optimize_for_rate : int
+        Number of parameters to optimize for the rate law.
+    vitrification_law : function
+        The vitrification law function.
+    experimental_args_for_vitrification : tuple
+        Experimental arguments for the vitrification law function.
+    tg_law : function
+        The glass transition temperature (tg) law function.
+    experimental_args_for_tg : tuple
+        Experimental arguments for the tg law function.
+    tg_args : tuple
+        Additional arguments for the tg law function.
+    coupling_law_for_reaction_and_vitrification : function
+        The coupling law for reaction and vitrification.
+    coupling_law_for_reaction_and_vitrification_args : tuple
+        Additional arguments for the coupling law function.
+
+    Returns
+    -------
+    rss : float
+        Residual sum of squares (RSS).
+    """
+    # Calculate model rate using the defined model function
+    model_rate = model(x, rate_law, experimental_args_for_rate, number_of_parameters_to_optimize_for_rate, vitrification_law, experimental_args_for_vitrification, number_of_parameters_to_optimize_for_vitrification, coupling_law, experimental_args_for_coupling, tg_law, experimental_args_for_tg, tg_args)
+    # Calculate the difference between model rate and experimental rate
+    dif = (model_rate - experimental_rate)/experimental_rate
+    # Calculate the RSS by summing the squared differences
+    return np.dot(dif, dif)
 
 def rss_increase_of_small_extents_impact(x, experimental_rate, rate_law, experimental_args_for_rate, number_of_parameters_to_optimize_for_rate, vitrification_law, experimental_args_for_vitrification, number_of_parameters_to_optimize_for_vitrification, coupling_law, experimental_args_for_coupling, tg_law, experimental_args_for_tg, tg_args, extent, extent_limit, amplification_factor):
     r"""
