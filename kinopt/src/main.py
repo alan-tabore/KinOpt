@@ -739,12 +739,14 @@ class MainWindow(QMainWindow):
         try :
             for dict in [self.line_edit_dict_rate_model, self.line_edit_dict_vitrification_model, self.line_edit_dict_coupling_law]:
                 for key,line_edit in dict.items():
-                    if key in ["A", "A1", "A2", "Ad"]:
+                    if key in ["A", "A1", "A2"]:
                         line_edit.setText("1e8")
                     elif key in ["E", "Ea", "E1", "E2"]:
                         line_edit.setText("50000")
                     elif key in ["m", "n"]:
-                        line_edit.setText("2")                        
+                        line_edit.setText("2")
+                    elif key in ["Ad"]:
+                        line_edit.setText("1")                  
                     elif key in ["C","C1", "C2"]:
                         line_edit.setText("50")
                     else:
@@ -1101,8 +1103,10 @@ class MainWindow(QMainWindow):
         try :
             for dict in [self.entries_dict_global_optimization, self.entries_dict_local_optimization, self.entries_dict_cost_function]:
                 for key,object in dict.items():
-                    if key in ["minA", "minA1", "minA2", "minAd"]:
+                    if key in ["minA", "minA1", "minA2"]:
                         object.setText("1")
+                    elif key in ["minAd"]:
+                       object.setText("1e-20")    
                     elif key in ["maxA", "maxA1", "maxA2", "maxAd"]:
                        object.setText("1e20")
                     elif key in ["minE", "minEa", "minE1", "minE2"]:
@@ -1130,7 +1134,7 @@ class MainWindow(QMainWindow):
                     elif key in ["strategy"]:
                         object.setCurrentText("best1bin")
                     elif key in ["maxiter","iters","niters","niter"]:
-                        object.setText("120")
+                        object.setText("1200")
                     elif key in ["n"]:
                         object.setText("500")
                     elif key in ["workers"]:
