@@ -1492,6 +1492,10 @@ class MainWindow(QMainWindow):
             # Handle other exceptions with a generic error message
             traceback.print_exc() 
             QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
+            self.optimization_thread.terminate()
+            self.ui.pushButton_launch_optimization.setEnabled(True)
+            self.ui.progressBar.setValue(100)
+            self.ui.label_remaing_time.setText("Remaining time: (No optimization runnning)")
             return
             
     def update_progress_bar(self,progress):
