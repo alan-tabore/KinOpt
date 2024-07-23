@@ -199,7 +199,7 @@ def vitrification_WLF_rate(T,Tg,Ad,C1,C2):
     
     The vitrification term is given by the WLF model:
     
-    .. math:: k_v = A_d e^{ \left( \frac{C_1(T - T_g(\alpha))}{C_2 + |T - T_g(\alpha)|} \right) }
+    .. math:: k_v = A_d e^{ \left( \frac{-C_1(T - T_g(\alpha))}{C_2 + |T - T_g(\alpha)|} \right) }
     
     where:
         * :math:`T` is the temperature of the reaction (in Kelvin). 
@@ -238,14 +238,14 @@ def vitrification_WLF_rate(T,Tg,Ad,C1,C2):
     """
     #Check if temperature of reaction is above glass transition temperature
     #If so, the vitrification term is computed, else the rate is equal to 0
-    return Ad*np.exp( (C1*(T-Tg)) / (C2+abs(T-Tg)))
+    return Ad*np.exp( -(C1*(T-Tg)) / (C2+abs(T-Tg)))
 
 def vitrification_WLF_rate_no_reaction_below_Tg(T,Tg,Ad,C1,C2):
     r"""
     Compute the vitrification term for a WLF-like model when the reaction temperature is above Tg.
     The vitrification term is equal to 0 when below Tg.
     
-    .. math:: k_v = A_d e^{ \left( \dfrac{C_1(T-T_g(\alpha))}{C_2+ |T-T_g(\alpha)|} \right) }
+    .. math:: k_v = A_d e^{ \left( \dfrac{-C_1(T-T_g(\alpha))}{C_2+ |T-T_g(\alpha)|} \right) }
 
     Usually the glass transition temperature is determined by using the DiBenedetto equation
     See: G. Wisanrakkit et J. K. Gillham, « The glass transition temperature (Tg) as an index of chemical conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics », Journal of Applied Polymer Science, vol. 41, nᵒ 11‑12, p. 2885‑2929, 1990, doi: 10.1002/app.1990.070411129.
@@ -276,7 +276,7 @@ def vitrification_WLF_rate_no_reaction_below_Tg(T,Tg,Ad,C1,C2):
     """
     #Check if temperature of reaction is above glass transition temperature
     #If so, the vitrification term is computed, else the rate is equal to 0
-    return np.where( T>Tg, Ad*np.exp( (C1*(T-Tg)) / (C2+abs(T-Tg))), 0)
+    return np.where( T>Tg, Ad*np.exp( -(C1*(T-Tg)) / (C2+abs(T-Tg))), 0)
 
 
 def tg_diBennedetto(extent,Tg_0,Tg_inf,coeff):
