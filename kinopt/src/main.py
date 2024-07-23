@@ -1973,23 +1973,23 @@ class MainWindow(QMainWindow):
                             end_rate_index = start_rate_index + len(rate_info["initial_guess"])
                             rate_args = [float(line.split(": ")[1]) for line in lines[start_rate_index:end_rate_index]]
                         else:
-                            rate_args = None
+                            rate_args = ()
                         if 'None' not in vitrification_info["initial_guess"]:
                             start_vitrification_index = lines.index("Vitrification optimization results:")+1
                             end_vitrification_index = start_vitrification_index + len(vitrification_info["initial_guess"])
                             vitrification_args = [float(line.split(": ")[1]) for line in lines[start_vitrification_index:end_vitrification_index]]
                         else:
-                            vitrification_args = None
+                            vitrification_args = ()
                         if 'None' not in coupling_info["initial_guess"]:
                             start_coupling_index = lines.index("Coupling optimization results:")+1
                             end_coupling_index = start_coupling_index + len(coupling_info["initial_guess"])
                             coupling_args = [float(line.split(": ")[1]) for line in lines[start_coupling_index:end_coupling_index]]
                         else:
-                            coupling_args = None
+                            coupling_args = ()
                         if 'None' not in tg_info["parameters"]:
                             tg_args = [float(value) for value in tg_info["parameters"].values()]
                         else:
-                            tg_args = None
+                            tg_args = ()
                             
                        
                     elif "Data used for optimization ==" in section:
