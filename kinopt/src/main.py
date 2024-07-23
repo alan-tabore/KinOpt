@@ -1367,6 +1367,7 @@ class MainWindow(QMainWindow):
             self.initial_guess = np.array([])
             self.results = None
             self.ui.progressBar.setValue(0)
+            self.total_time_for_optimization = None
             if self.selected_rate != '':
                 self.rate_law = getattr(km, self.selected_rate)
                 self.experimental_args_for_rate = self.get_associated_experimental_parameters(self.rate_parameters_experimental)
@@ -1585,13 +1586,14 @@ class MainWindow(QMainWindow):
         
         self.ui.tabWidget_visualization.setCurrentIndex(2)
     
-    def update_GUI_at_end_of_optimization(self,results):
+    def update_GUI_at_end_of_optimization(self,results,total_optimization_time):
         try:
             self.optimization_thread.terminate()
             self.ui.pushButton_launch_optimization.setEnabled(True)
             self.ui.progressBar.setValue(100)
             self.ui.label_remaing_time.setText("Remaining time: (No optimization runnning)")
             
+            self.total_time_for_optimization = total_optimization_time
             self.results = results
             print("final x used for plot:", self.results.x)
             rate_opti = opt.model(self.results.x,
@@ -1808,6 +1810,8 @@ class MainWindow(QMainWindow):
             summary_info += f"Final cost function value: {self.results.fun}\n"
             if self.mean_rss:
                 summary_info += f"Final mean RSS value: {self.mean_rss}\n"
+            if self.total_time_for_optimization:
+                summary_info += f"Total time for optimization: {self.total_time_for_optimization}\n"
             summary_info += "Scipy final output:\n"
             summary_info += f"{self.results}\n"
         
@@ -2089,7 +2093,7 @@ class MainWindow(QMainWindow):
         
         
 class OptimizationThread(QThread):
-    end_of_optimization = pyqtSignal(scipy.optimize.OptimizeResult)
+    end_of_optimization = pyqtSignal(scipy.optimize.OptimizeResult,float)
     update_progress_bar_signal = pyqtSignal(int)
     update_graph_signal = pyqtSignal(int,float,np.ndarray,object,object)
     error_in_optimization_thread = pyqtSignal(Exception)
@@ -2229,7 +2233,8 @@ class OptimizationThread(QThread):
                                                     self.initial_guess,
                                                     **self.local_optimization_args_dict)
             
-            self.end_of_optimization.emit(self.result)
+            total_optimization_time = elapsed_time = time_module.time() - self.start_time
+            self.end_of_optimization.emit(self.result,total_optimization_time)
             
         except Exception as e:
             # Handle other exceptions with a generic error message
