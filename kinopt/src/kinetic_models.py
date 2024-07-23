@@ -547,7 +547,7 @@ def compute_extent_and_rate(time, temperature, rate_law=None, rate_law_args=None
         Additional arguments to be passed to the rate law function.
     vitrification_law : function, optional
         The vitrification law function that calculates the vitrification term.
-    vitrification_args : tuple, optional
+    vitrification_law_args : tuple, optional
         Additional arguments to be passed to the vitrification law function.
     tg_law : function, optional
         The glass transition temperature law function that calculates the Tg.
