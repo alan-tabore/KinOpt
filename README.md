@@ -1,8 +1,12 @@
-![Python](https://img.shields.io/badge/Python-3.8-blue)
+![Python](https://img.shields.io/badge/Python-3.9-blue)
 
 # KinOpt
 
 The aim of the KinOpt project is to use kinetics data to perform isoconversional analysis and model optimization.
+
+## Documentation
+
+A documentation of the KinOpt module is available at [KinOpt Documentation](https://kinopt.readthedocs.io/en/latest/index.html)
 
 ## Table of Contents
 
@@ -10,11 +14,6 @@ The aim of the KinOpt project is to use kinetics data to perform isoconversional
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
 - [Usage](#usage)
-- [Features](#features)
-   - [Isoconversional analysis](#isoconversional-analysis)
-   - [Kinetic models](#kinetic-models)
-   - [Model optimization](#model-optimization)
-- [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
 
@@ -22,64 +21,41 @@ The aim of the KinOpt project is to use kinetics data to perform isoconversional
 
 ### Prerequisites
 
+#### Kinetic data
 The first step is to obtain experimental kinetic data (e.g. from FTIR, DSC or rheological experiments). These data should be stored as text or csv files containing four columns arranged in the following order: 
 1. Time (in seconds)
 2. Temperature (in Kelvin)
 3. Reaction speed (in s-1)
 4. Extent of reaction (in %)
 
-This project uses Python language with the following libraries:
-- numpy
-- scipy
-- matplotlib
-- pyqt5
-- tqdm
+#### Python
+This project uses Python, so please make sure you installed it and that the version is superior or equal to 3.9.
 
-We acknowledge and appreciate their contributions to the Python community.
-
-
-Most of these modules are pre-installed, else you can install them from PyPI with pip:
-``` bash
-python -m pip install missing_module_name
-```
-or with conda:
-``` bash
-conda install missing_module_name
-```
 
 ### Installation
 
 To install this module, simply download the project in a zip file and extract it.
 
+Once you’ve downloaded the project, you can install the required python modules from PyPI with pip or with conda.
+
+Open a command prompt in the KinOpt folder and execute:
+``` bash
+python -m pip install requirements.txt
+```
+or with conda:
+``` bash
+conda install requirements.txt
+```
+
 ## Usage
 
-To use this project, go to kinopt/src and run main.py with python.
-The following graphical interface should appear:
+To start the graphical interface:
+1. Open a command prompt in the ‘src’ folder
+2. Run the “main.py” script using python.
+``` bash   
+>> python3 main.py
+```
 
-![Image](screenshots/GUI.PNG)
-
-
-
-
-
-
-## Features
-
-### Isoconversional analysis
-
-### Kinetic models
-
-### Model optimization
-
-## Contributing
-
-Explanation on how others can contribute to thr project.
-
-1. Fork the repository
-2. Create a new branch
-3. Make changes and commit them
-4. Push to the branch
-5. Open a pull request
 
 ## License
 
