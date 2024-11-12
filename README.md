@@ -26,7 +26,7 @@ The first step is to obtain experimental kinetic data (e.g. from FTIR, DSC or rh
 1. Time (in seconds)
 2. Temperature (in Kelvin)
 3. Reaction speed (in s-1)
-4. Extent of reaction (in %)
+4. Extent of reaction (no unit)
 
 #### Python
 This project uses Python, so please make sure you installed it and that the version is superior or equal to 3.9.
