@@ -305,8 +305,9 @@ if __name__ == "__main__":
         rates.append(rate)    
     
     linear_conversions, linear_times, linear_temperatures, linear_rates = linear_interpolation(conversions,times,temperatures,rates,1000)
-    cubic_conversions, cubic_times, cubic_temperatures, cubic_rates = cubic_spline_interpolation(conversions,times,temperatures,rates,1000)
+    cubic_conversions, cubic_times, cubic_temperatures, cubic_rates = cubic_spline_interpolation(conversions,times,temperatures,rates,5)
     
+    #%% Plot linear interpolation
     # Rate over time
     fig, ax = plt.subplots()
     ax.set_xlabel("Time (s)")
@@ -343,6 +344,46 @@ if __name__ == "__main__":
         line_original, = ax.plot(times[i],conversions[i],label="Original data for " + str((i+1)*5) + "°/min",alpha=0.5)
         curve_color = line_original.get_color()
         ax.plot(linear_times[i],linear_conversions[i],label="Linear interpolation for " + str((i+1)*5) + "°/min", color=curve_color, linestyle="dashed")
+        
+    ax.legend()
+    
+    #%% Plot cubic interpolation
+    # Rate over time
+    fig, ax = plt.subplots()
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Rate")
+    ax.set_title("Cubic interpolation vs Original data")
+    
+    for i in range(len(rates)):
+        line_original, =ax.plot(times[i],rates[i],label="Original data for " + str((i+1)*5) + "°/min",alpha=0.5)
+        curve_color = line_original.get_color()
+        ax.plot(cubic_times[i],cubic_rates[i],label="Cubic interpolation for " + str((i+1)*5) + "°/min", color=curve_color, linestyle="dashed") 
+    ax.legend()
+    
+    # Rate over extent
+    fig, ax = plt.subplots()
+    ax.set_xlabel("Extent")
+    ax.set_ylabel("Rate")
+    ax.set_title("Cubic interpolation vs Original data")
+    
+    for i in range(len(rates)):
+        line_original, = ax.plot(conversions[i],rates[i],label="Original data for " + str((i+1)*5) + "°/min",alpha=0.5)
+        curve_color = line_original.get_color()
+        ax.plot(cubic_conversions[i],cubic_rates[i],label="Cubic interpolation for " + str((i+1)*5) + "°/min", color=curve_color, linestyle="dashed")
+    ax.legend()
+    
+    
+    
+    # Extent over time
+    fig, ax = plt.subplots()
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Extent")
+    ax.set_title("Cubic interpolation vs Original data")
+    
+    for i in range(len(rates)):
+        line_original, = ax.plot(times[i],conversions[i],label="Original data for " + str((i+1)*5) + "°/min",alpha=0.5)
+        curve_color = line_original.get_color()
+        ax.plot(cubic_times[i],cubic_conversions[i],label="Cubic interpolation for " + str((i+1)*5) + "°/min", color=curve_color, linestyle="dashed")
         
     ax.legend()
     
