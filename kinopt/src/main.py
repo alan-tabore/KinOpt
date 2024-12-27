@@ -1830,8 +1830,14 @@ class MainWindow(QMainWindow):
         header_row = "\t".join([f"{header}{i+1}" for i in range(len(self.experimental_times)) for header in headers ])
         data_rows.append(header_row)
         
+        # Pad experimental times to ensure uniform sizes
+        padded_times = pad_arrays(self.experimental_times)
+        padded_temperatures = pad_arrays(self.experimental_temperatures)
+        padded_rates = pad_arrays(self.experimental_rates)
+        padded_extents = pad_arrays(self.experimental_extents)
+
         # Combine experimental data into a single NumPy array
-        experimental_data = np.array([self.experimental_times, self.experimental_temperatures, self.experimental_rates, self.experimental_extents])
+        experimental_data = np.array([padded_times, padded_temperatures, padded_rates, padded_extents])
         
         # Transpose the data
         experimental_data = np.transpose(experimental_data)
@@ -2694,6 +2700,12 @@ def get_main_args_dict_and_options_dict(main_args_dict, method_dict):
         method_dict.pop(key)
 
     return main_args_dict, method_dict
+
+def pad_arrays(array_list, fill_value=np.nan):
+    """Pad arrays in a list to match the length of the longest array."""
+    max_length = max(len(arr) for arr in array_list)
+    padded_arrays = [np.pad(arr, (0, max_length - len(arr)), constant_values=fill_value) for arr in array_list]
+    return np.array(padded_arrays)
 
 # =============================================================================
 #
