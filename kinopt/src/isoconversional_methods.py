@@ -143,14 +143,14 @@ def get_index_area_of_calculation(conversion_lists, list_of_points_for_analysis)
     Parameters
     ----------
     conversion_lists : List
-        List with conversions at different heating rates (one list element for one heating rate)
+        List with conversions at different heating rates (one list element for one heating rate).
     list_of_points_for_analysis : List
-        List containing all the point of conversion at which the activation energy will be calculated
+        List containing all the points of conversion at which the activation energy will be calculated.
 
     Raises
     ------
     ValueError
-        return an error if starting point is smaller than step
+        Raised if the starting point is smaller than the step.
 
     Returns
     -------
@@ -162,48 +162,66 @@ def get_index_area_of_calculation(conversion_lists, list_of_points_for_analysis)
     [1] S. Vyazovkin, « Modification of the integral isoconversional method to account for variation in the activation energy », Journal of Computational Chemistry, vol. 22, nᵒ 2, p. 178‑183, 2001, doi: 10.1002/1096-987X(20010130)22:2<178::AID-JCC5>3.0.CO;2-#.
     """
     index_list = []
-    conversions_array = np.array(conversion_lists)
-    
-    # Compute the difference between values of experimental conversions
-    delta_alpha_exp = conversions_array[:,1] - conversions_array[:,0]
-    
+
+    # Find the maximum size of the arrays
+    max_size = max(arr.size for arr in conversion_lists)
+
+    # Pad arrays with NaN to ensure uniform size
+    padded_conversion_lists = [
+        np.concatenate([arr, np.full(max_size - arr.size, np.nan)]) if arr.size < max_size else arr
+        for arr in conversion_lists
+    ]
+
+    conversions_array = np.array(padded_conversion_lists)
+
+    # Compute the difference between values of experimental conversions, ignoring NaNs
+    delta_alpha_exp = np.nanmax(conversions_array[:, 1:] - conversions_array[:, :-1], axis=1)
+
     # Compute the minimum delta to use for analysis
-    
-    # The same point must not be analyzed 2 times, so the analysis delta must 
-    # be greater than the maximum delta between experimental conversions.
-    min_delta_alpha_analysis = max(delta_alpha_exp)
-    
-    min_alpha_analysis = max(conversions_array[:,0]) + min_delta_alpha_analysis
-    
+    min_delta_alpha_analysis = np.nanmax(delta_alpha_exp)
+    min_alpha_analysis = np.nanmax(conversions_array[:, 0]) + min_delta_alpha_analysis
+
     delta_analysis = list_of_points_for_analysis[1] - list_of_points_for_analysis[0]
-    
-    max_alpha_analysis = min( [min(conversions_array[:,-1]), (list_of_points_for_analysis[0] + delta_analysis*len(list_of_points_for_analysis)) ])
-    
-    
-    
+    max_alpha_analysis = min(
+        np.nanmin(conversions_array[:, -1]),
+        list_of_points_for_analysis[0] + delta_analysis * len(list_of_points_for_analysis)
+    )
+
+    # Validations
     if list_of_points_for_analysis[0] < min_alpha_analysis:
-        raise ValueError(f'\nThe minimum conversion for your analysis points is too low.\nCurrent minimum conversion = {list_of_points_for_analysis[0]}\nMinimum conversion allowed = {min_alpha_analysis}\nPlease increase the minimum conversion to analyze.')
-        return
-                         
+        raise ValueError(
+            f"\nThe minimum conversion for your analysis points is too low.\n"
+            f"Current minimum conversion = {list_of_points_for_analysis[0]}\n"
+            f"Minimum conversion allowed = {min_alpha_analysis}\n"
+            f"Please increase the minimum conversion to analyze."
+        )
+
     if list_of_points_for_analysis[-1] > max_alpha_analysis:
-        raise ValueError(f'\nThe maximum conversion for your analysis points is too high.\nCurrent maximum conversion = {list_of_points_for_analysis[-1]}\nMaximum conversion allowed for {str(len(list_of_points_for_analysis))} points = {max_alpha_analysis}\nPlease decrease the maximum conversion to analyze.')
-        return                 
-    
+        raise ValueError(
+            f"\nThe maximum conversion for your analysis points is too high.\n"
+            f"Current maximum conversion = {list_of_points_for_analysis[-1]}\n"
+            f"Maximum conversion allowed for {len(list_of_points_for_analysis)} points = {max_alpha_analysis}\n"
+            f"Please decrease the maximum conversion to analyze."
+        )
+
     if delta_analysis < min_delta_alpha_analysis:
-        raise ValueError(f'\nThe step between your analysis points is too high.\nCurrent step = {delta_analysis}\nMinimum step = {min_delta_alpha_analysis}\nPlease reduce the number of points you want to analyze.')
-        return                 
-    
+        raise ValueError(
+            f"\nThe step between your analysis points is too high.\n"
+            f"Current step = {delta_analysis}\n"
+            f"Minimum step = {min_delta_alpha_analysis}\n"
+            f"Please reduce the number of points you want to analyze."
+        )
+
     start_value = list_of_points_for_analysis[0] - delta_analysis
-        
-                
-    for i in range(len(conversion_lists)):
-        index_of_start_value, value_of_start_value = find_closest_value(
-            start_value, conversion_lists[i])
-        index_list.append([index_of_start_value])
-        for k in range(len(list_of_points_for_analysis)):
-            index, value = find_closest_value(
-                list_of_points_for_analysis[k], conversion_lists[i])
-            index_list[i].append(index)
+
+    # Build the index list
+    for i, conversion_array in enumerate(conversion_lists):
+        index_of_start_value, _ = find_closest_value(start_value, conversion_array)
+        indices = [index_of_start_value]
+        for point in list_of_points_for_analysis:
+            index, _ = find_closest_value(point, conversion_array)
+            indices.append(index)
+        index_list.append(indices)
 
     return index_list
 
