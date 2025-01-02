@@ -13,6 +13,7 @@ A documentation of the KinOpt module is available at [KinOpt Documentation](http
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
+  - [Tutorials](#tutorials)
 - [Usage](#usage)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
@@ -46,6 +47,13 @@ or with conda:
 ``` bash
 conda install requirements.txt
 ```
+
+### Tutorials
+
+Tutorials are available on Youtube to show you how to install and use the software:
+
+**[Youtube Tutorials for KinOpt](https://youtube.com/playlist?list=PLxgAQK6NxsvJIZDw5gI6Xi16PfxUrXFI0&si=ICWPLX2gbCdEuDp9)**
+*(Make sure you installed VSCode to follow the tutorials)*
 
 ## Usage
 
