@@ -41,12 +41,9 @@ Once you’ve downloaded the project, you can install the required python module
 
 Open a command prompt in the KinOpt folder and execute:
 ``` bash
-python -m pip install requirements.txt
+python -m pip install -r requirements.txt
 ```
-or with conda:
-``` bash
-conda install requirements.txt
-```
+
 
 ### Tutorials
 
