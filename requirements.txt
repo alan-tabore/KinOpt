@@ -24,7 +24,6 @@ PySide6_Essentials==6.6.2
 QDarkStyle==3.2.3
 QtPy==2.4.1
 scipy==1.12.0
-shiboken2==5.15.2.1
 shiboken6==6.6.2
 tenacity==8.2.3
 tqdm==4.66.2
