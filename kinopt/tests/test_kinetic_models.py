@@ -12,11 +12,11 @@ def test_vitrification_WLF_rate_no_reaction_below_Tg():
     # Test case 1: All temperatures above Tg
     temperature = np.array([350, 400, 450])
     Ad = 1.0
-    C1 = 0.5
-    C2 = 0.2
+    C1 = 1.0
+    C2 = 10
     Tg = 320
-    expected_result = np.array([1.64327096, 1.64666679, 1.64745546])
-    result = km.vitrification_WLF_rate_no_reaction_below_Tg(temperature, Ad, C1, C2, Tg)
+    expected_result = np.array([np.exp(3/4), np.exp(8/9), np.exp(13/14)])
+    result = km.vitrification_WLF_rate_no_reaction_below_Tg(temperature, Tg, Ad, C1, C2)
     assert np.allclose(result, expected_result), "Test case 1 failed"
 
     # Test case 2: All temperatures below Tg
@@ -26,7 +26,7 @@ def test_vitrification_WLF_rate_no_reaction_below_Tg():
     C2 = 0.2
     Tg = 320
     expected_result = np.array([0, 0, 0])
-    result = km.vitrification_WLF_rate_no_reaction_below_Tg(temperature, Ad, C1, C2, Tg)
+    result = km.vitrification_WLF_rate_no_reaction_below_Tg(temperature, Tg, Ad, C1, C2)
     assert np.allclose(result, expected_result), "Test case 2 failed"
 
 
@@ -37,7 +37,7 @@ def test_vitrification_WLF_rate_no_reaction_below_Tg():
     C2 = 1e6
     Tg = 320
     expected_result = np.array([1.06768614e+19, 5.50527845e+40, 2.82451591e+62])
-    result = km.vitrification_WLF_rate_no_reaction_below_Tg(temperature, Ad, C1, C2, Tg)
+    result = km.vitrification_WLF_rate_no_reaction_below_Tg(temperature, Tg, Ad, C1, C2)
     assert np.allclose(result, expected_result), "Test case 4 failed"
 
     print("All test cases passed!")
