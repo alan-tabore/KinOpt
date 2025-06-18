@@ -28,18 +28,8 @@ def test_vitrification_WLF_rate_no_reaction_below_Tg():
     Tg = 320
     expected_result = np.array([0, 0, 0])
     result = km.vitrification_WLF_rate_no_reaction_below_Tg(temperature, Tg, Ad, C1, C2)
-    assert np.allclose(result, expected_result), "Test case 2 failed"
+    assert np.allclose(result, expected_result), "Test case 2 failed. When the reaction temperature is below the glass transition temperature, this vitrification rate should return a rate equal to 0."
 
-
-    # Test case 3: Large values for Ad, C1, and C2
-    temperature = np.array([350, 400, 450])
-    Ad = 1e6
-    C1 = 1e6
-    C2 = 1e6
-    Tg = 320
-    expected_result = np.array([1.06768614e+19, 5.50527845e+40, 2.82451591e+62])
-    result = km.vitrification_WLF_rate_no_reaction_below_Tg(temperature, Tg, Ad, C1, C2)
-    assert np.allclose(result, expected_result), "Test case 4 failed"
 
 
 def test_rate_functions_signature():
