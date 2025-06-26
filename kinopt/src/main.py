@@ -1482,7 +1482,9 @@ class MainWindow(QMainWindow):
                                                           self.experimental_args_for_cost_function,
                                                           self.max_iter
                                                           )
-            self.ui.pushButton_launch_optimization.setEnabled(False)
+            self.ui.pushButton_launch_optimization.setText("Cancel optimization")
+            self.ui.pushButton_launch_optimization.clicked.disconnect()
+            self.ui.pushButton_launch_optimization.clicked.connect(self.cancel_optimization)
             self.optimization_thread.start()
             self.optimization_thread.update_progress_bar_signal.connect(self.update_progress_bar)
             self.optimization_thread.update_graph_signal.connect(self.update_graph)
@@ -1494,10 +1496,42 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
             self.optimization_thread.terminate()
             self.ui.pushButton_launch_optimization.setEnabled(True)
-            self.ui.progressBar.setValue(100)
+            self.ui.progressBar.setValue(0)
             self.ui.label_remaing_time.setText("Remaining time: (No optimization runnning)")
             return
-            
+    
+    def cancel_optimization(self):
+        """
+        Cancel the ongoing optimization process.
+    
+        This function stops the optimization thread and resets the GUI elements related to the optimization.
+    
+        Parameters
+        ----------
+        self : object
+            The object instance.
+    
+        Returns
+        -------
+        None
+        """
+        try:
+            if hasattr(self, 'optimization_thread') and self.optimization_thread.isRunning():
+                self.ui.pushButton_launch_optimization.setText("Start optimization")
+                self.ui.pushButton_launch_optimization.clicked.disconnect()
+                self.ui.pushButton_launch_optimization.clicked.connect(self.launch_optimization)
+                self.optimization_thread.terminate()
+                self.ui.pushButton_launch_optimization.setEnabled(True)
+                self.ui.progressBar.setValue(0)
+                self.ui.label_remaing_time.setText("Remaining time: (No optimization runnning)")
+                self.ui.textEdit_output_of_optimization.insertPlainText("Optimization cancelled.\n")
+                self.ui.textEdit_output_of_optimization.moveCursor(QTextCursor.End)
+                self.ax_optimization.clear()
+                self.canvas_optimization.draw_idle()
+        except Exception as e:
+            # Handle other exceptions with a generic error message
+            QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
+                    
     def update_progress_bar(self,progress):
         """
         Update the progress bar with the given progress value.
