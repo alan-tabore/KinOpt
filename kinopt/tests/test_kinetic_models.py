@@ -117,8 +117,24 @@ def test_tg_diBennedetto():
     assert np.allclose(result, expected_result), "DiBenedetto Tg calculation failed."
 
     
+def test_coupling_harmonic_mean():
+    kc = 2
+    kv = 3
     
+    expected_result = 1.2
+    result = km.coupling_harmonic_mean(kc, kv)
+    assert np.allclose(result, expected_result), "Harmonic mean coupling calculation failed."
+
+
+def test_coupling_product():
+    kc = 2
+    kv = 3
     
+    expected_result = 6
+    result = km.coupling_product(kc, kv)
+    assert np.allclose(result, expected_result), "Product coupling calculation failed."
+
+
 def test_rate_functions_signature():
     for name, func in inspect.getmembers(km, inspect.isfunction):
         if name.startswith("rate_"):
@@ -147,7 +163,16 @@ def test_tg_functions_signature():
 
 print("All test cases passed!")
     
+def test_coupling_functions_signature():
+    for name, func in inspect.getmembers(km, inspect.isfunction):
+        if name.startswith("coupling_"):
+            sig = inspect.signature(func)
+            params = list(sig.parameters.values())
+            assert len(params) >= 3, f"{name} should have at least 3 parameters: kc, kv, and experimental_parameters (that can be set to 'None' if no experimental parameter is required for the coupling) "
+            assert params[0].name == "kc", f"{name}: first argument should be 'kc' (purely chemical rate)"
+            assert params[1].name == "kv", f"{name}: second argument should be 'kv' (vitrification rate)"    
     
+        
 if __name__=="__main__":
 
     
