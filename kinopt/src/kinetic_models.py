@@ -372,10 +372,7 @@ def coupling_product(kc,kv,experimental_parameters=None):
     Rate : 1-D array
         Rate of reaction
     """
-    #If kc or kv are equal to 0, then it returns 0
-    rate = 1 / ((1/kc)+(1/kv))
-    
-    return rate
+    return kc*kv
 
 
 def jac_for_rate_for_kamal(extent, T, A1, E1, A2, E2, m, n):
