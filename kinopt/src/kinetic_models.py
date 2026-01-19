@@ -21,11 +21,11 @@ def arrhenius_rate_constant(T,A,Ea):
     Parameters
     ----------
     T : Float
-        Temperature of reaction.
+        Temperature of reaction in Kelvin.
     A : Float
         Pre-exponential factor.
     Ea : Float
-        Activation energy.
+        Activation energy in J/mol.
 
     Returns
     -------
@@ -53,11 +53,11 @@ def rate_for_nth_order(extent,T,A1,E1,n):
     extent : 1-D array
         Extent of reaction.
     T : 1-D array
-        Temperature of reaction.
+        Temperature of reaction in Kelvin.
     A : Float
         Pre-exponential factor of the reaction.
     Ea : Float
-        Activation energy of the reaction.
+        Activation energy of the reaction in J/mol.
     n : Float
         Order of reaction.
 
@@ -67,8 +67,47 @@ def rate_for_nth_order(extent,T,A1,E1,n):
         Rate of reaction for a nth order reaction.
 
     """
-    return arrhenius_rate_constant(T,A1,E1)*(1-extent)**n
+    return arrhenius_rate_constant(T,A1,E1)*((1-extent)**n)
 
+
+def rate_for_autocatalytic(extent,T,A,Ea,m,n):
+    r"""
+    Compute the rate of reaction for an autocatalytic reaction.
+    
+    Parameters
+    ----------
+    extent : ndarray
+        Extent of reaction.
+    T : ndarray
+        Temperature of reaction in Kelvin.
+    A : float
+        Pre-exponential factor of the reaction.
+    Ea : float
+        Activation energy of the reaction in J/mol.
+    m : float
+        Order of reaction for the autocatalyzed reaction.
+    n : float
+        Order of reaction for the regular reaction.
+    
+    Returns
+    -------
+    rate : ndarray
+        Rate of reaction for an autocatalytic equation.     
+        
+    Notes
+    -----
+     The rate for an autocatalytic reaction is given by:
+    
+     .. math:: \frac{d\alpha}{dt} =  A e^{ \left( \frac{-E_a}{RT} \right)} \alpha^m (1-\alpha)^n
+     
+    References
+    ----------
+    [1] M. R. Keenan, « Autocatalytic cure kinetics from DSC measurements: Zero initial cure rate », J. Appl. Polym. Sci., vol. 33, nᵒ 5, p. 1725‑1734, avr. 1987, doi: 10.1002/app.1987.070330525.
+
+    """
+    if np.any(extent) <= 0:
+        raise ValueError("Be careful, for an autocatalytic model the extent can't be inferior or equal to 0 !!! \n It would result in a rate of reaction equal to 0 and no reaction would occur.")
+    return arrhenius_rate_constant(T,A,Ea) * extent**m * (1 - extent)**n
 
 
 def rate_for_kamal(extent,T,A1,E1,A2,E2,m,n):
@@ -80,15 +119,15 @@ def rate_for_kamal(extent,T,A1,E1,A2,E2,m,n):
      extent : ndarray
          Extent of reaction.
      T : ndarray
-         Temperature of reaction.
+         Temperature of reaction in Kelvin.
      A1 : float
          Pre-exponential factor of the regular reaction.
      E1 : float
-         Activation energy of the regular reaction.
+         Activation energy of the regular reaction in J/mol.
      A2 : float
          Pre-exponential factor of the autocatalyzed reaction.
      E2 : float
-         Activation energy of the autocatalyzed reaction.
+         Activation energy of the autocatalyzed reaction in J/mol.
      m : float
          Order of reaction for the autocatalyzed reaction.
      n : float
@@ -153,45 +192,6 @@ def rate_for_kamal(extent,T,A1,E1,A2,E2,m,n):
     """
     return (arrhenius_rate_constant(T,A1,E1) + (arrhenius_rate_constant(T,A2,E2) * extent**m)) * (1 - extent)**n
 
-def rate_for_autocatalytic(extent,T,A,Ea,m,n):
-    r"""
-    Compute the rate of reaction for an autocatalytic reaction.
-    
-    Parameters
-    ----------
-    extent : ndarray
-        Extent of reaction.
-    T : ndarray
-        Temperature of reaction.
-    A : float
-        Pre-exponential factor of the reaction.
-    Ea : float
-        Activation energy of the reaction.
-    m : float
-        Order of reaction for the autocatalyzed reaction.
-    n : float
-        Order of reaction for the regular reaction.
-    
-    Returns
-    -------
-    rate : ndarray
-        Rate of reaction for an autocatalytic equation.     
-        
-    Notes
-    -----
-     The rate for an autocatalytic reaction is given by:
-    
-     .. math:: \frac{d\alpha}{dt} =  A e^{ \left( \frac{-E_a}{RT} \right)} \alpha^m (1-\alpha)^n
-     
-    References
-    ----------
-    [1] M. R. Keenan, « Autocatalytic cure kinetics from DSC measurements: Zero initial cure rate », J. Appl. Polym. Sci., vol. 33, nᵒ 5, p. 1725‑1734, avr. 1987, doi: 10.1002/app.1987.070330525.
-
-    """
-    if np.any(extent) <= 0:
-        raise ValueError("Be careful, for an autocatalytic model the extent can't be inferior or equal to 0 !!! \n It would result in a rate of reaction equal to 0 and no reaction would occur.")
-    return arrhenius_rate_constant(T,A,Ea) * extent**m * (1 - extent)**n
-
     
 def vitrification_WLF_rate(T,Tg,Ad,C1,C2):
     r"""
@@ -239,6 +239,7 @@ def vitrification_WLF_rate(T,Tg,Ad,C1,C2):
     #Check if temperature of reaction is above glass transition temperature
     #If so, the vitrification term is computed, else the rate is equal to 0
     return Ad*np.exp( (C1*(T-Tg)) / (C2+abs(T-Tg)))
+
 
 def vitrification_WLF_rate_no_reaction_below_Tg(T,Tg,Ad,C1,C2):
     r"""
@@ -288,16 +289,16 @@ def tg_diBennedetto(extent,Tg_0,Tg_inf,coeff):
     alpha : array-like
         conversion or extent of reaction
     Tg_0 : Float
-        glass transition temperature of unreacted material
+        glass transition temperature of unreacted material in Kelvin
     Tg_inf : Float
-        glass transition temperature of fully reacted material
+        glass transition temperature of fully reacted material in Kelvin
     coeff : Float
         ratio of the changes in isobaric heat capacities at Tg of the fully reacted material and of the initial unreacted material
 
     Returns
     -------
     Tg : array-like
-        Glass transition temperature
+        Glass transition temperature in Kelvin
         
     Notes
     -----
@@ -313,6 +314,7 @@ def tg_diBennedetto(extent,Tg_0,Tg_inf,coeff):
 
     """
     return Tg_0 + (Tg_inf - Tg_0)*((coeff*extent)/(1-(1-coeff)*extent))
+
 
 def coupling_harmonic_mean(kc,kv,experimental_parameters=None):
     r"""
@@ -347,6 +349,7 @@ def coupling_harmonic_mean(kc,kv,experimental_parameters=None):
     
     return rate
 
+
 def coupling_product(kc,kv,experimental_parameters=None):
     r"""
     Return the product of a chemical rate and vitrification rate.
@@ -369,10 +372,7 @@ def coupling_product(kc,kv,experimental_parameters=None):
     Rate : 1-D array
         Rate of reaction
     """
-    #If kc or kv are equal to 0, then it returns 0
-    rate = 1 / ((1/kc)+(1/kv))
-    
-    return rate
+    return kc*kv
 
 
 def jac_for_rate_for_kamal(extent, T, A1, E1, A2, E2, m, n):
@@ -540,7 +540,7 @@ def compute_extent_and_rate(time, temperature, rate_law=None, rate_law_args=None
     time : array-like
         List or array containing the times during the reaction.
     temperature : array-like
-        List or array containing the temperatures during the reaction.
+        List or array containing the temperatures (in Kelvin) during the reaction.
     rate_law : function
         The rate law function that calculates the rate of reaction.
     rate_law_args : tuple
@@ -571,7 +571,7 @@ def compute_extent_and_rate(time, temperature, rate_law=None, rate_law_args=None
     vitrification_term : ndarray, optional
         Evolution of the vitrification rate of reaction (if vitrification parameters are provided).
     tg : ndarray, optional
-        Evolution of the Tg (if Tg parameters are provided).
+        Evolution of the Tg in Kelvin (if Tg parameters are provided).
     """
     # Importation of a module to display a progress bar for the finite difference
     from tqdm import tqdm
@@ -659,93 +659,6 @@ def compute_extent_and_rate(time, temperature, rate_law=None, rate_law_args=None
     else:
         return AttributeError("No law was given for calculations.")
 
-
-
-
-def compute_extent_and_rate_using_scipy(t0, tf, temperature_program, rate_law, rate_law_args, vitrification_law=None, vitrification_args=None, tg_law=None, tg_law_args=None, coupling_law=None, coupling_law_args=None, initial_extent=0):
-    """
-    Compute extent and rate using scipy's solve_ivp.
-
-    Parameters
-    ----------
-    t0 : float
-        Initial time.
-    tf : float
-        Final time.
-    temperature_program : callable
-        A function that takes time as input and returns temperature.
-    rate_law : callable
-        Rate law function.
-    rate_law_args : tuple
-        Arguments for the rate law function.
-    vitrification_law : callable
-        Vitrification law function.
-    vitrification_args : tuple
-        Arguments for the vitrification law function.
-    tg_law : callable
-        Tg law function.
-    tg_law_args : tuple
-        Arguments for the Tg law function.
-    coupling_law : callable
-        Coupling law function.
-    coupling_law_args : tuple
-        Arguments for the coupling law function.
-    initial_extent : float, optional
-        Initial extent. Default is 0.
-
-    Returns
-    -------
-    scipy.integrate.OdeResult
-        Solution object from solve_ivp.
-    """
-    if (vitrification_law is not None) and (tg_law is None):
-        raise ValueError("Please make sure to indicate a tg law since you have selected a vitrification law.")
-    if (vitrification_law is not None) and (coupling_law is None):
-        raise ValueError("Please make sure to indicate a tg law since you have selected a vitrification law.")
-    if (coupling_law is not None) and (vitrification_law is None):
-        raise ValueError("Please make sure to indicate a tg law since you have selected a vitrification law.")
-    if (coupling_law is not None) and (tg_law is None):
-        raise ValueError("Please make sure to indicate a tg law since you have selected a vitrification law.")
-    if (tg_law is not None) and (vitrification_law is None):
-        raise ValueError("Please make sure to indicate a tg law since you have selected a vitrification law.")
-    if (tg_law is not None) and (coupling_law is None):
-        raise ValueError("Please make sure to indicate a tg law since you have selected a vitrification law.")
-
-    def rate(t, extent, temperature, *args):
-        """
-        Compute the rate at a given time.
-
-        Parameters
-        ----------
-        t : float
-            Time.
-        extent : float
-            Current extent.
-        temperature : float
-            Current temperature.
-        *args : tuple
-            Additional arguments.
-
-        Returns
-        -------
-        float
-            Rate.
-        """
-        rate = rate_law(extent, temperature_program(t), *rate_law_args)
-
-        if vitrification_law is not None:
-            tg = tg_law(extent, *tg_law_args)
-            vitrification_term = vitrification_law(temperature_program(t), tg, *vitrification_args)
-            rate = coupling_law(rate, vitrification_term, *coupling_law_args)
-        
-        return rate
-    
-    initial_extent = np.atleast_1d(initial_extent)
-    return scipy.integrate.solve_ivp(rate, [t0, tf], initial_extent,
-                                     args=(temperature_program, *rate_law_args,
-                                           vitrification_law, *vitrification_args,
-                                           tg_law, *tg_law_args,
-                                           coupling_law, *coupling_law_args))
 
 
 #%% Example 1 - Kamal
