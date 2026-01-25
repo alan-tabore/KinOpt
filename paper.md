@@ -44,7 +44,7 @@ The Python programming language was selected on the basis that optimization does
 
 Key Features of KinOpt:
 
-  - **Isoconversional Analysis**: Uncover the conversion dependence of activation energies through rigorous isoconversional analysis. The current version of KinOpt supports three different methods: Friedman method [@sbirrazzuoli_is_2007], Vyazovkin method [@vyazovkin_evaluation_1997] and Advanced Vyazovkin method [@vyazovkin_modification_2001].
+  - **Isoconversional Analysis**: Uncover the conversion dependence of activation energies through rigorous isoconversional analysis. The current version of KinOpt supports three different methods: Friedman method [@sbirrazzuoli_is_2007], Vyazovkin method [@vyazovkin_evaluation_1997] and Advanced Vyazovkin method.
   - **Kinetic Rate Law Selection**: Select your reaction model using standard reaction law such as n-th order reaction, autocatalytic reaction, Kamal and Sourour model [@sourour_differential_1976]. You can also add a vitrification/diffusion term  if necessary.
   - **Kinetic Rate Law Optimization**: Fine-tune the parameters of the main kinetic rate law using global and local optimization algorithms [@virtanen_scipy_2020], ensuring accurate modeling of reaction kinetics under various conditions.
   - **User-Friendly Interface**: Navigate effortlessly through KinOpt’s intuitive graphical user interface (GUI), making complex analyses accessible to users of all levels.
