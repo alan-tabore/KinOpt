@@ -51,8 +51,10 @@ def test_invalid_data_is_rejected(tmp_path, valid_data, row, column, value, mess
         assert "invalid.csv" in str(error.value)
 
 
-@pytest.mark.parametrize("contents", ["", "0,350,.1,.1\n", "0,350,.1\n1,360,.2\n",
-                                     "0,350,no,.1\n1,360,.1,.2\n", "0,350,,.1\n1,360,.1,.2\n"])
+@pytest.mark.parametrize("contents", [
+    "", "0,350,.1,.1\n", "0,350,.1\n1,360,.2\n",
+    "0,350,no,.1\n1,360,.1,.2\n", "0,350,,.1\n1,360,.1,.2\n",
+])
 def test_bad_file_structure(tmp_path, contents):
     path = tmp_path / "invalid.csv"
     path.write_text(contents)

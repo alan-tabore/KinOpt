@@ -11,6 +11,8 @@ def optimization_window(monkeypatch, tmp_path):
     from kinopt.src import main
 
     app = main.QApplication.instance() or main.QApplication([])
+    (tmp_path / "src").mkdir()
+    monkeypatch.setattr(main, "__file__", str(tmp_path / "src" / "main.py"))
     errors = []
     started = []
     monkeypatch.setattr(
@@ -58,6 +60,11 @@ def configure_optimization(window, with_vitrification=True):
     window.experimental_temperature = np.array([350., 400., 450.])
     window.experimental_time = np.array([0., 1., 2.])
     window.experimental_rate = np.array([0.01, 0.02, 0.03])
+    window.experimental_times = [window.experimental_time]
+    window.experimental_temperatures = [window.experimental_temperature]
+    window.experimental_rates = [window.experimental_rate]
+    window.experimental_extents = [window.experimental_extent]
+    window.selected_shortened_file_paths = ["synthetic.csv"]
 
 
 def test_launch_uses_tg_fields_in_coupled_model(optimization_window):
@@ -136,3 +143,152 @@ def test_failed_import_invalidates_previous_data(optimization_window):
     window.extract_data()
     assert window.successful_extraction is False
     assert len(errors) == 1
+
+
+@pytest.mark.parametrize("missing", ["data", "model", "optimizer", "cost", "coupling", "tg"])
+def test_missing_configuration_blocks_start(optimization_window, missing):
+    _, window, started, errors = optimization_window
+    configure_optimization(window)
+    if missing == "data":
+        window.successful_extraction = False
+    elif missing == "model":
+        window.selected_rate = window.selected_vitrification = ''
+    elif missing == "optimizer":
+        window.selected_local_optimization = ''
+    elif missing == "cost":
+        window.selected_cost_function = ''
+    elif missing == "coupling":
+        window.selected_coupling_law = ''
+    else:
+        window.selected_tg_law = ''
+    window.launch_optimization()
+    assert started == []
+    assert len(errors) == 1
+
+
+@pytest.mark.parametrize("budget", ["", "invalid", "0", "-1"])
+def test_invalid_iteration_budget_is_a_single_error(optimization_window, budget):
+    _, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+    window.entries_dict_local_optimization['maxiter'].setText(budget)
+    window.launch_optimization()
+    assert started == []
+    assert len(errors) == 1
+
+
+def test_nonfinite_initial_guess_is_rejected(optimization_window):
+    _, window, started, errors = optimization_window
+    configure_optimization(window)
+    window.line_edit_dict_rate_model['A1'].setText('nan')
+    window.launch_optimization()
+    assert started == []
+    assert len(errors) == 1
+
+
+def test_relative_cost_rejects_zero_measurements(optimization_window):
+    _, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+    window.ui.comboBox_cost_functions.setCurrentText('rss_relative')
+    window.update_cost_functions_formLayout()
+    window.experimental_rate[0] = 0
+    window.launch_optimization()
+    assert started == []
+    assert len(errors) == 1
+    assert 'nonzero' in errors[0]
+
+
+def test_worker_failure_restores_start_button(optimization_window):
+    _, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+    window.launch_optimization()
+    worker = started[0]
+
+    def fail(*args, **kwargs):
+        raise ValueError("synthetic solver failure")
+    worker.local_optimization = fail
+    worker.run()
+    worker.finished.emit()
+    assert len(errors) == 1
+    assert 'synthetic solver failure' in errors[0]
+    assert window.ui.pushButton_launch_optimization.text() == "Start optimization"
+    assert window.ui.toolBox_models_and_optimization_parameters.isEnabled()
+    window.ui.pushButton_launch_optimization.click()
+    assert len(started) == 2
+
+
+def test_actual_short_fit_saves_and_allows_another_run(optimization_window, tmp_path):
+    _, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+    window.entries_dict_local_optimization['maxiter'].setText('2')
+    window.entries_dict_local_optimization['disp'].setCurrentText('No')
+    window.launch_optimization()
+    worker = started[0]
+    worker.run()
+    worker.finished.emit()
+    assert errors == []
+    assert np.isfinite(window.results.fun)
+    assert 'Results' in next((tmp_path / 'results').glob('*.txt')).read_text()
+    assert window.ui.pushButton_launch_optimization.text() == "Start optimization"
+    assert 'args' not in window.local_optimization_args_dict
+    window.ui.pushButton_launch_optimization.click()
+    assert len(started) == 2
+
+
+def test_cancellation_uses_interruption_and_unwinds_worker(optimization_window, monkeypatch):
+    main, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+    window.launch_optimization()
+    worker = started[0]
+    requested = []
+    monkeypatch.setattr(worker, 'isRunning', lambda: True)
+    monkeypatch.setattr(worker, 'requestInterruption', lambda: requested.append(True))
+    monkeypatch.setattr(worker, 'isInterruptionRequested', lambda: bool(requested))
+    monkeypatch.setattr(worker, 'terminate', lambda: pytest.fail('Forced thread termination'))
+    window.cancel_optimization()
+    assert requested == [True]
+    assert not window.ui.pushButton_launch_optimization.isEnabled()
+    with pytest.raises(main.OptimizationCancelled):
+        worker.optimization_callback(worker.initial_guess)
+    worker.run()
+    monkeypatch.setattr(worker, 'isRunning', lambda: False)
+    worker.finished.emit()
+    assert errors == []
+    assert 'cancelled' in window.ui.textEdit_output_of_optimization.toPlainText()
+    assert window.ui.pushButton_launch_optimization.isEnabled()
+
+
+def test_real_thread_cancellation_returns_to_ready(optimization_window):
+    import threading
+    import time
+
+    main, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+    window.launch_optimization()
+    worker = started[0]
+    entered_solver = threading.Event()
+    finished = []
+
+    def wait_for_cancellation(function, initial_guess, callback, **kwargs):
+        entered_solver.set()
+        for _ in range(200):
+            callback(initial_guess)
+            time.sleep(0.005)
+        raise AssertionError("Cancellation did not reach the solver callback")
+
+    worker.local_optimization = wait_for_cancellation
+    worker.finished.connect(lambda: finished.append(True))
+    main.QThread.start(worker)
+    try:
+        assert entered_solver.wait(timeout=2)
+        window.cancel_optimization()
+        deadline = time.monotonic() + 3
+        while not finished and time.monotonic() < deadline:
+            main.QApplication.processEvents()
+            time.sleep(0.005)
+        assert finished == [True]
+        assert errors == []
+        assert window.ui.pushButton_launch_optimization.text() == 'Start optimization'
+        assert 'cancelled' in window.ui.textEdit_output_of_optimization.toPlainText()
+    finally:
+        worker.requestInterruption()
+        assert worker.wait(3000)
