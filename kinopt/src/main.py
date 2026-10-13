@@ -1409,8 +1409,17 @@ class MainWindow(QMainWindow):
             if self.selected_tg_law != '':
                 self.tg_law = getattr(km, self.selected_tg_law)
                 self.experimental_args_for_tg = self.get_associated_experimental_parameters(self.tg_law_parameters_experimental)
-                self.tg_args = np.array([])
-                self.tg_args = np.append(self.tg_args, tuple([float(line_edit.text()) for line_edit in self.line_edit_dict_vitrification_model.values()]))
+                try:
+                    self.tg_args = np.array([
+                        float(line_edit.text())
+                        for line_edit in self.line_edit_dict_tg_law.values()
+                    ])
+                except ValueError:
+                    QMessageBox.critical(self, "Error", "Please provide numeric values for all Tg law parameters.")
+                    return
+                if not np.all(np.isfinite(self.tg_args)):
+                    QMessageBox.critical(self, "Error", "Please provide finite values for all Tg law parameters.")
+                    return
             else:
                 self.tg_law = None
                 self.experimental_args_for_tg = None
