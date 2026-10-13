@@ -10,25 +10,24 @@ import sys
 import os
 import traceback
 
-# Get the absolute path of the 'Kinopt' folder
-kinopt_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# Add the 'Kinopt' folder to the Python path
-sys.path.append(kinopt_path)
+# Keep the documented `python main.py` launch working as well as package imports.
+if not __package__:
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QComboBox, QLabel, QLineEdit
 from PyQt5.QtCore import QStringListModel, QThread, pyqtSignal
 from PyQt5.QtGui import QTextCursor
-from kinopt_interface import Ui_MainWindow
+from kinopt.src.kinopt_interface import Ui_MainWindow
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
 
-import data_extraction
-import isoconversional_methods as icm
-import kinetic_models as km
-import optimization as opt 
+from kinopt.src import data_extraction
+from kinopt.src import isoconversional_methods as icm
+from kinopt.src import kinetic_models as km
+from kinopt.src import optimization as opt
 
 import scipy
 import numpy as np
@@ -2764,4 +2763,3 @@ if __name__ == '__main__':
     mainWindow = MainWindow()
     mainWindow.show()
     sys.exit(app.exec_())
-

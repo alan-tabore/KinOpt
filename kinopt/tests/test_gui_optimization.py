@@ -1,7 +1,5 @@
 """Regression tests for parameters passed from the GUI to the optimizer."""
 
-from pathlib import Path
-
 import numpy as np
 import pytest
 
@@ -10,8 +8,6 @@ import pytest
 def optimization_window(monkeypatch, tmp_path):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     monkeypatch.setenv("MPLCONFIGDIR", str(tmp_path / "matplotlib"))
-    # Match the documented script launch until the application uses package imports.
-    monkeypatch.syspath_prepend(str(Path(__file__).parents[1] / "src"))
     from kinopt.src import main
 
     app = main.QApplication.instance() or main.QApplication([])

@@ -22,7 +22,7 @@ from PyQt5.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QRadialGradient)
 from PyQt5.QtWidgets import *
 
-from ressources import ressources_rc
+from kinopt.ressources import ressources_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -864,4 +864,3 @@ class Ui_MainWindow(object):
         self.pushButton_display_result_files.setText(QCoreApplication.translate("MainWindow", u"Display selected result file", None))
         self.label_result_file.setText(QCoreApplication.translate("MainWindow", u"Result file:", None))
     # retranslateUi
-

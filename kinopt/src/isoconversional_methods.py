@@ -11,7 +11,10 @@ from bisect import bisect_left
 import scipy.optimize
 import time as time_module
 from tqdm import tqdm
-import interpolation
+if __package__:
+    from . import interpolation
+else:
+    import interpolation
 from scipy import stats
 
 
@@ -696,5 +699,4 @@ if __name__ == "__main__":
 
     
    
-
 
