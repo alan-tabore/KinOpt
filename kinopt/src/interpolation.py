@@ -13,6 +13,7 @@ a cubic spline interpolation might be more appropriate.
 
 import numpy as np
 from scipy import interpolate
+import warnings
 
 
 
@@ -55,31 +56,50 @@ def check_increase_and_remove_if_not(conversions, times, temperatures, rates):
     tuple
         New lists of conversions, times, temperatures, and rates with non-increasing segments removed.
     """
-    new_conversions = []
-    new_times = []
-    new_temperatures = []
-    new_rates = [] if rates else None
-    
-    for i in range(len(conversions)):
-        conv = np.array(conversions[i])
-        time = np.array(times[i])
-        temp = np.array(temperatures[i])
-        
-        increasing_indices = np.where(conv[:-1] < conv[1:])[0]
-        increasing_indices = np.append(increasing_indices, len(conv) - 1)
-        
-        new_conversions.append(conv[increasing_indices])
-        new_times.append(time[increasing_indices])
-        new_temperatures.append(temp[increasing_indices])
-        
-        if rates:
-            rate = np.array(rates[i])
-            new_rates.append(rate[increasing_indices])
-    
-    if rates:
-        return new_conversions, new_times, new_temperatures, new_rates
-    else:
-        return new_conversions, new_times, new_temperatures
+    if len(conversions) == 0 or len(times) != len(conversions) or len(temperatures) != len(conversions):
+        raise ValueError("Conversion, time and temperature lists must contain the same nonzero number of experiments.")
+    has_rates = rates is not None and len(rates) > 0
+    if has_rates and len(rates) != len(conversions):
+        raise ValueError("Rate lists must match the number of experiments.")
+    output = [[] for _ in range(4 if has_rates else 3)]
+    for index in range(len(conversions)):
+        columns = [np.asarray(group[index], dtype=float) for group in (conversions, times, temperatures)]
+        if has_rates:
+            columns.append(np.asarray(rates[index], dtype=float))
+        if any(column.ndim != 1 or column.size == 0 or column.shape != columns[0].shape for column in columns):
+            raise ValueError("Each experiment must contain nonempty columns of equal length.")
+        if any(not np.all(np.isfinite(column)) for column in columns):
+            raise ValueError("Interpolation requires finite data.")
+        conv = columns[0]
+        keep = np.r_[True, conv[1:] > np.maximum.accumulate(conv)[:-1]]
+        if not np.all(keep):
+            warnings.warn(f"Experiment {index + 1}: removed {np.count_nonzero(~keep)} non-increasing conversion points.", UserWarning)
+        for target, column in zip(output, columns):
+            target.append(column[keep])
+    return tuple(output)
+
+def _interpolate(conversions, times, temperatures, rates, number_of_points, cubic, own_limits):
+    if not isinstance(number_of_points, (int, np.integer)) or number_of_points < 2:
+        raise ValueError("The interpolation point count must be an integer of at least two.")
+    columns = check_increase_and_remove_if_not(conversions, times, temperatures, rates)
+    if any(len(conv) < 2 for conv in columns[0]):
+        raise ValueError("Each experiment needs at least two distinct increasing conversions.")
+    lower = max(conv[0] for conv in columns[0])
+    upper = min(conv[-1] for conv in columns[0])
+    if not own_limits and lower >= upper:
+        raise ValueError("The experiments have no common conversion interval.")
+    output = [np.empty((len(conversions), number_of_points)) for _ in columns]
+    for index, conv in enumerate(columns[0]):
+        grid = np.linspace(conv[0], conv[-1], number_of_points) if own_limits else np.linspace(lower, upper, number_of_points)
+        output[0][index] = grid
+        for target, data in zip(output[1:], columns[1:]):
+            function = (interpolate.CubicSpline(conv, data[index], extrapolate=False) if cubic
+                        else interpolate.interp1d(conv, data[index], bounds_error=True))
+            target[index] = function(grid)
+    if len(output) == 3:
+        output.append(None)
+    return tuple(output)
+
 
 def linear_interpolation(conversions_lists, times_lists, temperatures_lists, rates_lists, number_of_points):
     """
@@ -103,29 +123,8 @@ def linear_interpolation(conversions_lists, times_lists, temperatures_lists, rat
     tuple
         Interpolated conversion, time, temperature, and rate arrays.
     """
-    flat_conversions = np.concatenate(conversions_lists)
-    minimum, maximum = np.min(flat_conversions), np.max(flat_conversions)
-    global_conversion = np.linspace(minimum, maximum, number_of_points)
-    
-    conv, time, temp, rates = check_increase_and_remove_if_not(conversions_lists, times_lists, temperatures_lists, rates_lists)
-    
-    new_conversions = np.empty((len(conversions_lists), number_of_points))
-    new_times = np.empty((len(conversions_lists), number_of_points))
-    new_temperatures = np.empty((len(conversions_lists), number_of_points))
-    new_rates = np.empty((len(conversions_lists), number_of_points)) if rates_lists else None
-    
-    for i in range(len(conversions_lists)):
-        f = interpolate.interp1d(conv[i], time[i])
-        g = interpolate.interp1d(conv[i], temp[i])
-        h = interpolate.interp1d(conv[i], rates[i])
-        
-        new_times[i] = f(global_conversion)
-        new_temperatures[i] = g(global_conversion)  
-        new_rates[i] = h(global_conversion)
-        
-        new_conversions[i] = global_conversion
-    
-    return new_conversions, new_times, new_temperatures, new_rates
+    return _interpolate(conversions_lists, times_lists, temperatures_lists, rates_lists,
+                        number_of_points, cubic=False, own_limits=False)
 
 def linear_interpolation_multiple_limits(conversions_lists, times_lists, temperatures_lists, rates_lists, number_of_points):
     """
@@ -149,27 +148,8 @@ def linear_interpolation_multiple_limits(conversions_lists, times_lists, tempera
     tuple
         Interpolated conversion, time, temperature, and rate arrays.
     """
-    new_conversions = np.empty((len(conversions_lists), number_of_points))
-    new_times = np.empty((len(conversions_lists), number_of_points))
-    new_temperatures = np.empty((len(conversions_lists), number_of_points))
-    new_rates = np.empty((len(conversions_lists), number_of_points))
-    
-    for i, conv_list in enumerate(conversions_lists):
-        minimum = conv_list[0]
-        maximum = conv_list[-1]
-        global_conversion = np.linspace(minimum, maximum, number_of_points)
-        
-        f = interpolate.interp1d(conv_list, times_lists[i])
-        g = interpolate.interp1d(conv_list, temperatures_lists[i])
-        h = interpolate.interp1d(conv_list, rates_lists[i])
-        
-        new_times[i] = f(global_conversion)
-        new_temperatures[i] = g(global_conversion)            
-        new_rates[i] = h(global_conversion)
-        
-        new_conversions[i] = global_conversion
-    
-    return new_conversions, new_times, new_temperatures, new_rates
+    return _interpolate(conversions_lists, times_lists, temperatures_lists, rates_lists,
+                        number_of_points, cubic=False, own_limits=True)
     
 def cubic_spline_interpolation(conversions_lists, times_lists, temperatures_lists, rates_lists, number_of_points):
     """
@@ -193,29 +173,8 @@ def cubic_spline_interpolation(conversions_lists, times_lists, temperatures_list
     tuple
         Interpolated conversion, time, temperature, and rate arrays.
     """
-    flat_conversions = np.concatenate(conversions_lists)
-    minimum, maximum = np.min(flat_conversions), np.max(flat_conversions)
-    global_conversion = np.linspace(minimum, maximum, number_of_points)
-    
-    conv, time, temp, rates = check_increase_and_remove_if_not(conversions_lists, times_lists, temperatures_lists, rates_lists)
-    
-    new_conversions = np.empty((len(conversions_lists), number_of_points))
-    new_times = np.empty((len(conversions_lists), number_of_points))
-    new_temperatures = np.empty((len(conversions_lists), number_of_points))
-    new_rates = np.empty((len(conversions_lists), number_of_points)) if rates_lists else None
-    
-    for i in range(len(conversions_lists)):
-        f = interpolate.CubicSpline(conv[i], time[i])
-        g = interpolate.CubicSpline(conv[i], temp[i])
-        h = interpolate.CubicSpline(conv[i], rates[i])
-        
-        new_times[i] = f(global_conversion)
-        new_temperatures[i] = g(global_conversion)
-        new_rates[i] = h(global_conversion)
-        
-        new_conversions[i] = global_conversion
-    
-    return new_conversions, new_times, new_temperatures, new_rates
+    return _interpolate(conversions_lists, times_lists, temperatures_lists, rates_lists,
+                        number_of_points, cubic=True, own_limits=False)
 
 def cubic_spline_interpolation_multiple_limits(conversions_lists, times_lists, temperatures_lists, rates_lists, number_of_points):
     """
@@ -237,35 +196,8 @@ def cubic_spline_interpolation_multiple_limits(conversions_lists, times_lists, t
     tuple
         Interpolated conversion, time, and temperature arrays.
     """
-    # Preallocate arrays for interpolated values
-    new_conversions = np.empty((len(conversions_lists), number_of_points))
-    new_times = np.empty((len(conversions_lists), number_of_points))
-    new_temperatures = np.empty((len(conversions_lists), number_of_points))
-    new_rates = np.empty((len(conversions_lists), number_of_points))
-    
-    for i, conv_list in enumerate(conversions_lists):
-        minimum = conv_list[0]
-        maximum = conv_list[-1]
-        global_conversion = np.linspace(minimum, maximum, number_of_points)
-        
-        # Perform cubic spline interpolation
-        f = interpolate.CubicSpline(conversions_lists[i], times_lists[i])
-        g = interpolate.CubicSpline(conversions_lists[i], temperatures_lists[i])
-        h = interpolate.CubicSpline(conv_list, rates_lists[i])
-        
-        # Evaluate interpolations at global conversion points
-        new_conv = global_conversion
-        new_time = f(global_conversion)
-        new_temp = g(global_conversion)
-        new_rate = h(global_conversion)
-        
-        # Append to results
-        new_conversions.append(new_conv)
-        new_times.append(new_time)
-        new_temperatures.append(new_temp)
-        new_rates.append(new_rate)
-
-    return np.array(new_conversions), np.array(new_times), np.array(new_temperatures)
+    return _interpolate(conversions_lists, times_lists, temperatures_lists, rates_lists,
+                        number_of_points, cubic=True, own_limits=True)
 
 
 

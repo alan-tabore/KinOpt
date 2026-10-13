@@ -2,6 +2,65 @@ import pytest
 import numpy as np
 from kinopt.src import interpolation as interp
 
+
+@pytest.mark.parametrize("method", [interp.linear_interpolation, interp.cubic_spline_interpolation])
+def test_shared_grid_uses_only_common_domain(method):
+    conversions = [np.array([0., .5, 1.]), np.array([.1, .5, .9])]
+    times = [2 * values for values in conversions]
+    temperatures = [300 + values for values in conversions]
+    rates = [3 * values for values in conversions]
+    result = method(conversions, times, temperatures, rates, 5)
+    expected = np.tile(np.linspace(.1, .9, 5), (2, 1))
+    np.testing.assert_allclose(result[0], expected)
+    np.testing.assert_allclose(result[1], 2 * expected)
+    np.testing.assert_allclose(result[2], 300 + expected)
+    np.testing.assert_allclose(result[3], 3 * expected)
+
+
+@pytest.mark.parametrize("method", [interp.linear_interpolation_multiple_limits,
+                                   interp.cubic_spline_interpolation_multiple_limits])
+def test_per_experiment_grid_returns_all_four_columns(method):
+    conversions = [np.array([0., .3, .6]), np.array([.1, .5, .9])]
+    result = method(conversions, conversions, [300 + c for c in conversions], conversions, 5)
+    expected = np.array([np.linspace(0, .6, 5), np.linspace(.1, .9, 5)])
+    assert len(result) == 4
+    np.testing.assert_allclose(result[0], expected)
+    np.testing.assert_allclose(result[1], expected)
+    np.testing.assert_allclose(result[2], 300 + expected)
+    np.testing.assert_allclose(result[3], expected)
+
+
+def test_monotonic_filter_keeps_columns_aligned():
+    conversion = np.array([0., .4, .5, .2, .3, .6])
+    with pytest.warns(UserWarning, match="removed 2"):
+        actual = interp.check_increase_and_remove_if_not(
+            [conversion], [np.arange(6.)], [np.arange(6.) + 300], [np.arange(6.) + 10])
+    indices = [0, 1, 2, 5]
+    np.testing.assert_array_equal(actual[0][0], conversion[indices])
+    np.testing.assert_array_equal(actual[1][0], indices)
+    np.testing.assert_array_equal(actual[2][0], np.array(indices) + 300)
+    np.testing.assert_array_equal(actual[3][0], np.array(indices) + 10)
+
+
+def test_interpolation_without_rates():
+    data = [np.array([0., .5, 1.])]
+    result = interp.linear_interpolation(data, data, data, None, 5)
+    np.testing.assert_allclose(result[1][0], np.linspace(0, 1, 5))
+    assert result[3] is None
+
+
+def test_disjoint_experiments_are_rejected():
+    data = [np.array([0., .2]), np.array([.3, .4])]
+    with pytest.raises(ValueError, match="no common"):
+        interp.linear_interpolation(data, data, data, data, 5)
+
+
+@pytest.mark.parametrize("points", [0, 1, -1, 2.5])
+def test_invalid_interpolation_point_count(points):
+    data = [np.array([0., 1.])]
+    with pytest.raises(ValueError, match="point count"):
+        interp.linear_interpolation(data, data, data, data, points)
+
 def test_linear_interpolation():
     """
     Test the linear_interpolation function to ensure it correctly interpolates
