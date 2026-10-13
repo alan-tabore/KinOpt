@@ -19,7 +19,9 @@ To perform the optimization of a kinetic model:
 
 ⚠ The start of optimization can take a few seconds up to a few minutes to start, please be patient.
 
-At the end of optimization, a result file is saved under 'KinOpt/results/'.
+At the end of optimization, a result file is saved in ``KinOpt/results`` inside
+your desktop's Documents folder, or in the directory selected with
+``kinopt --results-dir DIRECTORY``. Its full path appears in the output panel.
 
 .. note::
     * The GUI will frequently be updated with the current state of optimization.

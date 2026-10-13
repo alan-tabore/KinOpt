@@ -45,23 +45,23 @@ jobs:
       - name: Check installed dependencies
         run: python -m pip check
       - name: Check syntax and undefined names
-        run: python -m flake8 kinopt/src kinopt/tests --select=E9,F63,F7,F82 --show-source --statistics
+        run: python -m flake8 kinopt ci --select=E9,F63,F7,F82 --show-source --statistics
       - name: Run regression tests and record coverage
         run: python -m pytest --cov --cov-report=term --cov-report=xml:coverage.xml
       - name: Build distributable wheel
         run: python -m build --wheel
-      - name: Open installed GUI outside the repository
+      - name: Install the built wheel
+        run: python -m pip install --force-reinstall --no-deps dist/*.whl
+      - name: Check both installed launchers outside the repository
         working-directory: ${{ runner.temp }}
+        env:
+          GUI_SMOKE_SCRIPT: ${{ github.workspace }}/ci/smoke_installed_gui.py
         run: |
-          python - <<'PY'
-          from kinopt.src.main import QApplication, MainWindow
-          app = QApplication([])
-          window = MainWindow()
-          window.show()
-          app.processEvents()
-          assert window.isVisible()
-          window.close()
-          PY
+          kinopt --help
+          python -m kinopt --version
+          timeout 30s python "$GUI_SMOKE_SCRIPT" console
+          timeout 30s python "$GUI_SMOKE_SCRIPT" module
+          timeout 30s python "$GUI_SMOKE_SCRIPT" legacy
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -1,14 +1,27 @@
 Launching the graphical interface
 =================================
 
-To start the graphical interface:
-
-1. Open a command prompt in the '*src*' folder
-2. Run the "main.py" script using python.
+After :doc:`installation`, open a terminal in your graphical desktop session
+and run the command from any directory:
 
 .. code:: bash
 
-    >> python3 main.py
+    kinopt
+
+To choose where optimization results will be saved:
+
+.. code-block:: bash
+
+    kinopt --results-dir "$HOME/mes-resultats-kinopt"
+
+By default, results go to ``KinOpt/results`` inside your desktop's Documents
+folder. Relative paths supplied to ``--results-dir`` are resolved from the
+terminal's current directory. The output panel shows the saved file's full path.
+
+``kinopt --help`` and ``kinopt --version`` work without a graphical display.
+With the Python environment activated, ``python -m kinopt`` is an equivalent
+launcher. The historical ``python main.py`` command from ``kinopt/src`` is
+also supported. Opening the interface does not start a calculation.
 
 The GUI should look like this:
 

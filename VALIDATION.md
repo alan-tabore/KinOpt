@@ -60,7 +60,8 @@ Chaque pull request et chaque modification de `master` déclenchent :
   historiques définies dans `ci/constraints-legacy.txt` ;
 - les tests sous Python 3.14 avec les dépendances disponibles lors de l'installation ;
 - la cohérence des dépendances, les erreurs de syntaxe et les noms non définis ;
-- la construction du paquet et l'ouverture de son interface installée, hors du dépôt ;
+- la construction puis l'installation du paquet, et l'ouverture de son interface
+  par `kinopt` et `python -m kinopt`, hors du dépôt ;
 - un rapport de couverture téléchargeable dans les artefacts du workflow.
 
 Le contrôle final `build` réussit seulement si les trois environnements réussissent.
@@ -119,9 +120,11 @@ et la [protection des branches](https://docs.github.com/en/repositories/configur
   ne sont pas validés ici.
 - L'annulation intervient au prochain point de contrôle du solveur : une
   évaluation longue peut retarder l'arrêt. Le thread n'est pas tué brutalement.
-- La compatibilité visuelle avec un bureau Linux réel et le choix d'un dossier
-  de résultats accessible après installation restent à vérifier lors du travail
-  sur le lancement depuis le terminal.
+- La compatibilité visuelle avec les différents bureaux Linux reste à vérifier.
+  Les lanceurs et le choix du dossier de résultats sont testés séparément :
+  par défaut, les résultats vont dans `Documents/KinOpt/results`, avec prise en
+  compte du dossier Documents configuré sur le bureau. L'option `--results-dir`
+  permet d'en choisir un autre. Les anciens résultats du dépôt restent lisibles.
 
 L'import impose actuellement un écart relatif de `1e-5` et absolu de `1e-8`
 entre l'intégrale de la vitesse et la variation de conversion, comme auparavant.

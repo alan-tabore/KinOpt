@@ -37,15 +37,29 @@ This project uses Python, so please make sure you installed it and that the vers
 
 ### Installation
 
-To install this module, simply download the project in a zip file and extract it.
+Download or clone the repository. From its root directory on Linux, install
+KinOpt in an isolated Python environment:
 
-Once you’ve downloaded the project, you can install the required python modules from PyPI with pip or with conda.
-
-Open a command prompt in the KinOpt folder and execute:
 ``` bash
-python -m pip install -r requirements.txt
+python3 -m venv .venv
+.venv/bin/python -m pip install .
 ```
 
+To make `kinopt` available from any directory without activating the environment:
+
+```bash
+mkdir -p "$HOME/.local/bin"
+ln -s "$PWD/.venv/bin/kinopt" "$HOME/.local/bin/kinopt"
+```
+
+`~/.local/bin` must be on your `PATH`. If your desktop does not add it, add
+`export PATH="$HOME/.local/bin:$PATH"` to your shell configuration and open a new
+terminal. If a `kinopt` command already exists, check its location with
+`command -v kinopt` before replacing it.
+
+After updating the repository, run `.venv/bin/python -m pip install .` again.
+The dependencies needed by the application are declared in `pyproject.toml`;
+the old `requirements.txt` is kept as a historical environment snapshot.
 
 ### Tutorials
 
@@ -56,13 +70,39 @@ Tutorials are available on Youtube to show you how to install and use the softwa
 
 ## Usage
 
-To start the graphical interface:
-1. Open a command prompt in the ‘src’ folder
-2. Run the “main.py” script using python.
-``` bash   
->> python3 main.py
+Open a terminal in your graphical desktop session and run:
+
+```bash
+kinopt
 ```
 
+Results are saved in `KinOpt/results` inside your desktop's Documents folder
+(usually `~/Documents/KinOpt/results`). The output panel shows the saved file's
+full path. To choose a different folder:
+
+```bash
+kinopt --results-dir "$HOME/mes-resultats-kinopt"
+```
+
+Relative paths are resolved from the terminal's current directory. Existing
+results in the checkout's `kinopt/results` folder remain available through
+**Load result file(s)**.
+
+```bash
+kinopt --help
+kinopt --version
+```
+
+You can also activate the environment and launch the module:
+
+```bash
+source /path/to/KinOpt/.venv/bin/activate
+python -m kinopt
+```
+
+The historical `python main.py` launch from `kinopt/src` remains supported.
+All launchers open the graphical interface; they do not start an optimization
+automatically.
 
 ## License
 
