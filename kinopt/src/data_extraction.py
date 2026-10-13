@@ -1,162 +1,70 @@
-# -*- coding: utf-8 -*-
-"""
-The data extraction allows to retrieve kinetic data from one or multiple files.
+"""Load and validate kinetic data stored as time, temperature, rate and conversion."""
 
-In addition to retrieving data from .txt or .csv files, this module also check the validity
-of provided data.
-
-.. note::
-    To improve computational costs, the data is retrieved as numpy arrays.
-"""
+import os
+import warnings
 
 import numpy as np
-import os
+from scipy.integrate import trapezoid
 
-def extract_dsc_data_multiple_files(file_paths, delimiter=',', has_header=False, skip_lines=0):
-    """
-    Extract DSC data from multiple txt or csv files and perform data validation.
-
-    Parameters
-    ----------
-    file_paths : list
-        List of file paths to input txt or csv files containing DSC data.
-    delimiter : str, optional
-        Delimiter used in the input files. Default is ','.
-    has_header : bool, optional
-        Whether the input files have headers. Default is False.
-    skip_lines : int, optional
-        Number of lines to skip at the beginning of each file. Default is 0.
-
-    Returns
-    -------
-    Tuple of concatenated numpy arrays
-        (time, temperature, rate_of_reaction, extent_of_reaction)
-    """
-    try:
-        concatenated_time = []
-        concatenated_temperature = []
-        concatenated_rate_of_reaction = []
-        concatenated_extent_of_reaction = []
-        
-        for file_path in file_paths:
-            # Load data from the file
-            if has_header:
-                data = np.genfromtxt(file_path, delimiter=delimiter, skip_header=1 + skip_lines)  # Skip the header and specified lines
-            else:
-                data = np.genfromtxt(file_path, delimiter=delimiter, skip_header=skip_lines)
-            
-            # Separate columns from the data
-            time = data[:, 0]
-            temperature = data[:, 1]
-            rate_of_reaction = data[:, 2]
-            extent_of_reaction = data[:, 3]
-            
-            # Check if extent of reaction is within [0, 1] range
-            initial_extent = extent_of_reaction[0]
-            final_extent = extent_of_reaction[-1]
-            
-            # Integral of reaction rate should be equal to extent of reaction
-            extent_of_reaction_recorded = extent_of_reaction[-1]-extent_of_reaction[0]
-            
-            if initial_extent < 0 or initial_extent > 1 or final_extent < 0 or final_extent > 1:
-                print(f"Error in file {os.path.basename(file_path)}: Extent of reaction should be between 0 and 1. Initial extent: {initial_extent}, Final extent: {final_extent}")
-            else:
-                print(f"Info in file {os.path.basename(file_path)}:\n Initial extent: {initial_extent}, Final extent: {final_extent}")
-            
-            # Warn about issues with initial extent being zero
-            if initial_extent == 0:
-                print(f"Info: in file {os.path.basename(file_path)}: Initial extent being zero can lead to issues for some kinetic models.")
-            
-            # Check if extent of reaction is non-decreasing
-            if not np.all(np.diff(extent_of_reaction) >= 0):
-                print(f"Error in file {os.path.basename(file_path)}: Extent of reaction is not non-decreasing.")
-            
-            # Check temperature unit
-            if temperature[0] < 173.15:
-                print(f"Warning in file {os.path.basename(file_path)}: Starting temperature should be in Kelvin not Celsius.\n Make sure you're using the appropriate units.")
-            
-            # Calculate the integral of rate of reaction and compare with global extent
-            integral_rate = np.trapz(rate_of_reaction, time)
-            if not np.isclose(integral_rate, extent_of_reaction_recorded):
-                print(f"Error in file {os.path.basename(file_path)}: Integral of rate of reaction is not equal to the final extent.")
-            
-            #Check if there's extent equal or greater than 1
-            if np.any(extent_of_reaction >= 1):
-                # Remove data after extent reaches 1
-                complete_reaction_index = np.argmax(extent_of_reaction >= 1) + 1
-            else:
-                complete_reaction_index = len(extent_of_reaction)
-            
-            time = time[:complete_reaction_index]
-            temperature = temperature[:complete_reaction_index]
-            rate_of_reaction = rate_of_reaction[:complete_reaction_index]
-            extent_of_reaction = extent_of_reaction[:complete_reaction_index]
-            
-            concatenated_time.extend(time)
-            concatenated_temperature.extend(temperature)
-            concatenated_rate_of_reaction.extend(rate_of_reaction)
-            concatenated_extent_of_reaction.extend(extent_of_reaction)
-        
-        concatenated_time = np.array(concatenated_time)
-        concatenated_temperature = np.array(concatenated_temperature)
-        concatenated_rate_of_reaction = np.array(concatenated_rate_of_reaction)
-        concatenated_extent_of_reaction = np.array(concatenated_extent_of_reaction)
-
-        return concatenated_time, concatenated_temperature, concatenated_rate_of_reaction, concatenated_extent_of_reaction
-    except Exception as e:
-        print(f"Error in file {os.path.basename(file_path)}:{e}")
-        return 0,0,0,0
 
 def extract_dsc_data_single_file(file_path, delimiter=',', has_header=False, skip_lines=0):
+    """Return four arrays, validating the complete file before trimming at conversion 1.
+
+    Times must increase strictly, temperatures must be positive (Kelvin), and
+    conversions must be nondecreasing and within [0, 1]. At least two rows and
+    four columns are required. Extra columns are ignored for compatibility.
+    The integral of rate must match the recorded conversion change, using the
+    existing NumPy isclose tolerances (rtol=1e-5, atol=1e-8).
+
+    Invalid input raises ValueError with the file name; filesystem failures
+    raise OSError. Suspicious units produce a warning without changing data.
     """
-    Extract DSC data from multiple txt or csv files and perform data validation.
+    if not isinstance(skip_lines, (int, np.integer)) or skip_lines < 0:
+        raise ValueError("The number of lines to skip must be a nonnegative integer.")
+    name = os.path.basename(file_path)
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="loadtxt: input contained no data")
+            data = np.loadtxt(file_path, delimiter=delimiter,
+                              skiprows=skip_lines + int(has_header), ndmin=2)
+        if data.shape[0] < 2 or data.shape[1] < 4:
+            raise ValueError("at least two rows and four columns are required")
+        data = data[:, :4]
+        if not np.all(np.isfinite(data)):
+            raise ValueError("data contain missing or non-finite values")
+        time, temperature, rate, extent = data.T
+        if np.any(np.diff(time) <= 0):
+            raise ValueError("time must be strictly increasing")
+        if np.any(temperature <= 0):
+            raise ValueError("temperature must be positive and expressed in Kelvin")
+        if np.any((extent < 0) | (extent > 1)):
+            raise ValueError("extent of reaction must be between 0 and 1")
+        if np.any(np.diff(extent) < 0):
+            raise ValueError("extent of reaction must be nondecreasing")
+        if not np.isclose(trapezoid(rate, time), extent[-1] - extent[0]):
+            raise ValueError("integral of rate does not match the recorded change in extent")
+    except ValueError as exc:
+        raise ValueError(f"Error in file {name}: {exc}") from exc
 
-    Parameters
-    ----------
-    file_path : list
-        File path to input txt or csv files containing DSC data.
-    delimiter : str, optional
-        Delimiter used in the input file. Default is ','.
-    has_header : bool, optional
-        Whether the input file has headers. Default is False.
-    skip_lines : int, optional
-        Number of lines to skip at the beginning of the file. Default is 0.
+    if np.any(temperature < 173.15):
+        warnings.warn(f"File {name}: check that temperatures are in Kelvin, not Celsius.", UserWarning)
+    if extent[0] == 0:
+        warnings.warn(f"File {name}: zero initial extent needs care when simulating an autocatalytic model.", UserWarning)
+    stop = np.flatnonzero(extent >= 1)
+    end = int(stop[0]) + 1 if stop.size else len(extent)
+    return tuple(column[:end].copy() for column in (time, temperature, rate, extent))
 
-    Returns
-    -------
-    Tuple of numpy arrays
-        (time, temperature, rate_of_reaction, extent_of_reaction)
+
+def extract_dsc_data_multiple_files(file_paths, delimiter=',', has_header=False, skip_lines=0):
+    """Validate every file and concatenate its four columns, or raise an error.
+
+    No partial result or numeric sentinel is returned when one file fails.
+    Each file's time axis is validated separately; experiments may start at 0.
     """
-    # Load data from the file
-    if has_header:
-        data = np.loadtxt(file_path, delimiter=delimiter, skiprows=1 + skip_lines)  # Skip the header and specified lines
-    else:
-        data = np.loadtxt(file_path, delimiter=delimiter, skiprows=skip_lines)
-    
-    # Separate columns from the data
-    time = data[:, 0]
-    temperature = data[:, 1]
-    rate_of_reaction = data[:, 2]
-    extent_of_reaction = data[:, 3]
-    
-    
-    #Check if there's extent equal or greater than 1
-    if np.any(extent_of_reaction >= 1):
-        # Remove data after extent reaches 1
-        complete_reaction_index = np.argmax(extent_of_reaction >= 1) + 1
-    else:
-        complete_reaction_index = len(extent_of_reaction)
-        
-    time = time[:complete_reaction_index]
-    temperature = temperature[:complete_reaction_index]
-    rate_of_reaction = rate_of_reaction[:complete_reaction_index]
-    extent_of_reaction = extent_of_reaction[:complete_reaction_index]
-
-    
-    return time, temperature, rate_of_reaction, extent_of_reaction
-
-if __name__=="__main__":
-    print("You've run the data extraction module.")
-    
-    
-    
+    if isinstance(file_paths, (str, os.PathLike)):
+        raise ValueError("Provide a list of data files, not a single path.")
+    datasets = [extract_dsc_data_single_file(path, delimiter, has_header, skip_lines)
+                for path in file_paths]
+    if not datasets:
+        raise ValueError("Please select at least one data file.")
+    return tuple(np.concatenate(columns) for columns in zip(*datasets))
