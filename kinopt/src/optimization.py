@@ -45,6 +45,14 @@ def model(x, rate_law, experimental_args_for_rate, number_of_parameters_to_optim
     global_rate : float
         Overall global rate considering both reaction and vitrification.
     """
+    if not rate_law and not vitrification_law:
+        raise ValueError("Select at least one rate or vitrification model.")
+    if coupling_law and (not rate_law or not vitrification_law):
+        raise ValueError("A coupling law requires both rate and vitrification models.")
+    if rate_law and vitrification_law and not coupling_law:
+        raise ValueError("Select a coupling law when using both rate and vitrification models.")
+    if vitrification_law and not tg_law:
+        raise ValueError("A vitrification model requires a Tg law.")
     if rate_law:
         rate_of_reaction = rate_law(*experimental_args_for_rate, *x[:number_of_parameters_to_optimize_for_rate])
         if not coupling_law:
@@ -198,6 +206,8 @@ def rss_relative(x, experimental_rate, rate_law, experimental_args_for_rate, num
     # Calculate model rate using the defined model function
     model_rate = model(x, rate_law, experimental_args_for_rate, number_of_parameters_to_optimize_for_rate, vitrification_law, experimental_args_for_vitrification, number_of_parameters_to_optimize_for_vitrification, coupling_law, experimental_args_for_coupling, tg_law, experimental_args_for_tg, tg_args)
     # Calculate the difference between model rate and experimental rate
+    if np.any(np.asarray(experimental_rate) == 0):
+        raise ValueError("Relative RSS requires nonzero experimental rates.")
     dif = (model_rate - experimental_rate)/experimental_rate
     # Calculate the RSS by summing the squared differences
     return np.dot(dif, dif)

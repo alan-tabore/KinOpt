@@ -60,6 +60,26 @@ def test_rate_for_kamal():
     results = km.rate_for_kamal(extent,T,A1,E1,A2,E2,m,n)
     assert np.allclose(results, expected_results), "Rate for kamal reaction calculation failed."
 
+
+@pytest.mark.parametrize("extent", [-0.1, 1.1, np.nan, np.inf])
+def test_autocatalytic_rejects_invalid_conversion(extent):
+    with pytest.raises(ValueError, match="between 0 and 1"):
+        km.rate_for_autocatalytic(np.array([.2, extent]), 400., 1e8, 60000., .5, 1.)
+
+
+def test_autocatalytic_zero_conversion_has_zero_rate_but_cannot_start_simulation():
+    assert km.rate_for_autocatalytic(0., 400., 1e8, 60000., .5, 1.) == 0
+    with pytest.raises(ValueError, match="positive initial extent"):
+        km.compute_extent_and_rate([0, 1], [400, 400], km.rate_for_autocatalytic,
+                                   (1e8, 60000., .5, 1.), initial_extent=0)
+
+
+def test_harmonic_coupling_handles_zero_scalar_and_array_rates():
+    with np.errstate(all='raise'):
+        assert km.coupling_harmonic_mean(0, 1) == 0
+        assert km.coupling_harmonic_mean(0, 0) == 0
+        np.testing.assert_allclose(km.coupling_harmonic_mean(np.array([0., 2.]), np.array([3., 3.])), [0., 1.2])
+
     
 def test_vitrification_WLF_rate():
     # Test case 1: All temperatures above Tg
@@ -174,8 +194,4 @@ def test_coupling_functions_signature():
     
         
 if __name__=="__main__":
-
-    
     test_vitrification_WLF_rate_no_reaction_below_Tg()
-    
-    

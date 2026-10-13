@@ -8,6 +8,8 @@ The aim of the KinOpt project is to use kinetics data to perform isoconversional
 
 A documentation of the KinOpt module is available at [KinOpt Documentation](https://kinopt.readthedocs.io/en/latest/index.html)
 
+For development checks and merging changes, see the [validation guide (French)](VALIDATION.md).
+
 ## Table of Contents
 
 - [Getting Started](#getting-started)

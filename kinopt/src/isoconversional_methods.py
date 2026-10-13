@@ -11,7 +11,10 @@ from bisect import bisect_left
 import scipy.optimize
 import time as time_module
 from tqdm import tqdm
-import interpolation
+if __package__:
+    from . import interpolation
+else:
+    import interpolation
 from scipy import stats
 
 
@@ -448,10 +451,10 @@ def isoconversional_analysis_vyazovkin_method(conv_lists, time_lists, temperatur
         result = scipy.optimize.minimize(compute_function_to_minimize, x0=current_guess, args=(time_, temperature), method='BFGS', options={'gtol': 1e-15})
 
         # Store the calculated activation energy
-        Ea_calculated[i] = result.x
+        Ea_calculated[i] = result.x.item()
 
         # Update the current_guess for the next optimization step
-        current_guess = result.x
+        current_guess = result.x.item()
 
     t_stop = time_module.process_time()
     print("Done! It took", t_stop - t_start, "s for the optimization to be performed")
@@ -528,8 +531,8 @@ def isoconversional_analysis_advanced_vyazovkin_method(conv_lists, time_lists, t
         result = scipy.optimize.minimize(compute_function_to_minimize, x0=initial_guess, args=(
             times, temperatures), method='BFGS', options={'gtol': 1e-15})
 
-        Ea_calculated.append(float(result.x))
-        initial_guess = float(result.x)
+        Ea_calculated.append(result.x.item())
+        initial_guess = result.x.item()
 
     t_stop = time_module.process_time()
     
@@ -696,5 +699,3 @@ if __name__ == "__main__":
 
     
    
-
-

@@ -10,25 +10,24 @@ import sys
 import os
 import traceback
 
-# Get the absolute path of the 'Kinopt' folder
-kinopt_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# Add the 'Kinopt' folder to the Python path
-sys.path.append(kinopt_path)
+# Keep the documented `python main.py` launch working as well as package imports.
+if not __package__:
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QComboBox, QLabel, QLineEdit
 from PyQt5.QtCore import QStringListModel, QThread, pyqtSignal
 from PyQt5.QtGui import QTextCursor
-from kinopt_interface import Ui_MainWindow
+from kinopt.src.kinopt_interface import Ui_MainWindow
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
 
-import data_extraction
-import isoconversional_methods as icm
-import kinetic_models as km
-import optimization as opt 
+from kinopt.src import data_extraction
+from kinopt.src import isoconversional_methods as icm
+from kinopt.src import kinetic_models as km
+from kinopt.src import optimization as opt
 
 import scipy
 import numpy as np
@@ -43,6 +42,7 @@ class MainWindow(QMainWindow):
         # Set up the user interface from Designer.
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.optimization_thread = None
 
         # Connect data extraction elements
         self.ui.pushButton_add_files.clicked.connect(self.browse_files)
@@ -243,6 +243,7 @@ class MainWindow(QMainWindow):
         
     def extract_data(self):
         """Extract data from selected files and update GUI elements based on extraction results."""
+        self.successful_extraction = False
         try:
             # Get the selected file paths
             file_paths_list = self.selected_full_file_paths
@@ -1331,6 +1332,8 @@ class MainWindow(QMainWindow):
         Returns:
         - None
         """
+        if self.optimization_thread is not None and self.optimization_thread.isRunning():
+            return
         try:
             # =============================================================================
             # Check before launching optimization            
@@ -1428,6 +1431,11 @@ class MainWindow(QMainWindow):
                 self.global_optimization = getattr(scipy.optimize, self.selected_global_optimization)
                 
                 self.global_optimization_args_dict = self.get_global_optimization_args_dict(self.selected_global_optimization)
+                if self.global_optimization_args_dict is None:
+                    return
+                if self.global_optimization_args_dict.get('vectorized', False):
+                    QMessageBox.critical(self, "Error", "Vectorized evaluation is not supported by these cost functions.")
+                    return
                 
             else:
                 self.global_optimization = None
@@ -1436,6 +1444,8 @@ class MainWindow(QMainWindow):
                 self.local_optimization = getattr(scipy.optimize, 'minimize')
                 
                 self.local_optimization_args_dict = self.get_local_optimization_args_dict(self.selected_local_optimization)
+                if self.local_optimization_args_dict is None:
+                    return
                 
                 self.local_optimization_args_dict['method'] = self.selected_local_optimization
             else:
@@ -1462,6 +1472,16 @@ class MainWindow(QMainWindow):
                         self.max_iter = self.local_optimization_args_dict['options'][key]
 
             
+            if not np.all(np.isfinite(self.initial_guess)):
+                QMessageBox.critical(self, "Error", "All initial model parameters must be finite numbers.")
+                return
+            if not isinstance(self.max_iter, (int, np.integer)) or self.max_iter <= 0:
+                QMessageBox.critical(self, "Error", "The iteration budget must be a positive integer.")
+                return
+            if self.selected_cost_function == 'rss_relative' and np.any(self.experimental_rate == 0):
+                QMessageBox.critical(self, "Error", "Relative RSS requires nonzero experimental rates. Please choose another cost function.")
+                return
+
             self.ui.textEdit_output_of_optimization.clear()
             
             # =============================================================================
@@ -1494,53 +1514,53 @@ class MainWindow(QMainWindow):
             self.ui.pushButton_launch_optimization.setText("Cancel optimization")
             self.ui.pushButton_launch_optimization.clicked.disconnect()
             self.ui.pushButton_launch_optimization.clicked.connect(self.cancel_optimization)
-            self.optimization_thread.start()
             self.optimization_thread.update_progress_bar_signal.connect(self.update_progress_bar)
             self.optimization_thread.update_graph_signal.connect(self.update_graph)
             self.optimization_thread.end_of_optimization.connect(self.update_GUI_at_end_of_optimization)
             self.optimization_thread.error_in_optimization_thread.connect(self.display_error_in_optimization_thread)
+            self.optimization_thread.cancelled.connect(self._optimization_cancelled)
+            self.optimization_thread.finished.connect(self._optimization_finished)
+            self.ui.toolBox_models_and_optimization_parameters.setEnabled(False)
+            self.ui.dockWidgetData_extraction.setEnabled(False)
+            self.ui.dockWidgetIsoconversionalAnalysis.setEnabled(False)
+            self.optimization_thread.start()
         except Exception as e:
             # Handle other exceptions with a generic error message
             traceback.print_exc() 
             QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
-            self.optimization_thread.terminate()
-            self.ui.pushButton_launch_optimization.setEnabled(True)
+            self._optimization_finished()
             self.ui.progressBar.setValue(0)
             self.ui.label_remaing_time.setText("Remaining time: (No optimization runnning)")
             return
     
     def cancel_optimization(self):
-        """
-        Cancel the ongoing optimization process.
-    
-        This function stops the optimization thread and resets the GUI elements related to the optimization.
-    
-        Parameters
-        ----------
-        self : object
-            The object instance.
-    
-        Returns
-        -------
-        None
-        """
-        try:
-            if hasattr(self, 'optimization_thread') and self.optimization_thread.isRunning():
-                self.ui.pushButton_launch_optimization.setText("Start optimization")
-                self.ui.pushButton_launch_optimization.clicked.disconnect()
-                self.ui.pushButton_launch_optimization.clicked.connect(self.launch_optimization)
-                self.optimization_thread.terminate()
-                self.ui.pushButton_launch_optimization.setEnabled(True)
-                self.ui.progressBar.setValue(0)
-                self.ui.label_remaing_time.setText("Remaining time: (No optimization runnning)")
-                self.ui.textEdit_output_of_optimization.insertPlainText("Optimization cancelled.\n")
-                self.ui.textEdit_output_of_optimization.moveCursor(QTextCursor.End)
-                self.ax_optimization.clear()
-                self.canvas_optimization.draw_idle()
-        except Exception as e:
-            # Handle other exceptions with a generic error message
-            QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
-                    
+        """Request cancellation at the next solver callback without killing a thread."""
+        if self.optimization_thread is not None and self.optimization_thread.isRunning():
+            self.optimization_thread.requestInterruption()
+            self.ui.pushButton_launch_optimization.setText("Cancelling optimization...")
+            self.ui.pushButton_launch_optimization.setEnabled(False)
+
+    def _optimization_cancelled(self):
+        self.ui.progressBar.setValue(0)
+        self.ui.textEdit_output_of_optimization.append("Optimization cancelled.")
+
+    def _optimization_finished(self):
+        self.ui.pushButton_launch_optimization.setText("Start optimization")
+        self.ui.pushButton_launch_optimization.setEnabled(True)
+        self.ui.pushButton_launch_optimization.clicked.disconnect()
+        self.ui.pushButton_launch_optimization.clicked.connect(self.launch_optimization)
+        self.ui.toolBox_models_and_optimization_parameters.setEnabled(True)
+        self.ui.dockWidgetData_extraction.setEnabled(True)
+        self.ui.dockWidgetIsoconversionalAnalysis.setEnabled(True)
+        self.ui.label_remaing_time.setText("Remaining time: (No optimization running)")
+
+    def closeEvent(self, event):
+        if self.optimization_thread is not None and self.optimization_thread.isRunning():
+            QMessageBox.warning(self, "Optimization running", "Please cancel the optimization before closing the window.")
+            event.ignore()
+            return
+        super().closeEvent(event)
+
     def update_progress_bar(self,progress):
         """
         Update the progress bar with the given progress value.
@@ -1635,8 +1655,6 @@ class MainWindow(QMainWindow):
     
     def update_GUI_at_end_of_optimization(self,results,total_optimization_time):
         try:
-            self.optimization_thread.terminate()
-            self.ui.pushButton_launch_optimization.setEnabled(True)
             self.ui.progressBar.setValue(100)
             self.ui.label_remaing_time.setText("Remaining time: (No optimization runnning)")
             
@@ -1663,7 +1681,7 @@ class MainWindow(QMainWindow):
             summary_info = self.get_summary_info()
             self.ui.textEdit_output_of_optimization.insertPlainText(summary_info)
             
-            current_date = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+            current_date = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
             src_dir = os.path.dirname(os.path.realpath(__file__))
             results_dir = os.path.join(src_dir, "..", "results")
             filename = f"{current_date}_results_of_optimization.txt"
@@ -1717,9 +1735,8 @@ class MainWindow(QMainWindow):
         None
         """
         print("error detected in optimization thread")
-        self.optimization_thread.terminate()
-        # Handle other exceptions with a generic error message
-        self.ui.pushButton_launch_optimization.setEnabled(True)
+        self.ui.progressBar.setValue(0)
+        # Controls are restored when the worker actually finishes.
         QMessageBox.critical(self,"Error", f"An error occurred: {str(error_message)}")
         traceback.print_exc() 
             
@@ -2069,8 +2086,19 @@ class MainWindow(QMainWindow):
 
                 
             for i in range(results_experimental_times.shape[1]):
-                extent, rate, _,_,_ = km.compute_extent_and_rate(results_experimental_times[:,i],
-                                                            results_experimental_temperatures[:,i],
+                columns = np.column_stack([
+                    results_experimental_times[:, i], results_experimental_temperatures[:, i],
+                    results_experimental_rates[:, i], results_experimental_extents[:, i]])
+                valid = ~np.all(np.isnan(columns), axis=1)
+                padding = np.flatnonzero(~valid)
+                if padding.size and np.any(valid[padding[0]:]):
+                    raise ValueError("Missing result rows must be trailing padding.")
+                columns = columns[valid]
+                if len(columns) < 2 or not np.all(np.isfinite(columns)):
+                    raise ValueError("Result data must contain at least two complete finite rows per experiment.")
+                result_time, result_temperature, result_rate, result_extent = columns.T
+                extent, rate, _,_,_ = km.compute_extent_and_rate(result_time,
+                                                            result_temperature,
                                                             rate_law = rate_info["law"],
                                                             rate_law_args=rate_args,
                                                             vitrification_law=vitrification_info["law"],
@@ -2079,17 +2107,17 @@ class MainWindow(QMainWindow):
                                                             tg_law_args=tg_args,
                                                             coupling_law=coupling_info["law"],
                                                             coupling_law_args=coupling_args,
-                                                            initial_extent=results_experimental_extents[i][0])
+                                                            initial_extent=result_extent[0])
                 
-                curve1 = self.ax_results_viewer_rate.plot(results_experimental_times[:,i],results_experimental_rates[:,i],label=f'Experimental {files[i]}')
-                self.ax_results_viewer_extent.plot(results_experimental_times[:,i],results_experimental_extents[:,i],label=f'Experimental {files[i]}')
-                self.ax_results_viewer_temperature.plot(results_experimental_times[:,i],results_experimental_temperatures[:,i],label=f'Experimental {files[i]}')
+                curve1 = self.ax_results_viewer_rate.plot(result_time,result_rate,label=f'Experimental {files[i]}')
+                self.ax_results_viewer_extent.plot(result_time,result_extent,label=f'Experimental {files[i]}')
+                self.ax_results_viewer_temperature.plot(result_time,result_temperature,label=f'Experimental {files[i]}')
                 
                 color_of_first_curve = curve1[0].get_color()
                 
-                self.ax_results_viewer_rate.plot(results_experimental_times[:,i],rate,label=f'Model {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
-                self.ax_results_viewer_extent.plot(results_experimental_times[:,i],extent,label=f'Model {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
-                self.ax_results_viewer_temperature.plot(results_experimental_times[:,i],results_experimental_temperatures[:,i],label=f'Experimental {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
+                self.ax_results_viewer_rate.plot(result_time,rate,label=f'Model {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
+                self.ax_results_viewer_extent.plot(result_time,extent,label=f'Model {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
+                self.ax_results_viewer_temperature.plot(result_time,result_temperature,label=f'Experimental {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
                 
                 
             self.ax_results_viewer_rate.legend()
@@ -2145,7 +2173,12 @@ class MainWindow(QMainWindow):
      
         
         
+class OptimizationCancelled(Exception):
+    """Internal signal to unwind an optimizer after a cancellation request."""
+
+
 class OptimizationThread(QThread):
+    cancelled = pyqtSignal()
     end_of_optimization = pyqtSignal(scipy.optimize.OptimizeResult,float)
     update_progress_bar_signal = pyqtSignal(int)
     update_graph_signal = pyqtSignal(int,float,np.ndarray,object,object)
@@ -2156,10 +2189,11 @@ class OptimizationThread(QThread):
         self.initial_guess = initial_guess
         self.selected_global_optimization = selected_global_optimization
         self.global_optimization = global_optimization
-        self.global_optimization_args_dict = global_optimization_args_dict
+        from copy import deepcopy
+        self.global_optimization_args_dict = deepcopy(global_optimization_args_dict)
         self.selected_local_optimization = selected_local_optimization
         self.local_optimization = local_optimization
-        self.local_optimization_args_dict = local_optimization_args_dict
+        self.local_optimization_args_dict = deepcopy(local_optimization_args_dict)
         self.experimental_rate = experimental_rate
         self.rate_law = rate_law
         self.experimental_args_for_rate = experimental_args_for_rate
@@ -2183,6 +2217,8 @@ class OptimizationThread(QThread):
         
     def run(self):
         try:
+            if self.isInterruptionRequested():
+                raise OptimizationCancelled()
             if self.selected_global_optimization != '':
                     self.global_optimization_args_dict['callback'] = self.optimization_callback   
             if self.selected_local_optimization != '':        
@@ -2218,8 +2254,6 @@ class OptimizationThread(QThread):
                 self.result = self.global_optimization(self.cost_function,
                                                     self.initial_guess,
                                                     **self.global_optimization_args_dict)
-                self.result.x = self.xmin_bashinhopping
-                self.result.fun = self.fmin_bashinhopping
             
             elif self.selected_global_optimization == 'differential_evolution':
                 self.global_optimization_args_dict['args'] = (self.experimental_rate,
@@ -2287,8 +2321,14 @@ class OptimizationThread(QThread):
                                                     **self.local_optimization_args_dict)
             
             total_optimization_time = elapsed_time = time_module.time() - self.start_time
+            if self.isInterruptionRequested():
+                raise OptimizationCancelled()
+            if not np.all(np.isfinite(self.result.x)) or not np.isfinite(self.result.fun):
+                raise ValueError("Optimization returned non-finite parameters or cost.")
             self.end_of_optimization.emit(self.result,total_optimization_time)
             
+        except OptimizationCancelled:
+            self.cancelled.emit()
         except Exception as e:
             # Handle other exceptions with a generic error message
             traceback.print_exc()
@@ -2297,7 +2337,8 @@ class OptimizationThread(QThread):
            
             
     def optimization_callback(self, xk, *args,**kwargs):
-        print(self.count)
+        if self.isInterruptionRequested():
+            raise OptimizationCancelled()
         self.count = self.count + 1
         progress = (self.count / self.max_iter) * 100
         self.update_progress_bar_signal.emit(int(progress))
@@ -2369,32 +2410,17 @@ def launch_extraction(file_paths, delimiter=',', has_header=False, skip_lines=0)
             - numpy.ndarray: Rate of reaction data.
             - numpy.ndarray: Extent of reaction data.
     """
-    # Capture standard output to capture warning and info messages
-    from io import StringIO
-    import sys
+    import warnings
 
-    old_stdout = sys.stdout
-    new_stdout = StringIO()
-    sys.stdout = new_stdout
+    try:
+        with warnings.catch_warnings(record=True) as messages:
+            warnings.simplefilter("always", UserWarning)
+            arrays = data_extraction.extract_dsc_data_multiple_files(
+                file_paths, delimiter, has_header, skip_lines)
+        return True, "\n".join(str(message.message) for message in messages), *arrays
+    except (OSError, ValueError) as exc:
+        return False, str(exc), *(np.array([], dtype=float) for _ in range(4))
 
-    # Call the extract_dsc_data_multiple_files function
-    time, temperature, rate_of_reaction, extent_of_reaction = data_extraction.extract_dsc_data_multiple_files(
-        file_paths, delimiter, has_header, skip_lines)
-
-    # Restore standard output
-    sys.stdout = old_stdout
-
-    # Get the captured output
-    captured_output = new_stdout.getvalue()
-
-    # Check for warnings or info messages
-    if "Error" in captured_output:
-        return False, captured_output, time, temperature, rate_of_reaction, extent_of_reaction
-    elif "Info" in captured_output:
-        return True, captured_output, time, temperature, rate_of_reaction, extent_of_reaction
-    else:
-        return True, "", time, temperature, rate_of_reaction, extent_of_reaction
-    
 # =============================================================================
 # Function for isoconversional analysis parameters
 # =============================================================================
@@ -2764,4 +2790,3 @@ if __name__ == '__main__':
     mainWindow = MainWindow()
     mainWindow.show()
     sys.exit(app.exec_())
-

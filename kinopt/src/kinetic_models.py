@@ -105,8 +105,9 @@ def rate_for_autocatalytic(extent,T,A,Ea,m,n):
     [1] M. R. Keenan, « Autocatalytic cure kinetics from DSC measurements: Zero initial cure rate », J. Appl. Polym. Sci., vol. 33, nᵒ 5, p. 1725‑1734, avr. 1987, doi: 10.1002/app.1987.070330525.
 
     """
-    if np.any(extent) <= 0:
-        raise ValueError("Be careful, for an autocatalytic model the extent can't be inferior or equal to 0 !!! \n It would result in a rate of reaction equal to 0 and no reaction would occur.")
+    extent = np.asarray(extent, dtype=float)
+    if not np.all(np.isfinite(extent)) or np.any((extent < 0) | (extent > 1)):
+        raise ValueError("Autocatalytic conversion must be finite and between 0 and 1.")
     return arrhenius_rate_constant(T,A,Ea) * extent**m * (1 - extent)**n
 
 
@@ -344,8 +345,10 @@ def coupling_harmonic_mean(kc,kv,experimental_parameters=None):
     [1]   G. Wisanrakkit et J. K. Gillham, « The glass transition temperature (Tg) as an index of chemical conversion for a high-Tg amine/epoxy system: Chemical and diffusion-controlled reaction kinetics », Journal of Applied Polymer Science, vol. 41, nᵒ 11‑12, p. 2885‑2929, 1990, doi: 10.1002/app.1990.070411129.
      
     """    
-    #If kc or kv are equal to 0, then it returns 0
-    rate = 1 / ((1/kc)+(1/kv))
+    # A zero rate in either mechanism gives zero, including scalar inputs.
+    kc, kv = np.asarray(kc, dtype=float), np.asarray(kv, dtype=float)
+    with np.errstate(divide='ignore', over='ignore'):
+        rate = 1 / ((1/kc)+(1/kv))
     
     return rate
 
@@ -575,6 +578,9 @@ def compute_extent_and_rate(time, temperature, rate_law=None, rate_law_args=None
     """
     # Importation of a module to display a progress bar for the finite difference
     from tqdm import tqdm
+
+    if rate_law is rate_for_autocatalytic and initial_extent == 0:
+        raise ValueError("An autocatalytic simulation requires a positive initial extent to start the reaction.")
     
     if coupling_law:
         if not rate_law:

@@ -11,6 +11,19 @@ import numpy as np
 from kinopt.src import optimization as opt
 
 
+def test_relative_cost_rejects_zero_rate_instead_of_infinity():
+    def constant_rate(value):
+        return np.full(2, value)
+    with pytest.raises(ValueError, match="nonzero"):
+        opt.rss_relative([1.], np.array([0., 1.]), constant_rate, (), 1,
+                         None, None, 0, None, None, None, None, None)
+
+
+def test_missing_model_is_an_explicit_error():
+    with pytest.raises(ValueError, match="at least one"):
+        opt.model([], None, None, 0, None, None, 0, None, None, None, None, None)
+
+
 def test_rss_functions_arguments():
     """
     Test that all RSS functions have the correct argument names and order.
