@@ -20,3 +20,19 @@ authors = [{name = "Alan Tabore", email = "alan.tabore@gmail.com"}]
 description = "KinOpt - A Kinetics Optimization Software"
 readme = "README.md"
 license = {file = "LICENSE"}
+
+[project.optional-dependencies]
+test = ["pytest>=7", "pytest-cov>=4"]
+
+[tool.pytest.ini_options]
+testpaths = ["kinopt/tests"]
+addopts = "-ra"
+
+[tool.coverage.run]
+branch = true
+source = ["kinopt/src"]
+omit = ["*/kinopt_interface.py"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_also = ["if __name__ == .__main__.:"]

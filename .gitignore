@@ -410,3 +410,11 @@ FodyWeavers.xsd
 kinopt/data/*.txt
 kinopt/data/*.csv
 kinopt/results/*.txt
+
+# Local Python development and test reports
+.venv/
+.pytest_cache/
+.coverage*
+htmlcov/
+coverage.xml
+dist/
