@@ -242,6 +242,7 @@ class MainWindow(QMainWindow):
         
     def extract_data(self):
         """Extract data from selected files and update GUI elements based on extraction results."""
+        self.successful_extraction = False
         try:
             # Get the selected file paths
             file_paths_list = self.selected_full_file_paths
@@ -2368,32 +2369,17 @@ def launch_extraction(file_paths, delimiter=',', has_header=False, skip_lines=0)
             - numpy.ndarray: Rate of reaction data.
             - numpy.ndarray: Extent of reaction data.
     """
-    # Capture standard output to capture warning and info messages
-    from io import StringIO
-    import sys
+    import warnings
 
-    old_stdout = sys.stdout
-    new_stdout = StringIO()
-    sys.stdout = new_stdout
+    try:
+        with warnings.catch_warnings(record=True) as messages:
+            warnings.simplefilter("always", UserWarning)
+            arrays = data_extraction.extract_dsc_data_multiple_files(
+                file_paths, delimiter, has_header, skip_lines)
+        return True, "\n".join(str(message.message) for message in messages), *arrays
+    except (OSError, ValueError) as exc:
+        return False, str(exc), *(np.array([], dtype=float) for _ in range(4))
 
-    # Call the extract_dsc_data_multiple_files function
-    time, temperature, rate_of_reaction, extent_of_reaction = data_extraction.extract_dsc_data_multiple_files(
-        file_paths, delimiter, has_header, skip_lines)
-
-    # Restore standard output
-    sys.stdout = old_stdout
-
-    # Get the captured output
-    captured_output = new_stdout.getvalue()
-
-    # Check for warnings or info messages
-    if "Error" in captured_output:
-        return False, captured_output, time, temperature, rate_of_reaction, extent_of_reaction
-    elif "Info" in captured_output:
-        return True, captured_output, time, temperature, rate_of_reaction, extent_of_reaction
-    else:
-        return True, "", time, temperature, rate_of_reaction, extent_of_reaction
-    
 # =============================================================================
 # Function for isoconversional analysis parameters
 # =============================================================================

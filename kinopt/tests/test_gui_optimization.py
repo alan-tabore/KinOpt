@@ -17,6 +17,8 @@ def optimization_window(monkeypatch, tmp_path):
         main.QMessageBox, "critical",
         lambda parent, title, message: errors.append(message),
     )
+    monkeypatch.setattr(main.QMessageBox, "information", lambda *args: None)
+    monkeypatch.setattr(main.QMessageBox, "warning", lambda *args: None)
     # Keep the real worker and its parameters, without starting a background fit.
     monkeypatch.setattr(main.OptimizationThread, "start", lambda worker: started.append(worker))
     window = main.MainWindow()
@@ -113,3 +115,24 @@ def test_invalid_tg_is_rejected_before_start(optimization_window, invalid_value)
     assert len(errors) == 1
     assert "Tg" in errors[0]
     assert window.ui.pushButton_launch_optimization.text() == "Start optimization"
+
+
+def test_extraction_reports_failure_without_redirecting_stdout(optimization_window, tmp_path):
+    import sys
+    main, _, _, _ = optimization_window
+    original_stdout = sys.stdout
+    result = main.launch_extraction([tmp_path / "missing.csv"])
+    assert result[0] is False
+    assert "missing.csv" in result[1]
+    assert all(array.size == 0 for array in result[2:])
+    assert sys.stdout is original_stdout
+
+
+def test_failed_import_invalidates_previous_data(optimization_window):
+    _, window, _, errors = optimization_window
+    configure_optimization(window)
+    window.selected_full_file_paths = ["unused.csv"]
+    window.ui.lineEdit_number_of_lines_to_skip.setText("invalid")
+    window.extract_data()
+    assert window.successful_extraction is False
+    assert len(errors) == 1
