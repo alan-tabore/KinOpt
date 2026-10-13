@@ -11,8 +11,6 @@ def optimization_window(monkeypatch, tmp_path):
     from kinopt.src import main
 
     app = main.QApplication.instance() or main.QApplication([])
-    (tmp_path / "src").mkdir()
-    monkeypatch.setattr(main, "__file__", str(tmp_path / "src" / "main.py"))
     errors = []
     started = []
     monkeypatch.setattr(
@@ -23,7 +21,7 @@ def optimization_window(monkeypatch, tmp_path):
     monkeypatch.setattr(main.QMessageBox, "warning", lambda *args: None)
     # Keep the real worker and its parameters, without starting a background fit.
     monkeypatch.setattr(main.OptimizationThread, "start", lambda worker: started.append(worker))
-    window = main.MainWindow()
+    window = main.MainWindow(results_directory=tmp_path / 'results')
     try:
         yield main, window, started, errors
     finally:

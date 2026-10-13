@@ -21,6 +21,9 @@ description = "KinOpt - A Kinetics Optimization Software"
 readme = "README.md"
 license = {file = "LICENSE"}
 
+[project.scripts]
+kinopt = "kinopt.cli:main"
+
 [project.optional-dependencies]
 test = ["pytest>=7", "pytest-cov>=4"]
 
