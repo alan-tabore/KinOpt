@@ -292,3 +292,55 @@ def test_real_thread_cancellation_returns_to_ready(optimization_window):
     finally:
         worker.requestInterruption()
         assert worker.wait(3000)
+
+
+def test_saved_results_reload_unequal_experiments(optimization_window, tmp_path, monkeypatch):
+    main, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+    window.experimental_times.append(np.array([10., 11.]))
+    window.experimental_temperatures.append(np.array([380., 390.]))
+    window.experimental_extents.append(np.array([.4, .7]))
+    window.experimental_rates.append(np.array([.04, .05]))
+    for singular, plural in [('time', 'times'), ('temperature', 'temperatures'),
+                             ('extent', 'extents'), ('rate', 'rates')]:
+        setattr(window, 'experimental_' + singular, np.concatenate(getattr(window, 'experimental_' + plural)))
+    window.selected_shortened_file_paths.append('second.csv')
+    window.entries_dict_local_optimization['maxiter'].setText('2')
+    window.entries_dict_local_optimization['disp'].setCurrentText('No')
+    window.launch_optimization()
+    started[0].run()
+    started[0].finished.emit()
+    assert errors == []
+    path = next((tmp_path / 'results').glob('*.txt'))
+    window.selected_full_results_file_paths = [str(path)]
+    window.ui.listView_result_files.setModel(main.QStringListModel([path.name]))
+    window.ui.listView_result_files.setCurrentIndex(window.ui.listView_result_files.model().index(0))
+    calls = []
+    simulate = main.km.compute_extent_and_rate
+
+    def record_simulation(times, temperatures, **kwargs):
+        calls.append((times.copy(), temperatures.copy(), kwargs['initial_extent']))
+        return simulate(times, temperatures, **kwargs)
+
+    monkeypatch.setattr(main.km, 'compute_extent_and_rate', record_simulation)
+    window.display_selected_result_file()
+    assert errors == []
+    assert len(calls) == 2
+    for index, (times, temperatures, initial_extent) in enumerate(calls):
+        np.testing.assert_array_equal(times, window.experimental_times[index])
+        np.testing.assert_array_equal(temperatures, window.experimental_temperatures[index])
+        assert initial_extent == window.experimental_extents[index][0]
+
+
+def test_result_write_failure_is_reported_and_controls_recover(optimization_window, tmp_path):
+    _, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+    window.entries_dict_local_optimization['maxiter'].setText('1')
+    window.entries_dict_local_optimization['disp'].setCurrentText('No')
+    (tmp_path / 'results').write_text('This is a file, not a directory.')
+    window.launch_optimization()
+    started[0].run()
+    started[0].finished.emit()
+    assert len(errors) == 1
+    assert window.results is not None
+    assert window.ui.pushButton_launch_optimization.text() == 'Start optimization'

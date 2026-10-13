@@ -1681,7 +1681,7 @@ class MainWindow(QMainWindow):
             summary_info = self.get_summary_info()
             self.ui.textEdit_output_of_optimization.insertPlainText(summary_info)
             
-            current_date = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+            current_date = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
             src_dir = os.path.dirname(os.path.realpath(__file__))
             results_dir = os.path.join(src_dir, "..", "results")
             filename = f"{current_date}_results_of_optimization.txt"
@@ -2086,8 +2086,19 @@ class MainWindow(QMainWindow):
 
                 
             for i in range(results_experimental_times.shape[1]):
-                extent, rate, _,_,_ = km.compute_extent_and_rate(results_experimental_times[:,i],
-                                                            results_experimental_temperatures[:,i],
+                columns = np.column_stack([
+                    results_experimental_times[:, i], results_experimental_temperatures[:, i],
+                    results_experimental_rates[:, i], results_experimental_extents[:, i]])
+                valid = ~np.all(np.isnan(columns), axis=1)
+                padding = np.flatnonzero(~valid)
+                if padding.size and np.any(valid[padding[0]:]):
+                    raise ValueError("Missing result rows must be trailing padding.")
+                columns = columns[valid]
+                if len(columns) < 2 or not np.all(np.isfinite(columns)):
+                    raise ValueError("Result data must contain at least two complete finite rows per experiment.")
+                result_time, result_temperature, result_rate, result_extent = columns.T
+                extent, rate, _,_,_ = km.compute_extent_and_rate(result_time,
+                                                            result_temperature,
                                                             rate_law = rate_info["law"],
                                                             rate_law_args=rate_args,
                                                             vitrification_law=vitrification_info["law"],
@@ -2096,17 +2107,17 @@ class MainWindow(QMainWindow):
                                                             tg_law_args=tg_args,
                                                             coupling_law=coupling_info["law"],
                                                             coupling_law_args=coupling_args,
-                                                            initial_extent=results_experimental_extents[i][0])
+                                                            initial_extent=result_extent[0])
                 
-                curve1 = self.ax_results_viewer_rate.plot(results_experimental_times[:,i],results_experimental_rates[:,i],label=f'Experimental {files[i]}')
-                self.ax_results_viewer_extent.plot(results_experimental_times[:,i],results_experimental_extents[:,i],label=f'Experimental {files[i]}')
-                self.ax_results_viewer_temperature.plot(results_experimental_times[:,i],results_experimental_temperatures[:,i],label=f'Experimental {files[i]}')
+                curve1 = self.ax_results_viewer_rate.plot(result_time,result_rate,label=f'Experimental {files[i]}')
+                self.ax_results_viewer_extent.plot(result_time,result_extent,label=f'Experimental {files[i]}')
+                self.ax_results_viewer_temperature.plot(result_time,result_temperature,label=f'Experimental {files[i]}')
                 
                 color_of_first_curve = curve1[0].get_color()
                 
-                self.ax_results_viewer_rate.plot(results_experimental_times[:,i],rate,label=f'Model {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
-                self.ax_results_viewer_extent.plot(results_experimental_times[:,i],extent,label=f'Model {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
-                self.ax_results_viewer_temperature.plot(results_experimental_times[:,i],results_experimental_temperatures[:,i],label=f'Experimental {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
+                self.ax_results_viewer_rate.plot(result_time,rate,label=f'Model {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
+                self.ax_results_viewer_extent.plot(result_time,extent,label=f'Model {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
+                self.ax_results_viewer_temperature.plot(result_time,result_temperature,label=f'Experimental {files[i]}', linestyle='dashed', color=color_of_first_curve, linewidth=2)
                 
                 
             self.ax_results_viewer_rate.legend()
