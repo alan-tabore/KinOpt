@@ -194,8 +194,4 @@ def test_coupling_functions_signature():
     
         
 if __name__=="__main__":
-
-    
     test_vitrification_WLF_rate_no_reaction_below_Tg()
-    
-    
