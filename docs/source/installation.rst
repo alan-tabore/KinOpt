@@ -1,55 +1,74 @@
 Installation
 ============
 
-Installation from source
--------------------------
+Windows
+-------
 
-To install this module, simply download the project in a zip file and extract it.
+Follow :doc:`installation_windows` for the complete PowerShell walkthrough:
+Python installation, downloading KinOpt, setup, desktop shortcut, sample data,
+results and troubleshooting.
 
-Once you've downloaded the project, you can install the required python modules 
-from PyPI with pip or with conda.
+.. toctree::
+    :maxdepth: 1
 
-Open a command prompt in the KinOpt folder and execute:
+    installation_windows
+
+Linux: installation from source
+-------------------------------
+
+Download or clone KinOpt, then open a terminal at the repository root.
+On Linux, install the application in an isolated environment:
 
 .. code-block:: bash
 
-    >> python -m pip install requirements.txt
+    python3 -m venv .venv
+    .venv/bin/python -m pip install .
 
-or with conda:
+To make the command available from any directory:
 
 .. code-block:: bash
 
-    >> conda install requirements.txt
+    mkdir -p "$HOME/.local/bin"
+    ln -s "$PWD/.venv/bin/kinopt" "$HOME/.local/bin/kinopt"
 
-*(Note: The requirements.txt contains the list and version of all modules used to run the KinOpt software.)*
+The ``~/.local/bin`` directory must be on your ``PATH``. If necessary, add
+``export PATH="$HOME/.local/bin:$PATH"`` to your shell configuration and open a
+new terminal. Check ``command -v kinopt`` before replacing an existing command.
+
+After updating the repository, reinstall with ``.venv/bin/python -m pip install .``.
+Application dependencies are declared in ``pyproject.toml``. The old
+``requirements.txt`` is retained as a historical environment snapshot.
 
 Project structure
 -----------------
-The project is structured has follow:
+The main package is structured as follows:
 
 .. code-block:: text
 
-    ├── src
-    │   ├── data_extraction.py
-    │   ├── interpolation.py
-    │   ├── isoconversional_methods.py
-    │   ├── kinetic_models.py
-    │   ├── optimization.py
-    │   ├── kinopt_interface.py
-    │   └── main.py
-    │   
-    ├── data
-    ├── results
-    │
-    ├── tests
-    ├── docs
-    ├── screenshots
-    └── ressources
+    KinOpt/
+    ├── pyproject.toml
+    ├── kinopt/
+    │   ├── cli.py
+    │   ├── __main__.py
+    │   ├── src/
+    │   │   ├── data_extraction.py
+    │   │   ├── interpolation.py
+    │   │   ├── isoconversional_methods.py
+    │   │   ├── kinetic_models.py
+    │   │   ├── optimization.py
+    │   │   ├── kinopt_interface.py
+    │   │   └── main.py
+    │   ├── data/
+    │   ├── tests/
+    │   └── ressources/
+    └── docs/
 
-The src folder contains all the useful python scripts.
-If you want to use the package without the graphical interface you can 
-directly work in this folder to easily import all :doc:`modules <modules>`.
+The ``kinopt/src`` folder contains the scientific modules and graphical interface.
+Installed modules can also be imported in Python, for example
+``from kinopt.src import kinetic_models``. See :doc:`modules <modules>`.
 
 The '*data*' folder is designed to store your raw kinetic data.
 
-The '*results*' folder is where you'll find the results of optimization performed through the GUI.
+New results are saved in ``KinOpt/results`` inside your desktop's Documents
+folder, or in the folder passed with ``kinopt --results-dir DIRECTORY``.
+Existing files in the repository's old results folder can still be opened.

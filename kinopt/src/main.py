@@ -28,6 +28,7 @@ from kinopt.src import data_extraction
 from kinopt.src import isoconversional_methods as icm
 from kinopt.src import kinetic_models as km
 from kinopt.src import optimization as opt
+from kinopt.paths import results_directory as resolve_results_directory
 
 import scipy
 import numpy as np
@@ -36,8 +37,10 @@ import datetime
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, results_directory=None):
         super().__init__()
+
+        self.results_directory = resolve_results_directory(results_directory)
 
         # Set up the user interface from Designer.
         self.ui = Ui_MainWindow()
@@ -1682,16 +1685,14 @@ class MainWindow(QMainWindow):
             self.ui.textEdit_output_of_optimization.insertPlainText(summary_info)
             
             current_date = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
-            src_dir = os.path.dirname(os.path.realpath(__file__))
-            results_dir = os.path.join(src_dir, "..", "results")
             filename = f"{current_date}_results_of_optimization.txt"
-            file_path = os.path.join(results_dir, filename)
+            file_path = self.results_directory / filename
             
             # Create the 'results' folder if it doesn't exist
-            if not os.path.exists(results_dir):
-                os.makedirs(results_dir)
+            self.results_directory.mkdir(parents=True, exist_ok=True)
             with open(file_path, 'w') as file:
                 file.write(summary_info)
+            self.ui.textEdit_output_of_optimization.append(f"\nResults saved to: {file_path}")
             
             # The result of the "opt.model" function contained in "rate_opti" are an aggregation of the rates contained in all the files.
             # Since we want to display a curve for each, we split the data thanks to "range_of_plot"
@@ -1919,7 +1920,7 @@ class MainWindow(QMainWindow):
             results_file_paths, _ = QFileDialog.getOpenFileNames(
                 self,
                 "Select Files",
-                "",
+                str(self.results_directory),
                 "Text Files (*.txt);;All Files (*)"
             )
             if results_file_paths:
@@ -2229,7 +2230,9 @@ class OptimizationThread(QThread):
             self.count = 0
             
             # Initialize a self.count
-            self.start_time = time_module.time()
+            # perf_counter has sufficient resolution for very fast callbacks on
+            # every supported platform, including Windows.
+            self.start_time = time_module.perf_counter()
             
             if self.selected_global_optimization == 'basinhopping':
                 if self.selected_local_optimization == '':
@@ -2320,7 +2323,7 @@ class OptimizationThread(QThread):
                                                     self.initial_guess,
                                                     **self.local_optimization_args_dict)
             
-            total_optimization_time = elapsed_time = time_module.time() - self.start_time
+            total_optimization_time = elapsed_time = time_module.perf_counter() - self.start_time
             if self.isInterruptionRequested():
                 raise OptimizationCancelled()
             if not np.all(np.isfinite(self.result.x)) or not np.isfinite(self.result.fun):
@@ -2362,8 +2365,8 @@ class OptimizationThread(QThread):
             args = None
             
         if self.count == self.next_iteration_for_GUI_updtate:
-            elapsed_time = time_module.time() - self.start_time
-            time_per_iteration = elapsed_time/self.count
+            elapsed_time = time_module.perf_counter() - self.start_time
+            time_per_iteration = max(elapsed_time / self.count, np.finfo(float).eps)
             iteration_per_time = 1 / time_per_iteration
             if int(iteration_per_time)<1:
                 self.next_iteration_for_GUI_updtate = self.count + 1     
@@ -2781,12 +2784,5 @@ def pad_arrays(array_list, fill_value=np.nan):
 # =============================================================================
 
 if __name__ == '__main__':
-    # Check if QApplication instance already exists
-    if not QApplication.instance():
-        app = QApplication(sys.argv)
-    else:
-        app = QApplication.instance()
-
-    mainWindow = MainWindow()
-    mainWindow.show()
-    sys.exit(app.exec_())
+    from kinopt.cli import main
+    sys.exit(main())

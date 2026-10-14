@@ -86,3 +86,19 @@ def test_nonfinite_solver_result_is_reported_as_error(worker_factory, parameters
     assert completed == []
     assert len(errors) == 1
     assert 'non-finite' in str(errors[0])
+
+
+def test_progress_callback_handles_timer_without_elapsed_tick(worker_factory, monkeypatch):
+    from kinopt.src import main
+
+    worker = worker_factory()
+    worker.count = 0
+    worker.start_time = 12.5
+    monkeypatch.setattr(main.time_module, 'perf_counter', lambda: 12.5)
+    updates = []
+    worker.update_graph_signal.connect(lambda *values: updates.append(values))
+
+    worker.optimization_callback(np.array([3.]))
+
+    assert len(updates) == 1
+    assert updates[0][1] >= 0
