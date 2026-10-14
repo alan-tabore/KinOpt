@@ -11,18 +11,27 @@ permissions:
 
 jobs:
   tests:
-    name: Tests (Python ${{ matrix.python }}, ${{ matrix.dependencies }})
-    runs-on: ubuntu-latest
+    name: Tests (${{ matrix.os }}, Python ${{ matrix.python }}, ${{ matrix.dependencies }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         include:
-          - python: '3.9'
+          - os: ubuntu-latest
+            python: '3.9'
             dependencies: legacy
-          - python: '3.10'
+          - os: ubuntu-latest
+            python: '3.10'
             dependencies: legacy
-          - python: '3.14'
+          - os: ubuntu-latest
+            python: '3.14'
+            dependencies: current
+          - os: windows-latest
+            python: '3.10'
+            dependencies: legacy
+          - os: windows-latest
+            python: '3.14'
             dependencies: current
     env:
       QT_QPA_PLATFORM: offscreen
@@ -36,6 +45,13 @@ jobs:
           cache-dependency-path: |
             pyproject.toml
             ci/constraints-legacy.txt
+      - name: Create an isolated Windows environment
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          (Join-Path $PWD '.venv\Scripts') | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Install historical dependencies and package
         if: matrix.dependencies == 'legacy'
         run: python -m pip install -c ci/constraints-legacy.txt '.[test]' flake8 build
@@ -51,21 +67,31 @@ jobs:
       - name: Build distributable wheel
         run: python -m build --wheel
       - name: Install the built wheel
-        run: python -m pip install --force-reinstall --no-deps dist/*.whl
-      - name: Check both installed launchers outside the repository
+        shell: python
+        run: |
+          from pathlib import Path
+          import subprocess
+          import sys
+          wheels = list(Path('dist').glob('*.whl'))
+          assert len(wheels) == 1, wheels
+          subprocess.run([sys.executable, '-m', 'pip', 'install', '--force-reinstall', '--no-deps', str(wheels[0])], check=True)
+      - name: Check installed launchers outside the repository
         working-directory: ${{ runner.temp }}
+        shell: python
         env:
           GUI_SMOKE_SCRIPT: ${{ github.workspace }}/ci/smoke_installed_gui.py
         run: |
-          kinopt --help
-          python -m kinopt --version
-          timeout 30s python "$GUI_SMOKE_SCRIPT" console
-          timeout 30s python "$GUI_SMOKE_SCRIPT" module
-          timeout 30s python "$GUI_SMOKE_SCRIPT" legacy
+          import os
+          import subprocess
+          import sys
+          subprocess.run(['kinopt', '--help'], check=True, timeout=30)
+          subprocess.run([sys.executable, '-m', 'kinopt', '--version'], check=True, timeout=30)
+          for mode in ('console', 'module', 'legacy'):
+              subprocess.run([sys.executable, os.environ['GUI_SMOKE_SCRIPT'], mode], check=True, timeout=60)
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-python-${{ matrix.python }}
+          name: coverage-${{ matrix.os }}-python-${{ matrix.python }}
           path: coverage.xml
           if-no-files-found: ignore
   build:

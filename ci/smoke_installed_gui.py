@@ -1,49 +1,42 @@
 """Open and close each public launcher using the installed package, outside the checkout."""
 
+import os
 from pathlib import Path
-import runpy
 import shutil
+import subprocess
 import sys
+import sysconfig
 import tempfile
-import traceback
 
-from PyQt5.QtCore import QTimer
 from kinopt.src import main as gui
 
 
 def check_launcher(mode):
-    app = gui.QApplication.instance() or gui.QApplication([])
-    observations = []
+    executable = Path(sysconfig.get_path('scripts')) / ('kinopt.exe' if os.name == 'nt' else 'kinopt')
+    commands = {
+        'console': [str(executable)],
+        'module': [sys.executable, '-m', 'kinopt'],
+        'legacy': [sys.executable, gui.__file__],
+    }
+    assert mode in commands, f'Unknown launcher: {mode}'
+    source_package = Path(__file__).resolve().parents[1] / 'kinopt'
+    assert Path(gui.__file__).resolve().parent.parent != source_package, 'Test the installed package'
     with tempfile.TemporaryDirectory() as directory:
-        output = Path(directory) / 'trial results'
-
-        def inspect_window():
-            try:
-                windows = [widget for widget in app.topLevelWidgets()
-                           if isinstance(widget, gui.MainWindow) and widget.isVisible()]
-                assert len(windows) == 1, f'Expected one visible window, got {len(windows)}'
-                assert windows[0].results_directory == output
-                assert not output.exists(), 'Opening KinOpt must not create a result directory'
-                observations.append(True)
-                windows[0].close()
-            except Exception:
-                traceback.print_exc()
-                app.exit(1)
-
-        QTimer.singleShot(0, inspect_window)
-        sys.argv = ['kinopt', '--results-dir', str(output)]
-        try:
-            if mode == 'console':
-                runpy.run_path(shutil.which('kinopt'), run_name='__main__')
-            elif mode == 'module':
-                runpy.run_module('kinopt', run_name='__main__')
-            elif mode == 'legacy':
-                runpy.run_path(gui.__file__, run_name='__main__')
-            else:
-                raise ValueError(f'Unknown launcher: {mode}')
-        except SystemExit as exit_status:
-            assert exit_status.code == 0, exit_status.code
-        assert observations == [True]
+        root = Path(directory)
+        output = root / 'trial results'
+        marker = root / 'window-checked.txt'
+        hooks = root / 'test hooks'
+        hooks.mkdir()
+        shutil.copyfile(Path(__file__).parent / 'gui_smoke_hooks' / 'sitecustomize.py', hooks / 'sitecustomize.py')
+        env = os.environ.copy()
+        env.update(PYTHONPATH=str(hooks), KINOPT_SMOKE_OUTPUT=str(output), KINOPT_SMOKE_MARKER=str(marker))
+        # Execute the real script or Windows .exe. The child-only hook closes
+        # the window after inspection, without adding test options to KinOpt.
+        result = subprocess.run(commands[mode] + ['--results-dir', str(output)], cwd=root,
+                                env=env, capture_output=True, text=True, timeout=30)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert marker.is_file(), 'The launcher exited without displaying and checking its window'
+        assert marker.read_text() == 'visible'
     print(f'{mode}: installed GUI opened and closed successfully ({gui.__file__})')
 
 
