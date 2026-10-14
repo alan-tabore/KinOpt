@@ -7,7 +7,7 @@ import sys
 
 import pytest
 
-from kinopt.paths import results_directory
+from kinopt.paths import optimization_queue_path, results_directory
 
 
 @pytest.mark.parametrize('argument,expected', [('--help', '--results-dir'), ('--version', 'KinOpt')])
@@ -49,3 +49,16 @@ def test_default_result_directory_uses_desktop_documents(monkeypatch, tmp_path):
     monkeypatch.setattr(QStandardPaths, 'writableLocation', lambda location: str(documents))
     assert results_directory() == documents / 'KinOpt' / 'results'
     assert not documents.exists()
+
+
+def test_default_queue_uses_desktop_application_data(monkeypatch, tmp_path):
+    from PyQt5.QtCore import QStandardPaths
+
+    app_data = tmp_path / 'application data' / 'KinOpt'
+    monkeypatch.setattr(
+        QStandardPaths,
+        'writableLocation',
+        lambda location: str(app_data),
+    )
+    assert optimization_queue_path() == app_data / 'optimization_queue.sqlite3'
+    assert not app_data.exists()
