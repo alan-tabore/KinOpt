@@ -1,8 +1,12 @@
 Launching the graphical interface
 =================================
 
-After :doc:`installation`, open a terminal in your graphical desktop session
-and run the command from any directory:
+After :doc:`installation`, use the launcher for your operating system.
+
+Linux
+-----
+
+Open a terminal in your graphical desktop session and run:
 
 .. code:: bash
 
@@ -13,6 +17,33 @@ To choose where optimization results will be saved:
 .. code-block:: bash
 
     kinopt --results-dir "$HOME/mes-resultats-kinopt"
+
+Windows (PowerShell)
+--------------------
+
+From the extracted project folder:
+
+.. code-block:: powershell
+
+    .\.venv\Scripts\kinopt.exe
+
+From any folder, use the full path (replace the location if necessary):
+
+.. code-block:: powershell
+
+    & "$env:USERPROFILE\KinOpt\.venv\Scripts\kinopt.exe"
+
+To select a result folder:
+
+.. code-block:: powershell
+
+    .\.venv\Scripts\kinopt.exe --results-dir "$env:USERPROFILE\KinOpt Results"
+
+See :doc:`installation_windows` for a desktop shortcut and troubleshooting.
+Using the executable directly does not require activating PowerShell scripts.
+
+Results and other launch methods
+--------------------------------
 
 By default, results go to ``KinOpt/results`` inside your desktop's Documents
 folder. Relative paths supplied to ``--results-dir`` are resolved from the

@@ -24,7 +24,7 @@ revenir à un état utilisable. Les fichiers produits par les tests sont tempora
 
 ## Exécuter les contrôles localement
 
-Depuis la racine du dépôt, créer un environnement isolé :
+Depuis la racine du dépôt, créer un environnement isolé. Sous Linux :
 
 ```bash
 python3 -m venv .venv
@@ -33,6 +33,20 @@ python -m pip install -e '.[test]'
 python -m pip check
 QT_QPA_PLATFORM=offscreen MPLBACKEND=Agg python -m pytest
 ```
+
+Sous Windows, dans PowerShell :
+
+```powershell
+py -3.14 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e '.[test]'
+.\.venv\Scripts\python.exe -m pip check
+$env:QT_QPA_PLATFORM = 'offscreen'
+$env:MPLBACKEND = 'Agg'
+.\.venv\Scripts\python.exe -m pytest
+```
+
+Fermer ce terminal après les tests avant de lancer l'interface normalement :
+le réglage `offscreen` masque les fenêtres dans cette session.
 
 `offscreen` permet de tester les composants graphiques sans ouvrir de fenêtres.
 Pour une partie seulement :
@@ -52,21 +66,28 @@ Ouvrir ensuite `htmlcov/index.html`. Le fichier d'interface généré par Qt et 
 blocs de démonstration `if __name__ == '__main__'` sont exclus de cette mesure.
 Le pourcentage mesure le code parcouru, pas la qualité d'une validation scientifique.
 
+Dans le terminal PowerShell configuré ci-dessus, utiliser
+`.\.venv\Scripts\python.exe -m pytest --cov --cov-report=term --cov-report=html`.
+
 ## Ce que GitHub vérifie
 
 Chaque pull request et chaque modification de `master` déclenchent :
 
-- les tests sous Python 3.9 et 3.10 avec les versions scientifiques et Qt
+- les tests Linux sous Python 3.9 et 3.10 avec les versions scientifiques et Qt
   historiques définies dans `ci/constraints-legacy.txt` ;
-- les tests sous Python 3.14 avec les dépendances disponibles lors de l'installation ;
+- les tests Linux sous Python 3.14 avec les dépendances disponibles lors de l'installation ;
+- les tests Windows dans un environnement virtuel, sous Python 3.10 avec les
+  dépendances historiques et sous Python 3.14 avec les dépendances actuelles ;
 - la cohérence des dépendances, les erreurs de syntaxe et les noms non définis ;
 - la construction puis l'installation du paquet, et l'ouverture de son interface
-  par `kinopt` et `python -m kinopt`, hors du dépôt ;
+  par `kinopt` (le véritable `kinopt.exe` sous Windows), `python -m kinopt` et
+  l'ancien script, hors du dépôt, avec un dossier de résultats contenant des espaces ;
 - un rapport de couverture téléchargeable dans les artefacts du workflow.
 
-Le contrôle final `build` réussit seulement si les trois environnements réussissent.
-La matrice vérifie ces trois configurations Linux ; elle ne certifie pas toutes
-les combinaisons de versions ou tous les systèmes d'exploitation.
+Le contrôle final `build` réussit seulement si les cinq environnements réussissent.
+La matrice vérifie trois configurations Linux et deux Windows x64 sur les
+machines hébergées de GitHub. Elle ne certifie pas tous les postes Windows
+10/11, toutes les architectures ni toutes les combinaisons de versions.
 
 ## Contrôle manuel avant fusion
 
@@ -120,7 +141,8 @@ et la [protection des branches](https://docs.github.com/en/repositories/configur
   ne sont pas validés ici.
 - L'annulation intervient au prochain point de contrôle du solveur : une
   évaluation longue peut retarder l'arrêt. Le thread n'est pas tué brutalement.
-- La compatibilité visuelle avec les différents bureaux Linux reste à vérifier.
+- La compatibilité visuelle avec les différents bureaux Linux et postes Windows
+  reste à vérifier manuellement. Les tests GitHub ouvrent Qt en mode `offscreen`.
   Les lanceurs et le choix du dossier de résultats sont testés séparément :
   par défaut, les résultats vont dans `Documents/KinOpt/results`, avec prise en
   compte du dossier Documents configuré sur le bureau. L'option `--results-dir`

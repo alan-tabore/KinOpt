@@ -37,7 +37,31 @@ This project uses Python, so please make sure you installed it and that the vers
 
 ### Installation
 
-Download or clone the repository. From its root directory on Linux, install
+Choose the instructions for your operating system:
+
+- **Windows:** follow the [step-by-step Windows guide](docs/source/installation_windows.rst),
+  from installing Python to creating a desktop shortcut and trying the included data.
+- **Linux:** use the instructions below.
+
+#### Windows (PowerShell)
+
+With Python 3.14 installed, open PowerShell in the extracted repository folder
+(the one containing `pyproject.toml`):
+
+```powershell
+py -3.14 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install .
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\kinopt.exe
+```
+
+Use the `.exe` paths directly; activating the environment is optional. The
+Windows guide explains later launches, paths with spaces, result locations,
+updates and common errors. VSCode is not required to run KinOpt.
+
+#### Linux
+
+Download or clone the repository. From its root directory, install
 KinOpt in an isolated Python environment:
 
 ``` bash
@@ -70,18 +94,29 @@ Tutorials are available on Youtube to show you how to install and use the softwa
 
 ## Usage
 
-Open a terminal in your graphical desktop session and run:
+On **Linux**, after installing the command on your PATH:
 
 ```bash
 kinopt
 ```
 
+On **Windows**, from the project folder in PowerShell:
+
+```powershell
+.\.venv\Scripts\kinopt.exe
+```
+
 Results are saved in `KinOpt/results` inside your desktop's Documents folder
-(usually `~/Documents/KinOpt/results`). The output panel shows the saved file's
-full path. To choose a different folder:
+(usually `~/Documents/KinOpt/results` on Linux, or `Documents\KinOpt\results`
+on Windows). The output panel shows the saved file's full path, including if
+Documents is redirected by Windows. To choose a different folder:
 
 ```bash
 kinopt --results-dir "$HOME/mes-resultats-kinopt"
+```
+
+```powershell
+.\.venv\Scripts\kinopt.exe --results-dir "$env:USERPROFILE\KinOpt Results"
 ```
 
 Relative paths are resolved from the terminal's current directory. Existing
@@ -93,11 +128,15 @@ kinopt --help
 kinopt --version
 ```
 
-You can also activate the environment and launch the module:
+On Windows, use `.\.venv\Scripts\kinopt.exe --help` or `--version`.
+You can also launch the module with the environment's Python:
 
 ```bash
-source /path/to/KinOpt/.venv/bin/activate
-python -m kinopt
+/path/to/KinOpt/.venv/bin/python -m kinopt
+```
+
+```powershell
+.\.venv\Scripts\python.exe -m kinopt
 ```
 
 The historical `python main.py` launch from `kinopt/src` remains supported.

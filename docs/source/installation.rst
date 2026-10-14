@@ -1,8 +1,20 @@
 Installation
 ============
 
-Installation from source
--------------------------
+Windows
+-------
+
+Follow :doc:`installation_windows` for the complete PowerShell walkthrough:
+Python installation, downloading KinOpt, setup, desktop shortcut, sample data,
+results and troubleshooting.
+
+.. toctree::
+    :maxdepth: 1
+
+    installation_windows
+
+Linux: installation from source
+-------------------------------
 
 Download or clone KinOpt, then open a terminal at the repository root.
 On Linux, install the application in an isolated environment:
