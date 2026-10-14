@@ -118,6 +118,13 @@ def test_small_window_keeps_every_section_reachable(optimization_window):
     window.resize(1024, 768)
     main.QApplication.processEvents()
     assert window.ui.dockWidgetData_extraction.width() > compact_left_width
+    for dock_name in (
+        "dockWidgetData_extraction",
+        "dockWidgetIsoconversionalAnalysis",
+        "dockWidgetResultsViewer",
+    ):
+        scroll_area = window.dock_scroll_areas[dock_name]
+        assert scroll_area.horizontalScrollBar().maximum() == 0
 
 
 def test_current_setup_can_be_added_to_batch(optimization_window):

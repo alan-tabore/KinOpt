@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
 )
 from PyQt5.QtCore import Qt, QStringListModel, QThread, pyqtSignal
 from PyQt5.QtGui import QTextCursor
@@ -225,6 +226,7 @@ class MainWindow(QMainWindow):
     def _make_interface_scrollable(self):
         """Keep every main-window section reachable on smaller screens."""
         self.setMinimumSize(640, 480)
+        self._make_left_docks_compact()
 
         central_widget = self.takeCentralWidget()
         central_widget.setMinimumSize(central_widget.minimumSizeHint())
@@ -260,9 +262,80 @@ class MainWindow(QMainWindow):
         self._compact_dock_layout = self.width() < 960
         self._resize_side_docks()
 
+    @staticmethod
+    def _allow_horizontal_shrinking(widget, minimum_width):
+        policy = widget.sizePolicy()
+        policy.setHorizontalPolicy(QSizePolicy.Ignored)
+        widget.setSizePolicy(policy)
+        widget.setMinimumWidth(minimum_width)
+
+    @staticmethod
+    def _allow_vertical_shrinking(widget, minimum_height):
+        policy = widget.sizePolicy()
+        policy.setVerticalPolicy(QSizePolicy.Ignored)
+        widget.setSizePolicy(policy)
+        widget.setMinimumHeight(minimum_height)
+
+    def _make_left_docks_compact(self):
+        """Reflow wide controls so normal dock widths need no scrollbar."""
+        for layout in (
+            self.ui.horizontalLayout_5,
+            self.ui.verticalLayout_11,
+            self.ui.horizontalLayout_6,
+            self.ui.formLayout,
+            self.ui.isoconversional_method_layout,
+            self.ui.horizontalLayout_8,
+            self.ui.horizontalLayout,
+            self.ui.verticalLayout_22,
+            self.ui.verticalLayout_14,
+        ):
+            layout.setContentsMargins(0, 0, 0, 0)
+        for layout in (
+            self.ui.verticalLayout_9,
+            self.ui.verticalLayout_12,
+            self.ui.verticalLayout_13,
+        ):
+            layout.setContentsMargins(6, 6, 6, 6)
+
+        for list_view in (
+            self.ui.listView_files,
+            self.ui.listView_result_files,
+        ):
+            self._allow_horizontal_shrinking(list_view, 70)
+            self._allow_vertical_shrinking(list_view, 60)
+        self._allow_vertical_shrinking(
+            self.ui.textEdit_result_file_content,
+            60,
+        )
+        for line_edit in (
+            self.ui.lineEdit_number_of_lines_to_skip,
+            self.ui.lineEdit_delimiter,
+        ):
+            self._allow_horizontal_shrinking(line_edit, 45)
+        self._allow_horizontal_shrinking(
+            self.ui.comboBox_isoconversional_analysis_methods,
+            100,
+        )
+
+        extract_button = self.ui.pushButton_extract_data
+        self.ui.verticalLayout_10.removeWidget(extract_button)
+        self.ui.widget_data_extraction_buttons.hide()
+        self.ui.verticalLayout_9.addWidget(extract_button)
+
+        self.ui.pushButton_launch_isoconversional_analysis.setText(
+            "Start analysis"
+        )
+        self.ui.pushButton_launch_isoconversional_analysis.setToolTip(
+            "Launch the selected isoconversional analysis"
+        )
+        self.ui.pushButton_display_result_files.setText("Display selected")
+        self.ui.pushButton_display_result_files.setToolTip(
+            "Display the selected result file"
+        )
+
     def _resize_side_docks(self):
         """Balance the side docks with the central view at the current width."""
-        widths = [230, 260] if self._compact_dock_layout else [340, 320]
+        widths = [230, 260] if self._compact_dock_layout else [350, 320]
         self.resizeDocks(
             [
                 self.ui.dockWidgetData_extraction,
@@ -271,6 +344,16 @@ class MainWindow(QMainWindow):
             widths,
             Qt.Horizontal,
         )
+        if not self._compact_dock_layout:
+            self.resizeDocks(
+                [
+                    self.ui.dockWidgetData_extraction,
+                    self.ui.dockWidgetIsoconversionalAnalysis,
+                    self.ui.dockWidgetResultsViewer,
+                ],
+                [260, 128, 268],
+                Qt.Vertical,
+            )
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

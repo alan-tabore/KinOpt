@@ -72,4 +72,6 @@ Using a smaller window
 KinOpt can be reduced to a ``640 × 480`` window. When the available space is
 smaller than a panel's contents, scrollbars appear in the central area and in
 each dock. Use them to reach controls that do not fit on screen. The **View**
-menu can also hide an unused dock and restore it later.
+menu can also hide an unused dock and restore it later. At regular desktop
+sizes, the controls use a compact arrangement and unnecessary outer scrollbars
+disappear automatically.
