@@ -6,7 +6,7 @@ import time
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QMessageBox
 import pytest
 
 from kinopt.src.batch_optimization_dialog import BatchOptimizationDialog
@@ -98,3 +98,31 @@ def test_dialog_recovers_a_job_left_running(batch_dialog):
 
     assert queue.get(identifier).status is JobStatus.INTERRUPTED
     assert "Recovered 1" in dialog.status_label.text()
+
+
+def test_dialog_duplicates_reorders_and_deletes_jobs(batch_dialog, monkeypatch):
+    dialog, queue = batch_dialog
+    dialog.name_edit.setText("First")
+    dialog.add_current_setup()
+    dialog.name_edit.setText("Second")
+    dialog.add_current_setup()
+
+    dialog.table.selectRow(0)
+    dialog.duplicate_selected_job()
+    duplicate = queue.list_jobs()[-1]
+    assert duplicate.name == "First copy"
+
+    dialog.move_selected_pending_job(-1)
+    assert [job.name for job in queue.list_jobs()] == [
+        "First",
+        "First copy",
+        "Second",
+    ]
+
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args: QMessageBox.Yes,
+    )
+    dialog.delete_selected_job()
+    assert [job.name for job in queue.list_jobs()] == ["First", "Second"]
