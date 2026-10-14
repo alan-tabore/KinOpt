@@ -1,5 +1,7 @@
 """Regression tests for parameters passed from the GUI to the optimizer."""
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -74,8 +76,11 @@ def test_launch_uses_tg_fields_in_coupled_model(optimization_window):
     assert errors == []
     assert len(started) == 1
     worker = started[0]
-    np.testing.assert_array_equal(worker.tg_args, [290., 450., 0.5])
-    np.testing.assert_array_equal(worker.initial_guess, [1e8, 60000., 1.5, 1., 50., 50.])
+    config = worker.config
+    np.testing.assert_array_equal(config.tg_args, [290., 450., 0.5])
+    np.testing.assert_array_equal(
+        config.initial_guess, [1e8, 60000., 1.5, 1., 50., 50.]
+    )
 
     # Check the resulting coupled rate, not only the parameter container.
     extent = window.experimental_extent
@@ -85,12 +90,12 @@ def test_launch_uses_tg_fields_in_coupled_model(optimization_window):
     diffusion_rate = np.exp(50 * (temperature - expected_tg) / (50 + abs(temperature - expected_tg)))
     expected_rate = chemical_rate * diffusion_rate / (chemical_rate + diffusion_rate)
     actual_rate = main.opt.model(
-        worker.initial_guess, worker.rate_law, worker.experimental_args_for_rate,
-        worker.number_of_parameters_to_optimize_for_rate, worker.vitrification_law,
-        worker.experimental_args_for_vitrification,
-        worker.number_of_parameters_to_optimize_for_vitrification,
-        worker.coupling_law, worker.experimental_args_for_coupling,
-        worker.tg_law, worker.experimental_args_for_tg, worker.tg_args,
+        config.initial_guess, config.rate_law, config.experimental_args_for_rate,
+        config.rate_parameter_count, config.vitrification_law,
+        config.experimental_args_for_vitrification,
+        config.vitrification_parameter_count,
+        config.coupling_law, config.experimental_args_for_coupling,
+        config.tg_law, config.experimental_args_for_tg, config.tg_args,
     )
     np.testing.assert_allclose(actual_rate, expected_rate, rtol=1e-12, atol=0)
 
@@ -103,9 +108,29 @@ def test_launch_without_tg_keeps_rate_parameters(optimization_window):
 
     assert errors == []
     assert len(started) == 1
-    assert started[0].tg_law is None
-    assert started[0].tg_args is None
-    np.testing.assert_array_equal(started[0].initial_guess, [1e8, 60000., 1.5])
+    assert started[0].config.tg_law is None
+    assert started[0].config.tg_args is None
+    np.testing.assert_array_equal(
+        started[0].config.initial_guess, [1e8, 60000., 1.5]
+    )
+
+
+def test_launch_captures_data_and_settings_before_the_form_changes(
+    optimization_window,
+):
+    _, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+
+    window.launch_optimization()
+    config = started[0].config
+    window.experimental_rate[:] = 99.
+    window.line_edit_dict_rate_model['A1'].setText('42')
+    window.local_optimization_args_dict['options']['maxiter'] = 1
+
+    np.testing.assert_array_equal(config.experimental_rate, [0.01, 0.02, 0.03])
+    np.testing.assert_array_equal(config.initial_guess, [1e8, 60000., 1.5])
+    assert config.local_options['options']['maxiter'] != 1
+    assert errors == []
 
 
 @pytest.mark.parametrize("invalid_value", ["", "invalid", "nan", "inf", "-inf"])
@@ -203,7 +228,7 @@ def test_worker_failure_restores_start_button(optimization_window):
 
     def fail(*args, **kwargs):
         raise ValueError("synthetic solver failure")
-    worker.local_optimization = fail
+    worker.config = replace(worker.config, local_optimizer=fail)
     worker.run()
     worker.finished.emit()
     assert len(errors) == 1
@@ -246,7 +271,7 @@ def test_cancellation_uses_interruption_and_unwinds_worker(optimization_window, 
     assert requested == [True]
     assert not window.ui.pushButton_launch_optimization.isEnabled()
     with pytest.raises(main.OptimizationCancelled):
-        worker.optimization_callback(worker.initial_guess)
+        worker.optimization_callback(worker.config.initial_guess)
     worker.run()
     monkeypatch.setattr(worker, 'isRunning', lambda: False)
     worker.finished.emit()
@@ -273,7 +298,7 @@ def test_real_thread_cancellation_returns_to_ready(optimization_window):
             time.sleep(0.005)
         raise AssertionError("Cancellation did not reach the solver callback")
 
-    worker.local_optimization = wait_for_cancellation
+    worker.config = replace(worker.config, local_optimizer=wait_for_cancellation)
     worker.finished.connect(lambda: finished.append(True))
     main.QThread.start(worker)
     try:
