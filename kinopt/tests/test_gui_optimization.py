@@ -115,7 +115,10 @@ def test_small_window_keeps_every_section_reachable(optimization_window):
     )
 
     compact_left_width = window.ui.dockWidgetData_extraction.width()
-    window.resize(1024, 768)
+    # Native Windows controls require more horizontal space than their Linux
+    # counterparts, so verify the scrollbar-free desktop layout at a width
+    # that accommodates both platform styles.
+    window.resize(1600, 900)
     main.QApplication.processEvents()
     assert window.ui.dockWidgetData_extraction.width() > compact_left_width
     for dock_name in (
