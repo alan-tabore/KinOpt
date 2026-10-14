@@ -259,6 +259,20 @@ class MainWindow(QMainWindow):
             dock.setMinimumSize(160, 100)
             self.dock_scroll_areas[dock.objectName()] = scroll_area
 
+        left_scroll_areas = (
+            self.dock_scroll_areas["dockWidgetData_extraction"],
+            self.dock_scroll_areas["dockWidgetIsoconversionalAnalysis"],
+            self.dock_scroll_areas["dockWidgetResultsViewer"],
+        )
+        self._normal_left_dock_width = max(
+            350,
+            max(
+                area.widget().minimumWidth()
+                + area.verticalScrollBar().sizeHint().width()
+                + 8
+                for area in left_scroll_areas
+            ),
+        )
         self._compact_dock_layout = self.width() < 960
         self._resize_side_docks()
 
@@ -335,7 +349,11 @@ class MainWindow(QMainWindow):
 
     def _resize_side_docks(self):
         """Balance the side docks with the central view at the current width."""
-        widths = [230, 260] if self._compact_dock_layout else [350, 320]
+        widths = (
+            [230, 260]
+            if self._compact_dock_layout
+            else [self._normal_left_dock_width, 320]
+        )
         self.resizeDocks(
             [
                 self.ui.dockWidgetData_extraction,
