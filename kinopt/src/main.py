@@ -14,8 +14,21 @@ import traceback
 if not __package__:
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QComboBox, QLabel, QLineEdit, QPushButton
-from PyQt5.QtCore import QStringListModel, QThread, pyqtSignal
+from PyQt5.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QFileDialog,
+    QFrame,
+    QLabel,
+    QLayout,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+)
+from PyQt5.QtCore import Qt, QStringListModel, QThread, pyqtSignal
 from PyQt5.QtGui import QTextCursor
 from kinopt.src.kinopt_interface import Ui_MainWindow
 
@@ -208,8 +221,181 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_results_viewer_rate.clicked.connect(self.show_extracted_result_rate)
         self.ui.pushButton_results_viewer_extent.clicked.connect(self.show_extracted_result_extent)
         self.ui.pushButton_results_viewer_temperature.clicked.connect(self.show_extracted_result_temperature)
-        
-        
+        self._make_interface_scrollable()
+
+    def _make_interface_scrollable(self):
+        """Keep every main-window section reachable on smaller screens."""
+        self.setMinimumSize(640, 480)
+        self._make_left_docks_compact()
+
+        central_widget = self.takeCentralWidget()
+        central_widget.setMinimumSize(central_widget.minimumSizeHint())
+        self.central_scroll_area = QScrollArea(self)
+        self.central_scroll_area.setObjectName("centralScrollArea")
+        self.central_scroll_area.setFrameShape(QFrame.NoFrame)
+        self.central_scroll_area.setWidgetResizable(True)
+        self.central_scroll_area.setWidget(central_widget)
+        self.setCentralWidget(self.central_scroll_area)
+
+        self.dock_scroll_areas = {}
+        docks = (
+            self.ui.dockWidgetData_extraction,
+            self.ui.dockWidgetIsoconversionalAnalysis,
+            self.ui.dockWidgetOptimization,
+            self.ui.dockWidgetResultsViewer,
+        )
+        for dock in docks:
+            contents = dock.widget()
+            dock.setWidget(None)
+            if contents.layout() is not None:
+                contents.layout().setSizeConstraint(QLayout.SetMinAndMaxSize)
+            contents.setMinimumSize(contents.minimumSizeHint())
+            scroll_area = QScrollArea(dock)
+            scroll_area.setObjectName(f"{dock.objectName()}ScrollArea")
+            scroll_area.setFrameShape(QFrame.NoFrame)
+            scroll_area.setWidgetResizable(True)
+            scroll_area.setWidget(contents)
+            dock.setWidget(scroll_area)
+            dock.setMinimumSize(160, 100)
+            self.dock_scroll_areas[dock.objectName()] = scroll_area
+
+        self._normal_left_dock_width = self._preferred_left_dock_width()
+        self._compact_dock_layout = self.width() < 960
+        self._resize_side_docks()
+
+    def _preferred_left_dock_width(self):
+        """Return a width that fits native controls without horizontal bars."""
+        left_scroll_areas = (
+            self.dock_scroll_areas["dockWidgetData_extraction"],
+            self.dock_scroll_areas["dockWidgetIsoconversionalAnalysis"],
+            self.dock_scroll_areas["dockWidgetResultsViewer"],
+        )
+        return max(
+            350,
+            max(
+                area.widget().minimumSizeHint().width()
+                + area.verticalScrollBar().sizeHint().width()
+                + 8
+                for area in left_scroll_areas
+            ),
+        )
+
+    @staticmethod
+    def _allow_horizontal_shrinking(widget, minimum_width):
+        policy = widget.sizePolicy()
+        policy.setHorizontalPolicy(QSizePolicy.Ignored)
+        widget.setSizePolicy(policy)
+        widget.setMinimumWidth(minimum_width)
+
+    @staticmethod
+    def _allow_vertical_shrinking(widget, minimum_height):
+        policy = widget.sizePolicy()
+        policy.setVerticalPolicy(QSizePolicy.Ignored)
+        widget.setSizePolicy(policy)
+        widget.setMinimumHeight(minimum_height)
+
+    def _make_left_docks_compact(self):
+        """Reflow wide controls so normal dock widths need no scrollbar."""
+        for layout in (
+            self.ui.horizontalLayout_5,
+            self.ui.verticalLayout_11,
+            self.ui.horizontalLayout_6,
+            self.ui.formLayout,
+            self.ui.isoconversional_method_layout,
+            self.ui.horizontalLayout_8,
+            self.ui.horizontalLayout,
+            self.ui.verticalLayout_22,
+            self.ui.verticalLayout_14,
+        ):
+            layout.setContentsMargins(0, 0, 0, 0)
+        for layout in (
+            self.ui.verticalLayout_9,
+            self.ui.verticalLayout_12,
+            self.ui.verticalLayout_13,
+        ):
+            layout.setContentsMargins(6, 6, 6, 6)
+
+        for list_view in (
+            self.ui.listView_files,
+            self.ui.listView_result_files,
+        ):
+            self._allow_horizontal_shrinking(list_view, 70)
+            self._allow_vertical_shrinking(list_view, 60)
+        self._allow_vertical_shrinking(
+            self.ui.textEdit_result_file_content,
+            60,
+        )
+        for line_edit in (
+            self.ui.lineEdit_number_of_lines_to_skip,
+            self.ui.lineEdit_delimiter,
+        ):
+            self._allow_horizontal_shrinking(line_edit, 45)
+        self._allow_horizontal_shrinking(
+            self.ui.comboBox_isoconversional_analysis_methods,
+            100,
+        )
+
+        extract_button = self.ui.pushButton_extract_data
+        self.ui.verticalLayout_10.removeWidget(extract_button)
+        self.ui.widget_data_extraction_buttons.hide()
+        self.ui.verticalLayout_9.addWidget(extract_button)
+
+        self.ui.pushButton_launch_isoconversional_analysis.setText(
+            "Start analysis"
+        )
+        self.ui.pushButton_launch_isoconversional_analysis.setToolTip(
+            "Launch the selected isoconversional analysis"
+        )
+        self.ui.pushButton_display_result_files.setText("Display selected")
+        self.ui.pushButton_display_result_files.setToolTip(
+            "Display the selected result file"
+        )
+
+    def _resize_side_docks(self):
+        """Balance the side docks with the central view at the current width."""
+        widths = (
+            [230, 260]
+            if self._compact_dock_layout
+            else [self._normal_left_dock_width, 320]
+        )
+        self.resizeDocks(
+            [
+                self.ui.dockWidgetData_extraction,
+                self.ui.dockWidgetOptimization,
+            ],
+            widths,
+            Qt.Horizontal,
+        )
+        if not self._compact_dock_layout:
+            self.resizeDocks(
+                [
+                    self.ui.dockWidgetData_extraction,
+                    self.ui.dockWidgetIsoconversionalAnalysis,
+                    self.ui.dockWidgetResultsViewer,
+                ],
+                [260, 128, 268],
+                Qt.Vertical,
+            )
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if not hasattr(self, "_compact_dock_layout"):
+            return
+        compact = event.size().width() < 960
+        if compact != self._compact_dock_layout:
+            self._compact_dock_layout = compact
+            self._resize_side_docks()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not hasattr(self, "_compact_dock_layout"):
+            return
+        # Font metrics and native control sizes are reliable only after Qt has
+        # polished the widgets. Windows in particular reports wider controls
+        # here than it does while the window is being constructed.
+        self._normal_left_dock_width = self._preferred_left_dock_width()
+        self._resize_side_docks()
+
     def browse_files(self):
         """Open a file dialog to browse and select multiple files. Update the file paths list widget."""
         try:
