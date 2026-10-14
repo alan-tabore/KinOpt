@@ -130,6 +130,40 @@ def test_small_window_keeps_every_section_reachable(optimization_window):
         assert scroll_area.horizontalScrollBar().maximum() == 0
 
 
+def test_model_and_optimizer_selections_show_contextual_guidance(
+    optimization_window,
+):
+    main, window, _, _ = optimization_window
+    rate_guidance = window.selection_guidance_labels['rate']
+    local_guidance = window.selection_guidance_labels['local_optimization']
+
+    assert rate_guidance.isHidden()
+    assert local_guidance.isHidden()
+
+    window.ui.comboBox_rate_model.setCurrentText('rate_for_kamal')
+    window.ui.comboBox_local_optimization_methods.setCurrentText('L-BFGS-B')
+    main.QApplication.processEvents()
+
+    assert not rate_guidance.isHidden()
+    assert 'Kamal model' in rate_guidance.text()
+    assert 'six fitted parameters' in rate_guidance.text()
+    assert not local_guidance.isHidden()
+    assert 'parameter bounds' in local_guidance.text()
+
+    rate_index = window.ui.comboBox_rate_model.findText('rate_for_kamal')
+    tooltip = window.ui.comboBox_rate_model.itemData(
+        rate_index,
+        main.Qt.ToolTipRole,
+    )
+    assert 'Kamal model' in tooltip
+
+    window.clear_models_and_parameters_forms_and_combobox()
+    window.clear_optimization_grids_and_combobox()
+    main.QApplication.processEvents()
+    assert rate_guidance.isHidden()
+    assert local_guidance.isHidden()
+
+
 def test_current_setup_can_be_added_to_batch(optimization_window):
     _, window, started, errors = optimization_window
     configure_optimization(window, with_vitrification=False)

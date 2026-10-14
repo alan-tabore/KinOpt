@@ -48,6 +48,7 @@ from kinopt.src.optimization_runner import (
     OptimizationRunConfig,
     run_optimization,
 )
+from kinopt.src.selection_guidance import selection_guidance_for
 from kinopt.paths import (
     optimization_queue_path as resolve_optimization_queue_path,
     results_directory as resolve_results_directory,
@@ -145,6 +146,7 @@ class MainWindow(QMainWindow):
         self.ui.comboBox_cost_functions.addItems(rss_methods)
         self.ui.comboBox_cost_functions.setCurrentIndex(-1)
         self.ui.comboBox_cost_functions.activated.connect(self.update_cost_functions_formLayout)
+        self._configure_selection_guidance()
         
         self.ui.pushButton_clear_optimization.clicked.connect(self.clear_optimization_grids_and_combobox)
         self.ui.pushButton_autofill_optimization.clicked.connect(self.autofill_optimization_parameters)
@@ -222,6 +224,113 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_results_viewer_extent.clicked.connect(self.show_extracted_result_extent)
         self.ui.pushButton_results_viewer_temperature.clicked.connect(self.show_extracted_result_temperature)
         self._make_interface_scrollable()
+
+    def _configure_selection_guidance(self):
+        """Add contextual explanations and tooltips to scientific choices."""
+        model_guidance = QLabel(self.ui.page_models_and_parameters)
+        model_guidance.setObjectName('label_model_selection_guidance')
+        optimization_guidance = QLabel(
+            self.ui.page_optimization_methods_and_parameters
+        )
+        optimization_guidance.setObjectName(
+            'label_optimization_selection_guidance'
+        )
+        for label, accessible_name, layout in (
+            (
+                model_guidance,
+                'Kinetic model selection guidance',
+                self.ui.verticalLayout_2,
+            ),
+            (
+                optimization_guidance,
+                'Optimization selection guidance',
+                self.ui.verticalLayout_5,
+            ),
+        ):
+            label.setWordWrap(True)
+            label.setMargin(6)
+            label.setFrameShape(QFrame.StyledPanel)
+            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            label.setAccessibleName(accessible_name)
+            label.hide()
+            layout.insertWidget(0, label)
+
+        self.selection_guidance_labels = {
+            'rate': model_guidance,
+            'vitrification': model_guidance,
+            'coupling': model_guidance,
+            'tg': model_guidance,
+            'global_optimization': optimization_guidance,
+            'local_optimization': optimization_guidance,
+            'cost_function': optimization_guidance,
+        }
+        bindings = (
+            (
+                'rate',
+                self.ui.comboBox_rate_model,
+            ),
+            (
+                'vitrification',
+                self.ui.comboBox_vitrification_model,
+            ),
+            (
+                'coupling',
+                self.ui.comboBox_coupling_law,
+            ),
+            (
+                'tg',
+                self.ui.comboBox_tg_law,
+            ),
+            (
+                'global_optimization',
+                self.ui.comboBox_global_optimization_methods,
+            ),
+            (
+                'local_optimization',
+                self.ui.comboBox_local_optimization_methods,
+            ),
+            (
+                'cost_function',
+                self.ui.comboBox_cost_functions,
+            ),
+        )
+        for kind, combo_box in bindings:
+            combo_box.setToolTip(
+                'Select an option to display guidance. '
+                'Hover over an option to preview its explanation.'
+            )
+            for index in range(combo_box.count()):
+                guidance = selection_guidance_for(
+                    kind,
+                    combo_box.itemText(index),
+                )
+                if guidance is not None:
+                    combo_box.setItemData(
+                        index,
+                        guidance.tooltip,
+                        Qt.ToolTipRole,
+                    )
+            combo_box.currentTextChanged.connect(
+                lambda name, selection_kind=kind:
+                self._update_selection_guidance(
+                    selection_kind,
+                    name,
+                )
+            )
+
+    def _update_selection_guidance(self, kind, name):
+        """Show the explanation associated with the current selection."""
+        label = self.selection_guidance_labels[kind]
+        guidance = selection_guidance_for(kind, name)
+        if guidance is None:
+            label.clear()
+            label.hide()
+            return
+        label.setText(
+            f'{guidance.title}\n{guidance.summary}\n'
+            f'Practical note: {guidance.advice}'
+        )
+        label.show()
 
     def _make_interface_scrollable(self):
         """Keep every main-window section reachable on smaller screens."""
