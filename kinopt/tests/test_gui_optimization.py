@@ -164,6 +164,70 @@ def test_model_and_optimizer_selections_show_contextual_guidance(
     assert local_guidance.isHidden()
 
 
+def test_empty_parameter_fields_show_examples_without_entering_values(
+    optimization_window,
+):
+    main, window, _, _ = optimization_window
+
+    window.ui.comboBox_rate_model.setCurrentText('rate_for_kamal')
+    window.update_rate_formLayout(None)
+    assert window.line_edit_dict_rate_model['A1'].text() == ''
+    assert (
+        window.line_edit_dict_rate_model['A1'].placeholderText()
+        == 'Example: 1e8 s^-1'
+    )
+    assert (
+        window.line_edit_dict_rate_model['E1'].placeholderText()
+        == 'Example: 50000 J/mol'
+    )
+
+    window.ui.comboBox_tg_law.setCurrentText('tg_diBennedetto')
+    window.update_tg_formLayout(None)
+    assert (
+        window.line_edit_dict_tg_law['Tg_0'].placeholderText()
+        == 'Example: 290 K'
+    )
+    assert window.line_edit_dict_tg_law['Tg_0'].text() == ''
+
+    window.ui.comboBox_global_optimization_methods.setCurrentText(
+        'differential_evolution'
+    )
+    window.update_global_optimization_gridLayout()
+    numeric_entries = [
+        entry
+        for entry in window.entries_dict_global_optimization.values()
+        if isinstance(entry, main.QLineEdit)
+    ]
+    assert numeric_entries
+    assert all(entry.placeholderText() for entry in numeric_entries)
+    assert all(entry.text() == '' for entry in numeric_entries)
+
+    window.ui.comboBox_cost_functions.setCurrentText(
+        'rss_increase_of_small_extents_impact'
+    )
+    window.update_cost_functions_formLayout()
+    assert (
+        window.entries_dict_cost_function['extent_limit'].placeholderText()
+        == 'Example: 0.707'
+    )
+
+    window.ui.comboBox_isoconversional_analysis_methods.setCurrentText(
+        'isoconversional_analysis_vyazovkin_method'
+    )
+    window.update_isoconversional_formLayout()
+    assert (
+        window.line_edit_dict_isoconversional_analysis[
+            'initial_guess'
+        ].placeholderText()
+        == 'Example: 50000 J/mol'
+    )
+
+    window.autofill_models_parameters()
+    assert window.line_edit_dict_tg_law['Tg_0'].text() == '290'
+    assert window.line_edit_dict_tg_law['Tg_inf'].text() == '450'
+    assert window.line_edit_dict_tg_law['coeff'].text() == '0.5'
+
+
 def test_current_setup_can_be_added_to_batch(optimization_window):
     _, window, started, errors = optimization_window
     configure_optimization(window, with_vitrification=False)

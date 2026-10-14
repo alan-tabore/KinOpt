@@ -22,6 +22,12 @@ assumption, a typical use, and the most important point to check. You can also
 hover over an option in a selection list to preview the same guidance before
 choosing it.
 
+Empty parameter fields show a grey illustrative value and its unit when one is
+available. This text is only a placeholder: KinOpt does not treat it as an
+entered value. Replace it with a value appropriate for your material and data,
+or use ``Autofill`` to write the example values into the fields. These examples
+are starting points, not universal kinetic constants.
+
 
 ⚠ The start of optimization can take a few seconds up to a few minutes to start, please be patient.
 
