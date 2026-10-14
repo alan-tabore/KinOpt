@@ -1,5 +1,7 @@
 """Tests for the optimization engine without importing the Qt interface."""
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 from scipy import optimize
@@ -79,3 +81,19 @@ def test_runner_honours_cancellation_before_start():
 
     with pytest.raises(OptimizationCancelled):
         run_optimization(config, is_cancelled=lambda: True)
+
+
+def test_runner_honours_cancellation_during_solver_callback():
+    cancellation_checks = iter([False, True])
+
+    def solver(function, initial_guess, callback, **kwargs):
+        callback(initial_guess)
+        raise AssertionError('Cancellation did not stop the solver callback')
+
+    config = replace(make_config(), local_optimizer=solver)
+
+    with pytest.raises(OptimizationCancelled):
+        run_optimization(
+            config,
+            is_cancelled=lambda: next(cancellation_checks),
+        )

@@ -143,15 +143,23 @@ def run_optimization(
     if cancellation_requested():
         raise OptimizationCancelled()
 
+    def solver_callback(*args, **kwargs):
+        if cancellation_requested():
+            raise OptimizationCancelled()
+        if callback is not None:
+            return callback(*args, **kwargs)
+        return None
+
     global_options = _thaw(config.global_options or {})
     local_options = _thaw(config.local_options or {})
     objective_args = _objective_arguments(config)
     initial_guess = _thaw(config.initial_guess)
 
-    if config.global_method:
-        global_options["callback"] = callback
-    elif callback is not None:
-        local_options["callback"] = callback
+    callback_required = callback is not None or is_cancelled is not None
+    if config.global_method and callback_required:
+        global_options["callback"] = solver_callback
+    elif callback_required:
+        local_options["callback"] = solver_callback
 
     started_at = clock()
     if config.global_method == "basinhopping":
