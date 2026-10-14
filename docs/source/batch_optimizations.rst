@@ -50,6 +50,24 @@ Queue controls
   next. Jobs that have already started cannot be reordered.
 * **Delete selected** removes an inactive job after confirmation. Deleting a
   completed job also deletes its stored result from the batch table.
+* **Compare completed jobs** opens a table ranked by an unweighted RMSE
+  recalculated from the model predictions and measured rates. This common score
+  remains comparable when jobs use different solver cost functions. Lower is
+  better. Jobs are grouped separately when their measured rate series differ.
+
+Comparing completed results
+---------------------------
+
+Complete at least two jobs, then click **Compare completed jobs**. The
+comparison table reports the common RMSE beside the solver cost, parameter
+count, evaluation count, and duration. A solver cost is useful for understanding
+the calculation that was requested, while the RMSE is the column to use for a
+direct fit comparison on the same measurements.
+
+The RMSE has the same unit as the experimental reaction rate. It measures fit
+error on the data used by the optimization; it does not by itself show whether
+the fitted parameters are physically meaningful or whether the model predicts
+an experiment that was not included in the fit.
 
 The regular **Start optimization** button and the batch runner cannot calculate
 at the same time in one KinOpt window. Detailed text result files are currently

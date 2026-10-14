@@ -18,6 +18,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
+from kinopt.src.batch_comparison_dialog import BatchComparisonDialog
 from kinopt.src.optimization_queue import JobStatus
 from kinopt.src.optimization_scheduler import SequentialOptimizationScheduler
 
@@ -96,6 +97,7 @@ class BatchOptimizationDialog(QDialog):
         self.config_provider = config_provider
         self.execution_allowed = execution_allowed or (lambda: True)
         self.worker = None
+        self.comparison_dialog = None
 
         self.setWindowTitle("Batch optimizations")
         self.resize(1050, 480)
@@ -133,6 +135,7 @@ class BatchOptimizationDialog(QDialog):
         self.move_up_button = QPushButton("Move pending job up")
         self.move_down_button = QPushButton("Move pending job down")
         self.delete_button = QPushButton("Delete selected")
+        self.compare_button = QPushButton("Compare completed jobs")
 
         add_controls = QHBoxLayout()
         add_controls.addWidget(QLabel("New job name:"))
@@ -156,6 +159,7 @@ class BatchOptimizationDialog(QDialog):
             self.move_up_button,
             self.move_down_button,
             self.delete_button,
+            self.compare_button,
         ):
             management_controls.addWidget(button)
 
@@ -186,6 +190,7 @@ class BatchOptimizationDialog(QDialog):
             lambda: self.move_selected_pending_job(1)
         )
         self.delete_button.clicked.connect(self.delete_selected_job)
+        self.compare_button.clicked.connect(self.show_completed_comparison)
         self.table.itemSelectionChanged.connect(self._update_action_buttons)
         close_buttons.rejected.connect(self.close)
 
@@ -289,6 +294,13 @@ class BatchOptimizationDialog(QDialog):
         self.pause_button.setEnabled(self.has_running_worker())
         self.start_button.setEnabled(not self.has_running_worker())
         self.recover_button.setEnabled(not self.has_running_worker())
+        self.compare_button.setEnabled(
+            sum(
+                job.status is JobStatus.COMPLETED and job.result is not None
+                for job in jobs
+            )
+            >= 2
+        )
         self._update_action_buttons()
 
     def add_current_setup(self):
@@ -495,6 +507,30 @@ class BatchOptimizationDialog(QDialog):
         else:
             self.status_label.setText("There are no stopped jobs to recover.")
         self.refresh()
+
+    def show_completed_comparison(self):
+        """Open a ranking of completed jobs using their common fit RMSE."""
+        completed_jobs = [
+            job
+            for job in self.queue.list_jobs()
+            if job.status is JobStatus.COMPLETED and job.result is not None
+        ]
+        if len(completed_jobs) < 2:
+            self.status_label.setText(
+                "Complete at least two jobs before comparing results."
+            )
+            return
+        if self.comparison_dialog is not None:
+            self.comparison_dialog.show()
+            self.comparison_dialog.raise_()
+            self.comparison_dialog.activateWindow()
+            return
+        self.comparison_dialog = BatchComparisonDialog(completed_jobs, self)
+        self.comparison_dialog.setAttribute(Qt.WA_DeleteOnClose)
+        self.comparison_dialog.destroyed.connect(
+            lambda: setattr(self, "comparison_dialog", None)
+        )
+        self.comparison_dialog.show()
 
     def closeEvent(self, event):
         if self.has_running_worker():

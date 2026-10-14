@@ -5,12 +5,15 @@ import time
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMessageBox
 import pytest
+from scipy.optimize import OptimizeResult
 
 from kinopt.src.batch_optimization_dialog import BatchOptimizationDialog
 from kinopt.src.optimization_queue import JobStatus, OptimizationQueue
+from kinopt.src.optimization_runner import OptimizationRunResult
 
 
 @pytest.fixture
@@ -126,3 +129,51 @@ def test_dialog_duplicates_reorders_and_deletes_jobs(batch_dialog, monkeypatch):
     )
     dialog.delete_selected_job()
     assert [job.name for job in queue.list_jobs()] == ["First", "Second"]
+
+
+def test_dialog_compares_completed_jobs_by_common_rmse(batch_dialog, qt_app):
+    dialog, queue = batch_dialog
+    dialog.name_edit.setText("Less accurate")
+    dialog.add_current_setup()
+    dialog.name_edit.setText("Exact fit")
+    dialog.add_current_setup()
+    assert not dialog.compare_button.isEnabled()
+
+    jobs = queue.list_jobs()
+    outcomes = (
+        OptimizationRunResult(
+            OptimizeResult(
+                x=np.array([8e7, 55000., 1.4]),
+                fun=0.01,
+                success=True,
+                message="done",
+                nfev=20,
+            ),
+            1.2,
+        ),
+        OptimizationRunResult(
+            OptimizeResult(
+                x=np.array([1e8, 60000., 1.5]),
+                fun=100.,
+                success=True,
+                message="done",
+                nfev=30,
+            ),
+            1.5,
+        ),
+    )
+    for job, outcome in zip(jobs, outcomes):
+        queue.set_status(job.identifier, JobStatus.RUNNING)
+        queue.complete(job.identifier, outcome)
+
+    dialog.refresh()
+    assert dialog.compare_button.isEnabled()
+    dialog.show_completed_comparison()
+    qt_app.processEvents()
+
+    comparison = dialog.comparison_dialog
+    assert comparison.table.rowCount() == 2
+    assert comparison.table.item(0, 1).text() == "1"
+    assert comparison.table.item(0, 2).text() == "Exact fit"
+    assert float(comparison.table.item(0, 5).text()) == pytest.approx(0.)
+    assert comparison.table.item(1, 2).text() == "Less accurate"
