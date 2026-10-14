@@ -34,6 +34,8 @@ def test_guidance_contains_a_title_explanation_and_practical_advice():
     assert guidance.title == 'Kamal model'
     assert 'autocatalytic' in guidance.summary
     assert 'six fitted parameters' in guidance.advice
+    assert '<sup>m</sup>' in guidance.equation
+    assert 'dα/dt' in guidance.equation
     assert guidance.title in guidance.tooltip
 
 

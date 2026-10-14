@@ -10,6 +10,7 @@ class SelectionGuidance:
     title: str
     summary: str
     advice: str
+    equation: str = ''
 
     @property
     def tooltip(self):
@@ -22,16 +23,23 @@ GUIDANCE_BY_KIND = {
             'Nth-order model',
             'A simple Arrhenius model with a (1 - alpha)^n conversion term.',
             'Useful as a baseline; it does not describe autocatalytic acceleration.',
+            '<i>dα/dt</i> = A<sub>1</sub> exp(−E<sub>1</sub>/(RT)) '
+            '(1 − α)<sup>n</sup>',
         ),
         'rate_for_autocatalytic': SelectionGuidance(
             'Autocatalytic model',
             'Adds an alpha^m term so the reaction can accelerate as conversion grows.',
             'For m > 0, a simulation starting exactly at alpha = 0 predicts zero rate.',
+            '<i>dα/dt</i> = A exp(−E<sub>a</sub>/(RT)) '
+            'α<sup>m</sup>(1 − α)<sup>n</sup>',
         ),
         'rate_for_kamal': SelectionGuidance(
             'Kamal model',
             'Combines separate ordinary and autocatalytic Arrhenius contributions.',
             'Its six fitted parameters need informative experiments and careful bounds.',
+            '<i>dα/dt</i> = [A<sub>1</sub> exp(−E<sub>1</sub>/(RT)) + '
+            'A<sub>2</sub> exp(−E<sub>2</sub>/(RT)) α<sup>m</sup>] '
+            '(1 − α)<sup>n</sup>',
         ),
     },
     'vitrification': {
@@ -39,11 +47,14 @@ GUIDANCE_BY_KIND = {
             'Continuous WLF vitrification term',
             'Models diffusion limitation from the difference between temperature and Tg.',
             'A Tg law is required; this version can remain nonzero below Tg.',
+            'k<sub>v</sub> = A<sub>d</sub> exp[C<sub>1</sub>'
+            '(T − T<sub>g</sub>)/(C<sub>2</sub> + |T − T<sub>g</sub>|)]',
         ),
         'vitrification_WLF_rate_no_reaction_below_Tg': SelectionGuidance(
             'WLF term with a Tg cutoff',
             'Uses the WLF vitrification term and sets it to zero when temperature is at or below Tg.',
             'Choose it only when this abrupt cutoff matches the intended physical assumption.',
+            'k<sub>v</sub> = 0 for T ≤ T<sub>g</sub>; WLF expression otherwise',
         ),
     },
     'coupling': {
@@ -51,11 +62,13 @@ GUIDANCE_BY_KIND = {
             'Reciprocal-rate coupling',
             'Combines chemical and diffusion rates as 1 / (1/kc + 1/kv).',
             'The slower contribution therefore limits the overall rate.',
+            'k = 1/(1/k<sub>c</sub> + 1/k<sub>v</sub>)',
         ),
         'coupling_product': SelectionGuidance(
             'Product coupling',
             'Multiplies the chemical and diffusion contributions.',
             'Check that the resulting units and physical interpretation match your model.',
+            'k = k<sub>c</sub> k<sub>v</sub>',
         ),
     },
     'tg': {
@@ -63,6 +76,8 @@ GUIDANCE_BY_KIND = {
             'DiBenedetto Tg law',
             'Describes how glass-transition temperature changes with conversion.',
             'Provide Tg_0 and Tg_inf in kelvin and justify the dimensionless coefficient.',
+            'T<sub>g</sub>(α) = T<sub>g,0</sub> + '
+            '(T<sub>g,∞</sub> − T<sub>g,0</sub>)λα/[1 − (1 − λ)α]',
         ),
     },
     'global_optimization': {
@@ -109,26 +124,34 @@ GUIDANCE_BY_KIND = {
             'Sum of squared residuals',
             'Adds the squared differences between measured and predicted rates.',
             'Experiments containing more points have more influence on the total.',
+            'J = Σ (r<sub>model,i</sub> − r<sub>exp,i</sub>)<sup>2</sup>',
         ),
         'rss_mean': SelectionGuidance(
             'Mean squared residual',
             'Averages the squared differences between measured and predicted rates.',
             'Use comparable units and scaling when interpreting values across data sets.',
+            'J = (1/N) Σ (r<sub>model,i</sub> − r<sub>exp,i</sub>)<sup>2</sup>',
         ),
         'rss_relative': SelectionGuidance(
             'Relative squared residuals',
             'Divides each rate residual by its measured rate before squaring.',
             'It emphasizes low rates and cannot be used when a measured rate is zero.',
+            'J = Σ [(r<sub>model,i</sub> − r<sub>exp,i</sub>)'
+            '/r<sub>exp,i</sub>]<sup>2</sup>',
         ),
         'rss_increase_of_small_extents_impact': SelectionGuidance(
             'Early-conversion weighted residuals',
             'Amplifies residuals below a selected conversion threshold.',
             'Use a weight justified by the experiment because it changes the fitted objective.',
+            'J = (1/N) Σ w<sub>i</sub>(r<sub>model,i</sub> − '
+            'r<sub>exp,i</sub>)<sup>2</sup>, with w<sub>i</sub> set by α',
         ),
         'rss_increase_of_small_rates_impact_with_zones': SelectionGuidance(
             'Low-rate-zone weighted residuals',
             'Amplifies residuals where the measured rate is below a selected fraction of its maximum.',
             'This can improve low-rate regions while reducing the relative influence of the peak.',
+            'J = (1/N) Σ w<sub>i</sub>(r<sub>model,i</sub> − '
+            'r<sub>exp,i</sub>)<sup>2</sup>, with w<sub>i</sub> set by rate',
         ),
     },
 }

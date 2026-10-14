@@ -147,6 +147,9 @@ def test_model_and_optimizer_selections_show_contextual_guidance(
     assert not rate_guidance.isHidden()
     assert 'Kamal model' in rate_guidance.text()
     assert 'six fitted parameters' in rate_guidance.text()
+    assert 'dα/dt' in rate_guidance.text()
+    assert '<sup>m</sup>' in rate_guidance.text()
+    assert rate_guidance.textFormat() == main.Qt.RichText
     assert not local_guidance.isHidden()
     assert 'parameter bounds' in local_guidance.text()
 

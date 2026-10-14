@@ -9,6 +9,7 @@ This script is used to define the graphical interface and its main functions.
 import sys
 import os
 import traceback
+from html import escape
 
 # Keep the documented `python main.py` launch working as well as package imports.
 if not __package__:
@@ -257,6 +258,7 @@ class MainWindow(QMainWindow):
             label.setWordWrap(True)
             label.setMargin(6)
             label.setFrameShape(QFrame.StyledPanel)
+            label.setTextFormat(Qt.RichText)
             label.setTextInteractionFlags(Qt.TextSelectableByMouse)
             label.setAccessibleName(accessible_name)
             label.hide()
@@ -333,9 +335,17 @@ class MainWindow(QMainWindow):
             label.clear()
             label.hide()
             return
+        equation = ''
+        if guidance.equation:
+            equation = (
+                '<p align="center"><span style="font-size: 115%;">'
+                f'{guidance.equation}</span></p>'
+            )
         label.setText(
-            f'{guidance.title}\n{guidance.summary}\n'
-            f'Practical note: {guidance.advice}'
+            f'<b>{escape(guidance.title)}</b>'
+            f'{equation}'
+            f'{escape(guidance.summary)}<br>'
+            f'<i>Practical note:</i> {escape(guidance.advice)}'
         )
         label.show()
 
