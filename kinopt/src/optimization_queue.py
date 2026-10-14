@@ -261,6 +261,99 @@ class OptimizationQueue:
             ).fetchall()
         return [self._row_to_job(row) for row in rows]
 
+    def duplicate(self, identifier, name=None):
+        """Append a new pending job with a selected job's configuration."""
+        source = self.get(identifier)
+        duplicate_name = str(name).strip() if name is not None else ""
+        if not duplicate_name:
+            duplicate_name = f"{source.name} copy"
+        return self.add(source.config, duplicate_name)
+
+    def move_pending(self, identifier, direction):
+        """Move a pending job before or after the nearest pending job."""
+        if direction not in (-1, 1):
+            raise ValueError("direction must be -1 or 1.")
+        comparison = "<" if direction < 0 else ">"
+        ordering = "DESC" if direction < 0 else "ASC"
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                """
+                SELECT status, position FROM optimization_jobs
+                WHERE identifier = ?
+                """,
+                (identifier,),
+            ).fetchone()
+            if row is None:
+                raise KeyError(f"Unknown optimization job: {identifier}")
+            if JobStatus(row["status"]) is not JobStatus.PENDING:
+                raise ValueError("Only pending jobs can be reordered.")
+            neighbour = connection.execute(
+                f"""
+                SELECT identifier, position FROM optimization_jobs
+                WHERE status = ? AND position {comparison} ?
+                ORDER BY position {ordering}, created_at {ordering}
+                LIMIT 1
+                """,
+                (JobStatus.PENDING.value, row["position"]),
+            ).fetchone()
+            if neighbour is not None:
+                timestamp = _utc_now()
+                connection.execute(
+                    """
+                    UPDATE optimization_jobs
+                    SET position = CASE identifier
+                        WHEN ? THEN ?
+                        WHEN ? THEN ?
+                    END,
+                    updated_at = ?
+                    WHERE identifier IN (?, ?)
+                    """,
+                    (
+                        identifier,
+                        neighbour["position"],
+                        neighbour["identifier"],
+                        row["position"],
+                        timestamp,
+                        identifier,
+                        neighbour["identifier"],
+                    ),
+                )
+        return self.get(identifier)
+
+    def delete(self, identifier):
+        """Delete an inactive job and compact the remaining queue positions."""
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT status FROM optimization_jobs WHERE identifier = ?",
+                (identifier,),
+            ).fetchone()
+            if row is None:
+                raise KeyError(f"Unknown optimization job: {identifier}")
+            if JobStatus(row["status"]) is JobStatus.RUNNING:
+                raise ValueError("A running job cannot be deleted.")
+            connection.execute(
+                "DELETE FROM optimization_jobs WHERE identifier = ?",
+                (identifier,),
+            )
+            remaining = connection.execute(
+                """
+                SELECT identifier FROM optimization_jobs
+                ORDER BY position, created_at
+                """
+            ).fetchall()
+            connection.executemany(
+                """
+                UPDATE optimization_jobs SET position = ?
+                WHERE identifier = ?
+                """,
+                (
+                    (position, job["identifier"])
+                    for position, job in enumerate(remaining, start=1)
+                ),
+            )
+
     def set_status(self, identifier, status, message=None):
         """Apply one valid lifecycle transition and persist its message."""
         requested_status = JobStatus(status)

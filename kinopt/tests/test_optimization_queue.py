@@ -125,3 +125,59 @@ def test_pending_job_can_only_be_claimed_once(tmp_path, serializable_config):
     claimed_jobs = [job for job in claimed if job is not None]
     assert [job.identifier for job in claimed_jobs] == [queued.identifier]
     assert claimed_jobs[0].status is JobStatus.RUNNING
+
+
+def test_job_can_be_duplicated_as_a_new_pending_run(
+    tmp_path,
+    serializable_config,
+):
+    queue = OptimizationQueue(tmp_path / 'queue.sqlite3')
+    source = queue.add(serializable_config, 'Baseline')
+
+    duplicate = queue.duplicate(source.identifier)
+
+    assert duplicate.identifier != source.identifier
+    assert duplicate.name == 'Baseline copy'
+    assert duplicate.status is JobStatus.PENDING
+    assert duplicate.position == 2
+    np.testing.assert_array_equal(
+        duplicate.config.initial_guess,
+        source.config.initial_guess,
+    )
+
+
+def test_pending_jobs_can_be_reordered_without_moving_finished_states(
+    tmp_path,
+    serializable_config,
+):
+    queue = OptimizationQueue(tmp_path / 'queue.sqlite3')
+    first = queue.add(serializable_config, 'First')
+    second = queue.add(serializable_config, 'Second')
+    third = queue.add(serializable_config, 'Third')
+
+    queue.move_pending(third.identifier, -1)
+    assert [job.identifier for job in queue.list_jobs()] == [
+        first.identifier,
+        third.identifier,
+        second.identifier,
+    ]
+    assert [job.position for job in queue.list_jobs()] == [1, 2, 3]
+
+    queue.set_status(second.identifier, JobStatus.CANCELLED)
+    with pytest.raises(ValueError, match='Only pending'):
+        queue.move_pending(second.identifier, -1)
+
+
+def test_only_inactive_jobs_can_be_deleted(tmp_path, serializable_config):
+    queue = OptimizationQueue(tmp_path / 'queue.sqlite3')
+    first = queue.add(serializable_config, 'First')
+    second = queue.add(serializable_config, 'Second')
+    running = queue.set_status(first.identifier, JobStatus.RUNNING)
+
+    with pytest.raises(ValueError, match='running job'):
+        queue.delete(running.identifier)
+
+    queue.delete(second.identifier)
+    jobs = queue.list_jobs()
+    assert [job.identifier for job in jobs] == [first.identifier]
+    assert jobs[0].position == 1
