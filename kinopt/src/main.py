@@ -9,6 +9,7 @@ This script is used to define the graphical interface and its main functions.
 import sys
 import os
 import traceback
+from html import escape
 
 # Keep the documented `python main.py` launch working as well as package imports.
 if not __package__:
@@ -48,6 +49,14 @@ from kinopt.src.optimization_runner import (
     OptimizationRunConfig,
     run_optimization,
 )
+from kinopt.src.parameter_examples import (
+    bound_parameter_example,
+    cost_parameter_example,
+    isoconversional_parameter_example,
+    model_parameter_example,
+    optimization_parameter_example,
+)
+from kinopt.src.selection_guidance import selection_guidance_for
 from kinopt.paths import (
     optimization_queue_path as resolve_optimization_queue_path,
     results_directory as resolve_results_directory,
@@ -145,6 +154,7 @@ class MainWindow(QMainWindow):
         self.ui.comboBox_cost_functions.addItems(rss_methods)
         self.ui.comboBox_cost_functions.setCurrentIndex(-1)
         self.ui.comboBox_cost_functions.activated.connect(self.update_cost_functions_formLayout)
+        self._configure_selection_guidance()
         
         self.ui.pushButton_clear_optimization.clicked.connect(self.clear_optimization_grids_and_combobox)
         self.ui.pushButton_autofill_optimization.clicked.connect(self.autofill_optimization_parameters)
@@ -222,6 +232,130 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_results_viewer_extent.clicked.connect(self.show_extracted_result_extent)
         self.ui.pushButton_results_viewer_temperature.clicked.connect(self.show_extracted_result_temperature)
         self._make_interface_scrollable()
+
+    def _configure_selection_guidance(self):
+        """Add contextual explanations and tooltips to scientific choices."""
+        model_guidance = QLabel(self.ui.page_models_and_parameters)
+        model_guidance.setObjectName('label_model_selection_guidance')
+        optimization_guidance = QLabel(
+            self.ui.page_optimization_methods_and_parameters
+        )
+        optimization_guidance.setObjectName(
+            'label_optimization_selection_guidance'
+        )
+        for label, accessible_name, layout in (
+            (
+                model_guidance,
+                'Kinetic model selection guidance',
+                self.ui.verticalLayout_2,
+            ),
+            (
+                optimization_guidance,
+                'Optimization selection guidance',
+                self.ui.verticalLayout_5,
+            ),
+        ):
+            label.setWordWrap(True)
+            label.setMargin(6)
+            label.setFrameShape(QFrame.StyledPanel)
+            label.setTextFormat(Qt.RichText)
+            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            label.setAccessibleName(accessible_name)
+            label.hide()
+            layout.insertWidget(0, label)
+
+        self.selection_guidance_labels = {
+            'rate': model_guidance,
+            'vitrification': model_guidance,
+            'coupling': model_guidance,
+            'tg': model_guidance,
+            'global_optimization': optimization_guidance,
+            'local_optimization': optimization_guidance,
+            'cost_function': optimization_guidance,
+        }
+        bindings = (
+            (
+                'rate',
+                self.ui.comboBox_rate_model,
+            ),
+            (
+                'vitrification',
+                self.ui.comboBox_vitrification_model,
+            ),
+            (
+                'coupling',
+                self.ui.comboBox_coupling_law,
+            ),
+            (
+                'tg',
+                self.ui.comboBox_tg_law,
+            ),
+            (
+                'global_optimization',
+                self.ui.comboBox_global_optimization_methods,
+            ),
+            (
+                'local_optimization',
+                self.ui.comboBox_local_optimization_methods,
+            ),
+            (
+                'cost_function',
+                self.ui.comboBox_cost_functions,
+            ),
+        )
+        for kind, combo_box in bindings:
+            combo_box.setToolTip(
+                'Select an option to display guidance. '
+                'Hover over an option to preview its explanation.'
+            )
+            for index in range(combo_box.count()):
+                guidance = selection_guidance_for(
+                    kind,
+                    combo_box.itemText(index),
+                )
+                if guidance is not None:
+                    combo_box.setItemData(
+                        index,
+                        guidance.tooltip,
+                        Qt.ToolTipRole,
+                    )
+            combo_box.currentTextChanged.connect(
+                lambda name, selection_kind=kind:
+                self._update_selection_guidance(
+                    selection_kind,
+                    name,
+                )
+            )
+
+    def _update_selection_guidance(self, kind, name):
+        """Show the explanation associated with the current selection."""
+        label = self.selection_guidance_labels[kind]
+        guidance = selection_guidance_for(kind, name)
+        if guidance is None:
+            label.clear()
+            label.hide()
+            return
+        equation = ''
+        if guidance.equation:
+            equation = (
+                '<p align="center"><span style="font-size: 115%;">'
+                f'{guidance.equation}</span></p>'
+            )
+        label.setText(
+            f'<b>{escape(guidance.title)}</b>'
+            f'{equation}'
+            f'{escape(guidance.summary)}<br>'
+            f'<i>Practical note:</i> {escape(guidance.advice)}'
+        )
+        label.show()
+
+    @staticmethod
+    def _set_parameter_example(line_edit, example):
+        """Display an example without making it an entered value."""
+        if example is None:
+            return
+        line_edit.setPlaceholderText(example.placeholder)
+        line_edit.setToolTip(example.tooltip)
 
     def _make_interface_scrollable(self):
         """Keep every main-window section reachable on smaller screens."""
@@ -610,6 +744,10 @@ class MainWindow(QMainWindow):
                 # Adding the parameters to optimize to the list
                 self.isoconversional_method_parameters_to_give.append(parameter)
                 line_edit = QLineEdit()
+                self._set_parameter_example(
+                    line_edit,
+                    isoconversional_parameter_example(parameter),
+                )
                 self.line_edit_dict_isoconversional_analysis[parameter] = line_edit
                 self.ui.formLayout_isoconversional_analysis.addRow(parameter+":",line_edit)
         
@@ -643,16 +781,11 @@ class MainWindow(QMainWindow):
     def autofill_isoconversional_analysis_parameters(self):
         try:
             for key, line_edit in self.line_edit_dict_isoconversional_analysis.items():
-                if key == "min_conv":
-                    line_edit.setText("0.1")
-                elif key == "max_conv":
-                    line_edit.setText("0.9")
-                elif key == "initial_guess":
-                    line_edit.setText("50000")
-                elif key == "number_of_points":
-                    line_edit.setText("100")
-                else:
+                example = isoconversional_parameter_example(key)
+                if example is None or example.value is None:
                     QMessageBox.critical(self, "Error", f"An error occurred:\nThe parameter {key} doesn't have a default value.\nPlease modify the 'autofill_isoconversional_analysis_parameters' function.", QMessageBox.Icon.Critical)
+                else:
+                    line_edit.setText(example.value)
         except Exception as e:
             # Handle other exceptions with a generic error message
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
@@ -737,6 +870,10 @@ class MainWindow(QMainWindow):
                 # Adding the parameters to optimize to the list
                 self.rate_parameters_to_optimize.append(parameter)
                 line_edit = QLineEdit()
+                self._set_parameter_example(
+                    line_edit,
+                    model_parameter_example(parameter),
+                )
                 self.line_edit_dict_rate_model[parameter] = line_edit
                 self.ui.formLayout_rate.addRow(parameter+":",line_edit)
 
@@ -781,6 +918,10 @@ class MainWindow(QMainWindow):
                 # Adding the parameters to optimize to the list
                 self.vitrification_parameters_to_optimize.append(parameter)
                 line_edit = QLineEdit()
+                self._set_parameter_example(
+                    line_edit,
+                    model_parameter_example(parameter),
+                )
                 self.line_edit_dict_vitrification_model[parameter] = line_edit
                 self.ui.formLayout_vitrification.addRow(parameter+":",line_edit)
 
@@ -825,6 +966,10 @@ class MainWindow(QMainWindow):
                 # Adding the parameters to optimize to the list
                 self.coupling_law_parameters_to_optimize.append(parameter)
                 line_edit = QLineEdit()
+                self._set_parameter_example(
+                    line_edit,
+                    model_parameter_example(parameter),
+                )
                 self.line_edit_dict_coupling_law[parameter] = line_edit
                 self.ui.formLayout_coupling_law.addRow(parameter+":",line_edit)
 
@@ -869,6 +1014,10 @@ class MainWindow(QMainWindow):
                 # Adding the parameters to optimize to the list
                 self.tg_law_parameters_to_optimize.append(parameter)
                 line_edit = QLineEdit()
+                self._set_parameter_example(
+                    line_edit,
+                    model_parameter_example(parameter),
+                )
                 self.line_edit_dict_tg_law[parameter] = line_edit
                 self.ui.formLayout_tg.addRow(parameter+":",line_edit)
         
@@ -947,18 +1096,17 @@ class MainWindow(QMainWindow):
         - None
         """
         try :
-            for dict in [self.line_edit_dict_rate_model, self.line_edit_dict_vitrification_model, self.line_edit_dict_coupling_law]:
-                for key,line_edit in dict.items():
-                    if key in ["A", "A1", "A2"]:
-                        line_edit.setText("1e8")
-                    elif key in ["E", "Ea", "E1", "E2"]:
-                        line_edit.setText("50000")
-                    elif key in ["m", "n"]:
-                        line_edit.setText("2")
-                    elif key in ["Ad"]:
-                        line_edit.setText("1")                  
-                    elif key in ["C","C1", "C2"]:
-                        line_edit.setText("50")
+            parameter_fields = (
+                self.line_edit_dict_rate_model,
+                self.line_edit_dict_vitrification_model,
+                self.line_edit_dict_coupling_law,
+                self.line_edit_dict_tg_law,
+            )
+            for fields in parameter_fields:
+                for key, line_edit in fields.items():
+                    example = model_parameter_example(key)
+                    if example is not None and example.value is not None:
+                        line_edit.setText(example.value)
                     else:
                         QMessageBox.critical(self,"Error", f" An error occurred:\n The parameter {key} does'nt have a default value.\n Please modify the 'autofill_parameters' function in GUI.py.")
         except Exception as e:
@@ -1007,6 +1155,13 @@ class MainWindow(QMainWindow):
                 if value_type == float or value_type == int:
                     label = QLabel(key)
                     line_edit = QLineEdit()
+                    self._set_parameter_example(
+                        line_edit,
+                        optimization_parameter_example(
+                            self.selected_global_optimization,
+                            key,
+                        ),
+                    )
                     self.labels_dict_global_optimization[key] = label
                     self.entries_dict_global_optimization[key] = line_edit
                     self.ui.gridLayout_global_optimization.addWidget(label, row, 0)
@@ -1050,6 +1205,14 @@ class MainWindow(QMainWindow):
                         label = QLabel(parameter)
                         line_edit_min = QLineEdit()
                         line_edit_max = QLineEdit()
+                        self._set_parameter_example(
+                            line_edit_min,
+                            bound_parameter_example(parameter, 'min'),
+                        )
+                        self._set_parameter_example(
+                            line_edit_max,
+                            bound_parameter_example(parameter, 'max'),
+                        )
                         self.labels_dict_global_optimization[parameter] = label
                         self.entries_dict_global_optimization["min" + parameter] = line_edit_min
                         self.entries_dict_global_optimization["max" + parameter] = line_edit_max
@@ -1148,6 +1311,13 @@ class MainWindow(QMainWindow):
                 if value_type == float or value_type == int:
                     label = QLabel(key)
                     line_edit = QLineEdit()
+                    self._set_parameter_example(
+                        line_edit,
+                        optimization_parameter_example(
+                            self.selected_local_optimization,
+                            key,
+                        ),
+                    )
                     self.labels_dict_local_optimization[key] = label
                     self.entries_dict_local_optimization[key] = line_edit
                     self.ui.gridLayout_local_optimization.addWidget(label, row, 0)
@@ -1191,6 +1361,14 @@ class MainWindow(QMainWindow):
                         label = QLabel(parameter)
                         line_edit_min = QLineEdit()
                         line_edit_max = QLineEdit()
+                        self._set_parameter_example(
+                            line_edit_min,
+                            bound_parameter_example(parameter, 'min'),
+                        )
+                        self._set_parameter_example(
+                            line_edit_max,
+                            bound_parameter_example(parameter, 'max'),
+                        )
                         self.labels_dict_local_optimization[parameter] = label
                         self.entries_dict_local_optimization["min" + parameter] = line_edit_min
                         self.entries_dict_local_optimization["max" + parameter] = line_edit_max
@@ -1269,6 +1447,10 @@ class MainWindow(QMainWindow):
                 self.cost_function_parameters_input.append(parameter)
                 label = QLabel(parameter)
                 line_edit = QLineEdit()
+                self._set_parameter_example(
+                    line_edit,
+                    cost_parameter_example(parameter),
+                )
                 self.labels_dict_cost_function[parameter] = label
                 self.entries_dict_cost_function[parameter] = line_edit
                 self.ui.gridLayout_cost_functions.addWidget(label,row,0)

@@ -130,6 +130,107 @@ def test_small_window_keeps_every_section_reachable(optimization_window):
         assert scroll_area.horizontalScrollBar().maximum() == 0
 
 
+def test_model_and_optimizer_selections_show_contextual_guidance(
+    optimization_window,
+):
+    main, window, _, _ = optimization_window
+    rate_guidance = window.selection_guidance_labels['rate']
+    local_guidance = window.selection_guidance_labels['local_optimization']
+
+    assert rate_guidance.isHidden()
+    assert local_guidance.isHidden()
+
+    window.ui.comboBox_rate_model.setCurrentText('rate_for_kamal')
+    window.ui.comboBox_local_optimization_methods.setCurrentText('L-BFGS-B')
+    main.QApplication.processEvents()
+
+    assert not rate_guidance.isHidden()
+    assert 'Kamal model' in rate_guidance.text()
+    assert 'six fitted parameters' in rate_guidance.text()
+    assert 'dα/dt' in rate_guidance.text()
+    assert '<sup>m</sup>' in rate_guidance.text()
+    assert rate_guidance.textFormat() == main.Qt.RichText
+    assert not local_guidance.isHidden()
+    assert 'parameter bounds' in local_guidance.text()
+
+    rate_index = window.ui.comboBox_rate_model.findText('rate_for_kamal')
+    tooltip = window.ui.comboBox_rate_model.itemData(
+        rate_index,
+        main.Qt.ToolTipRole,
+    )
+    assert 'Kamal model' in tooltip
+
+    window.clear_models_and_parameters_forms_and_combobox()
+    window.clear_optimization_grids_and_combobox()
+    main.QApplication.processEvents()
+    assert rate_guidance.isHidden()
+    assert local_guidance.isHidden()
+
+
+def test_empty_parameter_fields_show_examples_without_entering_values(
+    optimization_window,
+):
+    main, window, _, _ = optimization_window
+
+    window.ui.comboBox_rate_model.setCurrentText('rate_for_kamal')
+    window.update_rate_formLayout(None)
+    assert window.line_edit_dict_rate_model['A1'].text() == ''
+    assert (
+        window.line_edit_dict_rate_model['A1'].placeholderText()
+        == 'Example: 1e8 s^-1'
+    )
+    assert (
+        window.line_edit_dict_rate_model['E1'].placeholderText()
+        == 'Example: 50000 J/mol'
+    )
+
+    window.ui.comboBox_tg_law.setCurrentText('tg_diBennedetto')
+    window.update_tg_formLayout(None)
+    assert (
+        window.line_edit_dict_tg_law['Tg_0'].placeholderText()
+        == 'Example: 290 K'
+    )
+    assert window.line_edit_dict_tg_law['Tg_0'].text() == ''
+
+    window.ui.comboBox_global_optimization_methods.setCurrentText(
+        'differential_evolution'
+    )
+    window.update_global_optimization_gridLayout()
+    numeric_entries = [
+        entry
+        for entry in window.entries_dict_global_optimization.values()
+        if isinstance(entry, main.QLineEdit)
+    ]
+    assert numeric_entries
+    assert all(entry.placeholderText() for entry in numeric_entries)
+    assert all(entry.text() == '' for entry in numeric_entries)
+
+    window.ui.comboBox_cost_functions.setCurrentText(
+        'rss_increase_of_small_extents_impact'
+    )
+    window.update_cost_functions_formLayout()
+    assert (
+        window.entries_dict_cost_function['extent_limit'].placeholderText()
+        == 'Example: 0.707'
+    )
+
+    window.ui.comboBox_isoconversional_analysis_methods.setCurrentText(
+        'isoconversional_analysis_vyazovkin_method'
+    )
+    window.update_isoconversional_formLayout()
+    assert (
+        window.line_edit_dict_isoconversional_analysis[
+            'initial_guess'
+        ].placeholderText()
+        == 'Example: 50000 J/mol'
+    )
+
+    window.autofill_models_parameters()
+    assert window.line_edit_dict_tg_law['Tg_0'].text() == '290'
+    assert window.line_edit_dict_tg_law['Tg_inf'].text() == '450'
+    assert window.line_edit_dict_tg_law['coeff'].text() == '0.5'
+
+
 def test_current_setup_can_be_added_to_batch(optimization_window):
     _, window, started, errors = optimization_window
     configure_optimization(window, with_vitrification=False)
