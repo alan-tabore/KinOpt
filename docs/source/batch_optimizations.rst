@@ -44,6 +44,12 @@ Queue controls
   pending queue.
 * **Recover stopped jobs** marks jobs left running by an application or system
   interruption so that they can be selected and retried.
+* **Duplicate selected** creates a new pending copy of any job's original
+  configuration. The stored result is not copied.
+* **Move pending job up/down** changes which pending configuration will run
+  next. Jobs that have already started cannot be reordered.
+* **Delete selected** removes an inactive job after confirmation. Deleting a
+  completed job also deletes its stored result from the batch table.
 
 The regular **Start optimization** button and the batch runner cannot calculate
 at the same time in one KinOpt window. Detailed text result files are currently

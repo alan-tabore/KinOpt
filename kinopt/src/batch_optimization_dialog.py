@@ -129,6 +129,10 @@ class BatchOptimizationDialog(QDialog):
         self.retry_button = QPushButton("Retry selected job")
         self.recover_button = QPushButton("Recover stopped jobs")
         self.refresh_button = QPushButton("Refresh")
+        self.duplicate_button = QPushButton("Duplicate selected")
+        self.move_up_button = QPushButton("Move pending job up")
+        self.move_down_button = QPushButton("Move pending job down")
+        self.delete_button = QPushButton("Delete selected")
 
         add_controls = QHBoxLayout()
         add_controls.addWidget(QLabel("New job name:"))
@@ -146,6 +150,15 @@ class BatchOptimizationDialog(QDialog):
         ):
             execution_controls.addWidget(button)
 
+        management_controls = QHBoxLayout()
+        for button in (
+            self.duplicate_button,
+            self.move_up_button,
+            self.move_down_button,
+            self.delete_button,
+        ):
+            management_controls.addWidget(button)
+
         self.status_label = QLabel("Ready.")
         close_buttons = QDialogButtonBox(QDialogButtonBox.Close)
 
@@ -154,6 +167,7 @@ class BatchOptimizationDialog(QDialog):
         layout.addWidget(self.table)
         layout.addLayout(add_controls)
         layout.addLayout(execution_controls)
+        layout.addLayout(management_controls)
         layout.addWidget(self.status_label)
         layout.addWidget(close_buttons)
 
@@ -164,6 +178,15 @@ class BatchOptimizationDialog(QDialog):
         self.retry_button.clicked.connect(self.retry_selected_job)
         self.recover_button.clicked.connect(self.recover_stopped_jobs)
         self.refresh_button.clicked.connect(self.refresh)
+        self.duplicate_button.clicked.connect(self.duplicate_selected_job)
+        self.move_up_button.clicked.connect(
+            lambda: self.move_selected_pending_job(-1)
+        )
+        self.move_down_button.clicked.connect(
+            lambda: self.move_selected_pending_job(1)
+        )
+        self.delete_button.clicked.connect(self.delete_selected_job)
+        self.table.itemSelectionChanged.connect(self._update_action_buttons)
         close_buttons.rejected.connect(self.close)
 
         self.refresh_timer = QTimer(self)
@@ -188,6 +211,36 @@ class BatchOptimizationDialog(QDialog):
             if item.data(Qt.UserRole) == identifier:
                 self.table.selectRow(row)
                 return
+
+    def _selected_job(self):
+        identifier = self._selected_identifier()
+        if identifier is None:
+            return None
+        try:
+            return self.queue.get(identifier)
+        except KeyError:
+            return None
+
+    def _update_action_buttons(self):
+        job = self._selected_job()
+        self.duplicate_button.setEnabled(job is not None)
+        self.delete_button.setEnabled(
+            job is not None and job.status is not JobStatus.RUNNING
+        )
+
+        pending_jobs = [
+            queued
+            for queued in self.queue.list_jobs()
+            if queued.status is JobStatus.PENDING
+        ]
+        pending_identifiers = [queued.identifier for queued in pending_jobs]
+        if job is None or job.identifier not in pending_identifiers:
+            self.move_up_button.setEnabled(False)
+            self.move_down_button.setEnabled(False)
+            return
+        index = pending_identifiers.index(job.identifier)
+        self.move_up_button.setEnabled(index > 0)
+        self.move_down_button.setEnabled(index < len(pending_identifiers) - 1)
 
     @staticmethod
     def _solver_state(job):
@@ -235,6 +288,8 @@ class BatchOptimizationDialog(QDialog):
         self._restore_selection(selected_identifier)
         self.pause_button.setEnabled(self.has_running_worker())
         self.start_button.setEnabled(not self.has_running_worker())
+        self.recover_button.setEnabled(not self.has_running_worker())
+        self._update_action_buttons()
 
     def add_current_setup(self):
         """Snapshot the main form and append it to the queue."""
@@ -360,6 +415,70 @@ class BatchOptimizationDialog(QDialog):
         self.status_label.setText(f"Queued {retried.name} again.")
         self.refresh()
         self._restore_selection(identifier)
+
+    def duplicate_selected_job(self):
+        job = self._selected_job()
+        if job is None:
+            self.status_label.setText("Select a job to duplicate.")
+            return
+        try:
+            duplicate = self.queue.duplicate(job.identifier)
+        except (KeyError, TypeError, ValueError) as error:
+            self.status_label.setText(str(error))
+            self.refresh()
+            return
+        self.status_label.setText(f"Added {duplicate.name}.")
+        self.refresh()
+        self._restore_selection(duplicate.identifier)
+
+    def move_selected_pending_job(self, direction):
+        job = self._selected_job()
+        if job is None:
+            self.status_label.setText("Select a pending job to move.")
+            return
+        original_position = job.position
+        try:
+            moved = self.queue.move_pending(job.identifier, direction)
+        except (KeyError, RuntimeError, ValueError) as error:
+            self.status_label.setText(str(error))
+            self.refresh()
+            return
+        if moved.position == original_position:
+            self.status_label.setText(
+                "The job is already at the end of the pending queue."
+                if direction > 0
+                else "The job is already at the start of the pending queue."
+            )
+        else:
+            self.status_label.setText(f"Moved {moved.name}.")
+        self.refresh()
+        self._restore_selection(moved.identifier)
+
+    def delete_selected_job(self):
+        job = self._selected_job()
+        if job is None:
+            self.status_label.setText("Select a job to delete.")
+            return
+        if job.status is JobStatus.RUNNING:
+            self.status_label.setText("A running job cannot be deleted.")
+            return
+        answer = QMessageBox.question(
+            self,
+            "Delete batch job",
+            f"Delete {job.name} and its stored result?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+        if answer != QMessageBox.Yes:
+            return
+        try:
+            self.queue.delete(job.identifier)
+        except (KeyError, ValueError) as error:
+            self.status_label.setText(str(error))
+            self.refresh()
+            return
+        self.status_label.setText(f"Deleted {job.name}.")
+        self.refresh()
 
     def recover_stopped_jobs(self):
         """Mark jobs left running by a stopped application as interrupted."""
