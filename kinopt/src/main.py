@@ -259,22 +259,26 @@ class MainWindow(QMainWindow):
             dock.setMinimumSize(160, 100)
             self.dock_scroll_areas[dock.objectName()] = scroll_area
 
+        self._normal_left_dock_width = self._preferred_left_dock_width()
+        self._compact_dock_layout = self.width() < 960
+        self._resize_side_docks()
+
+    def _preferred_left_dock_width(self):
+        """Return a width that fits native controls without horizontal bars."""
         left_scroll_areas = (
             self.dock_scroll_areas["dockWidgetData_extraction"],
             self.dock_scroll_areas["dockWidgetIsoconversionalAnalysis"],
             self.dock_scroll_areas["dockWidgetResultsViewer"],
         )
-        self._normal_left_dock_width = max(
+        return max(
             350,
             max(
-                area.widget().minimumWidth()
+                area.widget().minimumSizeHint().width()
                 + area.verticalScrollBar().sizeHint().width()
                 + 8
                 for area in left_scroll_areas
             ),
         )
-        self._compact_dock_layout = self.width() < 960
-        self._resize_side_docks()
 
     @staticmethod
     def _allow_horizontal_shrinking(widget, minimum_width):
@@ -381,6 +385,16 @@ class MainWindow(QMainWindow):
         if compact != self._compact_dock_layout:
             self._compact_dock_layout = compact
             self._resize_side_docks()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not hasattr(self, "_compact_dock_layout"):
+            return
+        # Font metrics and native control sizes are reliable only after Qt has
+        # polished the widgets. Windows in particular reports wider controls
+        # here than it does while the window is being constructed.
+        self._normal_left_dock_width = self._preferred_left_dock_width()
+        self._resize_side_docks()
 
     def browse_files(self):
         """Open a file dialog to browse and select multiple files. Update the file paths list widget."""
