@@ -23,7 +23,10 @@ def optimization_window(monkeypatch, tmp_path):
     monkeypatch.setattr(main.QMessageBox, "warning", lambda *args: None)
     # Keep the real worker and its parameters, without starting a background fit.
     monkeypatch.setattr(main.OptimizationThread, "start", lambda worker: started.append(worker))
-    window = main.MainWindow(results_directory=tmp_path / 'results')
+    window = main.MainWindow(
+        results_directory=tmp_path / 'results',
+        queue_database=tmp_path / 'queue.sqlite3',
+    )
     try:
         yield main, window, started, errors
     finally:
@@ -65,6 +68,21 @@ def configure_optimization(window, with_vitrification=True):
     window.experimental_rates = [window.experimental_rate]
     window.experimental_extents = [window.experimental_extent]
     window.selected_shortened_file_paths = ["synthetic.csv"]
+
+
+def test_current_setup_can_be_added_to_batch(optimization_window):
+    _, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+
+    window.show_batch_optimizations()
+    window.batch_dialog.add_current_setup()
+
+    jobs = window.batch_dialog.queue.list_jobs()
+    assert started == []
+    assert errors == []
+    assert len(jobs) == 1
+    assert jobs[0].config.rate_law.__name__ == 'rate_for_nth_order'
+    assert jobs[0].config.local_method == 'Nelder-Mead'
 
 
 def test_launch_uses_tg_fields_in_coupled_model(optimization_window):

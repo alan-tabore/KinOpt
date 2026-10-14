@@ -12,6 +12,6 @@ Great, you now have everything needed to use the KinOpt package.
    launch_data_extraction
    launch_isoconversional_analysis
    launch_optimization
+   batch_optimizations
    load_results
-
 

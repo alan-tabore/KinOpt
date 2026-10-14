@@ -14,7 +14,7 @@ import traceback
 if not __package__:
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QComboBox, QLabel, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QComboBox, QLabel, QLineEdit, QPushButton
 from PyQt5.QtCore import QStringListModel, QThread, pyqtSignal
 from PyQt5.QtGui import QTextCursor
 from kinopt.src.kinopt_interface import Ui_MainWindow
@@ -28,12 +28,17 @@ from kinopt.src import data_extraction
 from kinopt.src import isoconversional_methods as icm
 from kinopt.src import kinetic_models as km
 from kinopt.src import optimization as opt
+from kinopt.src.batch_optimization_dialog import BatchOptimizationDialog
+from kinopt.src.optimization_queue import OptimizationQueue
 from kinopt.src.optimization_runner import (
     OptimizationCancelled,
     OptimizationRunConfig,
     run_optimization,
 )
-from kinopt.paths import results_directory as resolve_results_directory
+from kinopt.paths import (
+    optimization_queue_path as resolve_optimization_queue_path,
+    results_directory as resolve_results_directory,
+)
 
 import scipy
 import numpy as np
@@ -42,15 +47,17 @@ import datetime
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, results_directory=None):
+    def __init__(self, results_directory=None, queue_database=None):
         super().__init__()
 
         self.results_directory = resolve_results_directory(results_directory)
+        self.queue_database = resolve_optimization_queue_path(queue_database)
 
         # Set up the user interface from Designer.
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.optimization_thread = None
+        self.batch_dialog = None
 
         # Connect data extraction elements
         self.ui.pushButton_add_files.clicked.connect(self.browse_files)
@@ -129,6 +136,14 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_clear_optimization.clicked.connect(self.clear_optimization_grids_and_combobox)
         self.ui.pushButton_autofill_optimization.clicked.connect(self.autofill_optimization_parameters)
         self.ui.pushButton_launch_optimization.clicked.connect(self.launch_optimization)
+        self.pushButton_batch_optimizations = QPushButton(
+            "Batch optimizations…",
+            self.ui.dockWidgetContents_Optimization,
+        )
+        self.ui.verticalLayout.addWidget(self.pushButton_batch_optimizations)
+        self.pushButton_batch_optimizations.clicked.connect(
+            self.show_batch_optimizations
+        )
         
         # Create a Matplotlib figure and canvas to plot the rate from extracted data
         self.figure_data_extraction_rate = Figure()
@@ -1327,21 +1342,46 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
             traceback.print_exc()   
 
-    def launch_optimization(self):
-        """
-        Launch the optimization process.
-    
-        This function checks the necessary conditions for optimization, assigns necessary parameters,
-        and starts the optimization process in a separate thread.
-    
-        Parameters:
-        - self: The object instance.
-    
-        Returns:
-        - None
-        """
-        if self.optimization_thread is not None and self.optimization_thread.isRunning():
-            return
+    def show_batch_optimizations(self):
+        """Open the persistent queue without creating duplicate dialogs."""
+        if self.batch_dialog is None:
+            queue = OptimizationQueue(self.queue_database)
+            self.batch_dialog = BatchOptimizationDialog(
+                queue,
+                self.prepare_optimization_config,
+                execution_allowed=self._direct_optimization_is_idle,
+                parent=self,
+            )
+            self.batch_dialog.execution_started.connect(
+                self._batch_execution_started
+            )
+            self.batch_dialog.execution_finished.connect(
+                self._batch_execution_finished
+            )
+        self.batch_dialog.refresh()
+        self.batch_dialog.show()
+        self.batch_dialog.raise_()
+        self.batch_dialog.activateWindow()
+
+    def _direct_optimization_is_idle(self):
+        return not (
+            self.optimization_thread is not None
+            and self.optimization_thread.isRunning()
+        )
+
+    def _batch_execution_started(self):
+        self.ui.pushButton_launch_optimization.setText(
+            "Batch optimization running"
+        )
+        self.ui.pushButton_launch_optimization.setEnabled(False)
+
+    def _batch_execution_finished(self):
+        if self._direct_optimization_is_idle():
+            self.ui.pushButton_launch_optimization.setText("Start optimization")
+            self.ui.pushButton_launch_optimization.setEnabled(True)
+
+    def prepare_optimization_config(self):
+        """Validate the current form and return an immutable run snapshot."""
         try:
             # =============================================================================
             # Check before launching optimization            
@@ -1376,9 +1416,6 @@ class MainWindow(QMainWindow):
             # Function and args attribution            
             # =============================================================================
             self.initial_guess = np.array([])
-            self.results = None
-            self.ui.progressBar.setValue(0)
-            self.total_time_for_optimization = None
             if self.selected_rate != '':
                 self.rate_law = getattr(km, self.selected_rate)
                 self.experimental_args_for_rate = self.get_associated_experimental_parameters(self.rate_parameters_experimental)
@@ -1490,12 +1527,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Error", "Relative RSS requires nonzero experimental rates. Please choose another cost function.")
                 return
 
-            self.ui.textEdit_output_of_optimization.clear()
-            
-            # =============================================================================
-            # Start a thread to perform optimization without blocking the GUI         
-            # =============================================================================
-            self.active_optimization_config = OptimizationRunConfig(
+            return OptimizationRunConfig(
                 cost_function=self.cost_function,
                 initial_guess=self.initial_guess,
                 global_method=self.selected_global_optimization,
@@ -1526,6 +1558,28 @@ class MainWindow(QMainWindow):
                 ),
                 max_iterations=int(self.max_iter),
             )
+        except Exception as e:
+            traceback.print_exc()
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+            return None
+
+    def launch_optimization(self):
+        """Validate the form and run one optimization without blocking the GUI."""
+        if (
+            self.batch_dialog is not None
+            and self.batch_dialog.has_running_worker()
+        ):
+            return
+        if self.optimization_thread is not None and self.optimization_thread.isRunning():
+            return
+        self.active_optimization_config = self.prepare_optimization_config()
+        if self.active_optimization_config is None:
+            return
+        try:
+            self.results = None
+            self.total_time_for_optimization = None
+            self.ui.progressBar.setValue(0)
+            self.ui.textEdit_output_of_optimization.clear()
             self.optimization_thread = OptimizationThread(
                 self.active_optimization_config
             )
@@ -1543,13 +1597,11 @@ class MainWindow(QMainWindow):
             self.ui.dockWidgetIsoconversionalAnalysis.setEnabled(False)
             self.optimization_thread.start()
         except Exception as e:
-            # Handle other exceptions with a generic error message
-            traceback.print_exc() 
-            QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
+            traceback.print_exc()
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
             self._optimization_finished()
             self.ui.progressBar.setValue(0)
             self.ui.label_remaing_time.setText("Remaining time: (No optimization runnning)")
-            return
     
     def cancel_optimization(self):
         """Request cancellation at the next solver callback without killing a thread."""
@@ -1573,6 +1625,17 @@ class MainWindow(QMainWindow):
         self.ui.label_remaing_time.setText("Remaining time: (No optimization running)")
 
     def closeEvent(self, event):
+        if (
+            self.batch_dialog is not None
+            and self.batch_dialog.has_running_worker()
+        ):
+            QMessageBox.warning(
+                self,
+                "Batch optimization running",
+                "Please pause or cancel the batch before closing the window.",
+            )
+            event.ignore()
+            return
         if self.optimization_thread is not None and self.optimization_thread.isRunning():
             QMessageBox.warning(self, "Optimization running", "Please cancel the optimization before closing the window.")
             event.ignore()
