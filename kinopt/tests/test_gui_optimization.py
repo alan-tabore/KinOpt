@@ -70,6 +70,56 @@ def configure_optimization(window, with_vitrification=True):
     window.selected_shortened_file_paths = ["synthetic.csv"]
 
 
+def test_small_window_keeps_every_section_reachable(optimization_window):
+    main, window, _, _ = optimization_window
+    configure_optimization(window, with_vitrification=True)
+
+    window.resize(640, 480)
+    window.show()
+    main.QApplication.processEvents()
+
+    assert window.width() == 640
+    assert window.height() == 480
+    assert window.minimumWidth() == 640
+    assert window.minimumHeight() == 480
+    assert window.central_scroll_area.widget() is window.ui.centralwidget
+    assert window.central_scroll_area.horizontalScrollBar().maximum() > 0
+    assert window.central_scroll_area.verticalScrollBar().maximum() > 0
+
+    dock_contents = {
+        "dockWidgetData_extraction": window.ui.dockWidgetOpenFileContents,
+        "dockWidgetIsoconversionalAnalysis": (
+            window.ui.dockWidgetContents_IsoconversionalAnalysis
+        ),
+        "dockWidgetOptimization": window.ui.dockWidgetContents_Optimization,
+        "dockWidgetResultsViewer": window.ui.dockWidgetContents_ResultsViewer,
+    }
+    for dock_name, contents in dock_contents.items():
+        dock = getattr(window.ui, dock_name)
+        scroll_area = window.dock_scroll_areas[dock_name]
+        assert dock.isVisible()
+        assert scroll_area.widget() is contents
+        assert dock.geometry().intersects(window.contentsRect())
+
+    optimization_scroll = window.dock_scroll_areas["dockWidgetOptimization"]
+    optimization_scroll.ensureWidgetVisible(window.pushButton_batch_optimizations)
+    main.QApplication.processEvents()
+    button_position = window.pushButton_batch_optimizations.mapTo(
+        optimization_scroll.viewport(),
+        window.pushButton_batch_optimizations.rect().topLeft(),
+    )
+    assert button_position.y() < optimization_scroll.viewport().height()
+    assert (
+        button_position.y() + window.pushButton_batch_optimizations.height()
+        > 0
+    )
+
+    compact_left_width = window.ui.dockWidgetData_extraction.width()
+    window.resize(1024, 768)
+    main.QApplication.processEvents()
+    assert window.ui.dockWidgetData_extraction.width() > compact_left_width
+
+
 def test_current_setup_can_be_added_to_batch(optimization_window):
     _, window, started, errors = optimization_window
     configure_optimization(window, with_vitrification=False)

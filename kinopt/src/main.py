@@ -14,8 +14,20 @@ import traceback
 if not __package__:
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QComboBox, QLabel, QLineEdit, QPushButton
-from PyQt5.QtCore import QStringListModel, QThread, pyqtSignal
+from PyQt5.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QFileDialog,
+    QFrame,
+    QLabel,
+    QLayout,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+)
+from PyQt5.QtCore import Qt, QStringListModel, QThread, pyqtSignal
 from PyQt5.QtGui import QTextCursor
 from kinopt.src.kinopt_interface import Ui_MainWindow
 
@@ -208,8 +220,67 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_results_viewer_rate.clicked.connect(self.show_extracted_result_rate)
         self.ui.pushButton_results_viewer_extent.clicked.connect(self.show_extracted_result_extent)
         self.ui.pushButton_results_viewer_temperature.clicked.connect(self.show_extracted_result_temperature)
-        
-        
+        self._make_interface_scrollable()
+
+    def _make_interface_scrollable(self):
+        """Keep every main-window section reachable on smaller screens."""
+        self.setMinimumSize(640, 480)
+
+        central_widget = self.takeCentralWidget()
+        central_widget.setMinimumSize(central_widget.minimumSizeHint())
+        self.central_scroll_area = QScrollArea(self)
+        self.central_scroll_area.setObjectName("centralScrollArea")
+        self.central_scroll_area.setFrameShape(QFrame.NoFrame)
+        self.central_scroll_area.setWidgetResizable(True)
+        self.central_scroll_area.setWidget(central_widget)
+        self.setCentralWidget(self.central_scroll_area)
+
+        self.dock_scroll_areas = {}
+        docks = (
+            self.ui.dockWidgetData_extraction,
+            self.ui.dockWidgetIsoconversionalAnalysis,
+            self.ui.dockWidgetOptimization,
+            self.ui.dockWidgetResultsViewer,
+        )
+        for dock in docks:
+            contents = dock.widget()
+            dock.setWidget(None)
+            if contents.layout() is not None:
+                contents.layout().setSizeConstraint(QLayout.SetMinAndMaxSize)
+            contents.setMinimumSize(contents.minimumSizeHint())
+            scroll_area = QScrollArea(dock)
+            scroll_area.setObjectName(f"{dock.objectName()}ScrollArea")
+            scroll_area.setFrameShape(QFrame.NoFrame)
+            scroll_area.setWidgetResizable(True)
+            scroll_area.setWidget(contents)
+            dock.setWidget(scroll_area)
+            dock.setMinimumSize(160, 100)
+            self.dock_scroll_areas[dock.objectName()] = scroll_area
+
+        self._compact_dock_layout = self.width() < 960
+        self._resize_side_docks()
+
+    def _resize_side_docks(self):
+        """Balance the side docks with the central view at the current width."""
+        widths = [230, 260] if self._compact_dock_layout else [340, 320]
+        self.resizeDocks(
+            [
+                self.ui.dockWidgetData_extraction,
+                self.ui.dockWidgetOptimization,
+            ],
+            widths,
+            Qt.Horizontal,
+        )
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if not hasattr(self, "_compact_dock_layout"):
+            return
+        compact = event.size().width() < 960
+        if compact != self._compact_dock_layout:
+            self._compact_dock_layout = compact
+            self._resize_side_docks()
+
     def browse_files(self):
         """Open a file dialog to browse and select multiple files. Update the file paths list widget."""
         try:

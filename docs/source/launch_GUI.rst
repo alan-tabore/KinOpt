@@ -65,3 +65,11 @@ This GUI is divided in 5 parts:
 3. The results viewer dock
 4. The optimization dock (with the model section and optimization section)
 5. The central part that display the output of docks
+
+Using a smaller window
+----------------------
+
+KinOpt can be reduced to a ``640 × 480`` window. When the available space is
+smaller than a panel's contents, scrollbars appear in the central area and in
+each dock. Use them to reach controls that do not fit on screen. The **View**
+menu can also hide an unused dock and restore it later.
