@@ -2230,7 +2230,9 @@ class OptimizationThread(QThread):
             self.count = 0
             
             # Initialize a self.count
-            self.start_time = time_module.time()
+            # perf_counter has sufficient resolution for very fast callbacks on
+            # every supported platform, including Windows.
+            self.start_time = time_module.perf_counter()
             
             if self.selected_global_optimization == 'basinhopping':
                 if self.selected_local_optimization == '':
@@ -2321,7 +2323,7 @@ class OptimizationThread(QThread):
                                                     self.initial_guess,
                                                     **self.local_optimization_args_dict)
             
-            total_optimization_time = elapsed_time = time_module.time() - self.start_time
+            total_optimization_time = elapsed_time = time_module.perf_counter() - self.start_time
             if self.isInterruptionRequested():
                 raise OptimizationCancelled()
             if not np.all(np.isfinite(self.result.x)) or not np.isfinite(self.result.fun):
@@ -2363,8 +2365,8 @@ class OptimizationThread(QThread):
             args = None
             
         if self.count == self.next_iteration_for_GUI_updtate:
-            elapsed_time = time_module.time() - self.start_time
-            time_per_iteration = elapsed_time/self.count
+            elapsed_time = time_module.perf_counter() - self.start_time
+            time_per_iteration = max(elapsed_time / self.count, np.finfo(float).eps)
             iteration_per_time = 1 / time_per_iteration
             if int(iteration_per_time)<1:
                 self.next_iteration_for_GUI_updtate = self.count + 1     
