@@ -133,6 +133,34 @@ def test_launch_captures_data_and_settings_before_the_form_changes(
     assert errors == []
 
 
+def test_gui_configuration_can_be_restored_for_a_future_queue(
+    optimization_window,
+):
+    from kinopt.src.optimization_serialization import (
+        deserialize_config,
+        serialize_config,
+    )
+
+    _, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=True)
+    window.launch_optimization()
+
+    original = started[0].config
+    restored = deserialize_config(serialize_config(original))
+
+    assert errors == []
+    assert restored.rate_law is original.rate_law
+    assert restored.vitrification_law is original.vitrification_law
+    assert restored.coupling_law is original.coupling_law
+    assert restored.tg_law is original.tg_law
+    np.testing.assert_array_equal(restored.initial_guess, original.initial_guess)
+    np.testing.assert_array_equal(restored.tg_args, original.tg_args)
+    np.testing.assert_array_equal(
+        restored.experimental_args_for_rate[0],
+        original.experimental_args_for_rate[0],
+    )
+
+
 @pytest.mark.parametrize("invalid_value", ["", "invalid", "nan", "inf", "-inf"])
 def test_invalid_tg_is_rejected_before_start(optimization_window, invalid_value):
     _, window, started, errors = optimization_window
