@@ -14,7 +14,8 @@ To perform the optimization of a kinetic model:
     1. You must at least select a global or local optimization method
     2. If you selected the *'basinhopping'* or *'shgo'* global optimization method, it is recommended to also select a local optimization method.
     3. You must select a cost function (:func:`rss_mean<optimization.rss_mean>` is recommended)
-6. Start the optimization by clicking the 'Start optimization' button
+6. Select a calculation profile and click *Apply profile*
+7. Start the optimization by clicking the 'Start optimization' button
 
 When you select a model, optimization method, or cost function, KinOpt displays
 a short explanation at the top of the current page. It describes the main
@@ -28,6 +29,22 @@ available. This text is only a placeholder: KinOpt does not treat it as an
 entered value. Replace it with a value appropriate for your material and data,
 or use ``Autofill`` to write the example values into the fields. These examples
 are starting points, not universal kinetic constants.
+
+The calculation profiles provide understandable starting configurations for
+the selected solver:
+
+* *Quick check* uses a small budget to verify that the data, model, bounds, and
+  optimization setup work together. Its result is preliminary.
+* *Balanced (recommended)* uses practical budgets and tolerances for a routine
+  fit.
+* *Thorough search* increases the search budget and tightens tolerances. It can
+  take substantially longer, so compare its result with the balanced fit.
+
+Clicking *Apply profile* writes values into the solver, bounds, and cost fields
+currently displayed. Every field remains editable. Selecting another profile
+only changes its explanation; it does not replace your values until you click
+*Apply profile*. A larger calculation budget does not guarantee a better or
+physically meaningful model, so always inspect convergence and residuals.
 
 
 ⚠ The start of optimization can take a few seconds up to a few minutes to start, please be patient.

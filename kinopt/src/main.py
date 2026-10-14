@@ -44,6 +44,11 @@ from kinopt.src import kinetic_models as km
 from kinopt.src import optimization as opt
 from kinopt.src.batch_optimization_dialog import BatchOptimizationDialog
 from kinopt.src.optimization_queue import OptimizationQueue
+from kinopt.src.optimization_profiles import (
+    DEFAULT_PROFILE_NAME,
+    optimization_profile,
+    optimization_profile_names,
+)
 from kinopt.src.optimization_runner import (
     OptimizationCancelled,
     OptimizationRunConfig,
@@ -155,9 +160,12 @@ class MainWindow(QMainWindow):
         self.ui.comboBox_cost_functions.setCurrentIndex(-1)
         self.ui.comboBox_cost_functions.activated.connect(self.update_cost_functions_formLayout)
         self._configure_selection_guidance()
+        self._configure_optimization_profiles()
         
         self.ui.pushButton_clear_optimization.clicked.connect(self.clear_optimization_grids_and_combobox)
-        self.ui.pushButton_autofill_optimization.clicked.connect(self.autofill_optimization_parameters)
+        self.ui.pushButton_autofill_optimization.clicked.connect(
+            self.apply_optimization_profile
+        )
         self.ui.pushButton_launch_optimization.clicked.connect(self.launch_optimization)
         self.pushButton_batch_optimizations = QPushButton(
             "Batch optimizations…",
@@ -252,7 +260,7 @@ class MainWindow(QMainWindow):
             (
                 optimization_guidance,
                 'Optimization selection guidance',
-                self.ui.verticalLayout_5,
+                self.ui.verticalLayout_4,
             ),
         ):
             label.setWordWrap(True)
@@ -348,6 +356,71 @@ class MainWindow(QMainWindow):
             f'<i>Practical note:</i> {escape(guidance.advice)}'
         )
         label.show()
+
+    def _configure_optimization_profiles(self):
+        """Add selectable calculation profiles below the solver fields."""
+        page = self.ui.page_optimization_methods_and_parameters
+        self.optimization_profile_label = QLabel('Calculation profile:', page)
+        self.optimization_profile_label.setObjectName(
+            'label_optimization_profile'
+        )
+        self.optimization_profile_combo = QComboBox(page)
+        self.optimization_profile_combo.setObjectName(
+            'comboBox_optimization_profile'
+        )
+        self.optimization_profile_combo.addItems(optimization_profile_names())
+        self.optimization_profile_combo.setCurrentText(DEFAULT_PROFILE_NAME)
+        self.optimization_profile_combo.setAccessibleName(
+            'Optimization calculation profile'
+        )
+
+        self.optimization_profile_description = QLabel(page)
+        self.optimization_profile_description.setObjectName(
+            'label_optimization_profile_description'
+        )
+        self.optimization_profile_description.setWordWrap(True)
+        self.optimization_profile_description.setMargin(6)
+        self.optimization_profile_description.setFrameShape(QFrame.StyledPanel)
+        self.optimization_profile_description.setTextInteractionFlags(
+            Qt.TextSelectableByMouse
+        )
+        self.optimization_profile_description.setAccessibleName(
+            'Optimization profile explanation'
+        )
+
+        # Keep the profile and its buttons in the same scrollable area as the
+        # solver fields so that every control remains reachable in a short
+        # window. The expanding spacer stays at the end of the layout.
+        self.ui.verticalLayout_5.removeWidget(
+            self.ui.widget_optimization_methods_buttons
+        )
+        self.ui.widget_optimization_methods_buttons.setParent(
+            self.ui.scrollAreaWidgetContents_optimization_methods
+        )
+        insert_index = self.ui.verticalLayout_4.count() - 1
+        for widget in (
+            self.optimization_profile_label,
+            self.optimization_profile_combo,
+            self.optimization_profile_description,
+            self.ui.widget_optimization_methods_buttons,
+        ):
+            self.ui.verticalLayout_4.insertWidget(insert_index, widget)
+            insert_index += 1
+        self.ui.pushButton_autofill_optimization.setText('Apply profile')
+        self.ui.pushButton_autofill_optimization.setToolTip(
+            'Write this profile into the visible solver, bounds, and cost '
+            'fields. You can edit every value afterwards.'
+        )
+        self.optimization_profile_combo.currentTextChanged.connect(
+            self._update_optimization_profile_description
+        )
+        self._update_optimization_profile_description(DEFAULT_PROFILE_NAME)
+
+    def _update_optimization_profile_description(self, profile_name):
+        """Explain the intended use of the selected calculation profile."""
+        profile = optimization_profile(profile_name)
+        self.optimization_profile_description.setText(profile.description)
+        self.optimization_profile_combo.setToolTip(profile.description)
 
     @staticmethod
     def _set_parameter_example(line_edit, example):
@@ -1491,66 +1564,86 @@ class MainWindow(QMainWindow):
         self.selected_cost_function = ''
         
 
-    def autofill_optimization_parameters(self):
-        try :
-            for dict in [self.entries_dict_global_optimization, self.entries_dict_local_optimization, self.entries_dict_cost_function]:
-                for key,object in dict.items():
-                    if key in ["minA", "minA1", "minA2"]:
-                        object.setText("1")
-                    elif key in ["minAd"]:
-                       object.setText("1e-20")    
-                    elif key in ["maxA", "maxA1", "maxA2", "maxAd"]:
-                       object.setText("1e20")
-                    elif key in ["minE", "minEa", "minE1", "minE2"]:
-                        object.setText("1000")
-                    elif key in ["maxE", "maxEa", "maxE1", "maxE2"]:
-                        object.setText("350000")
-                    elif key in ["minm", "minn"]:
-                        object.setText("0.1")
-                    elif key in ["maxm", "maxn"]:
-                        object.setText("20")
-                    elif key in ["minC","minC1", "minC2"]:
-                        object.setText("1")
-                    elif key in ["maxC","maxC1", "maxC2"]:
-                        object.setText("350")
-                    elif key in ["disp", "return_all", "adaptive","polish"]:
-                        object.setCurrentText("Yes")
-                    elif key in ["vectorized"]:
-                        object.setCurrentText("No")
-                    elif key in ["sampling_method"]:
-                        object.setCurrentText("simplicial")
-                    elif key in ["init"]:
-                        object.setCurrentText("latinhypercube")
-                    elif key in ["updating"]:
-                        object.setCurrentText("")
-                    elif key in ["strategy"]:
-                        object.setCurrentText("best1bin")
-                    elif key in ["maxiter","iters","niters","niter"]:
-                        object.setText("1200")
-                    elif key in ["n"]:
-                        object.setText("500")
-                    elif key in ["workers"]:
-                        object.setText("4")
-                    elif key in ["maxfev", "maxfun", "norm", "eps", "maxls", "iprint", "maxcor","T","stepsize","interval","niter_success","target_accept_rate","stepwise_factor","popsize","mutation","recombination"]:
-                        object.setText("")
-                    elif key in ["tol","atol","xatol", "xrtol", "xtol", "fatol", "ftol", "gtol"]:
-                        object.setText("1e-15")
-                    elif key in ["extent_limit"]:
-                        object.setText("0.707")
-                    elif key in ["amplification_factor"]:
-                        object.setText("10")
-                    elif key in ["fraction_to_amplify"]:
-                        object.setText("0.5")
-                    elif key in ["jac"]:
-                        object.setCurrentText("None")
-                    elif key in ["bounds"]:
-                        pass       
+    @staticmethod
+    def _set_profile_value(widget, value):
+        """Write a profile value into a supported input widget."""
+        if isinstance(widget, QLineEdit):
+            widget.setText('' if value is None else value)
+            return
+        if isinstance(widget, QComboBox):
+            if value is None:
+                widget.setCurrentIndex(-1)
+                return
+            index = widget.findText(value)
+            if index < 0:
+                raise ValueError(
+                    f"Value '{value}' is not available for this parameter."
+                )
+            widget.setCurrentIndex(index)
+            return
+        raise TypeError(
+            f'Unsupported profile input widget: {type(widget).__name__}'
+        )
+
+    def apply_optimization_profile(self):
+        """Fill the visible optimization fields with the selected profile."""
+        try:
+            profile = optimization_profile(
+                self.optimization_profile_combo.currentText()
+            )
+            method_entries = (
+                (
+                    self.selected_global_optimization,
+                    self.entries_dict_global_optimization,
+                ),
+                (
+                    self.selected_local_optimization,
+                    self.entries_dict_local_optimization,
+                ),
+            )
+            for method, entries in method_entries:
+                profile_values = profile.values_for(method)
+                for key, widget in entries.items():
+                    is_bound = key not in profile_values and (
+                        key.startswith('min') or key.startswith('max')
+                    )
+                    if is_bound:
+                        limit = key[:3]
+                        example = bound_parameter_example(key[3:], limit)
+                        if example is None:
+                            raise ValueError(
+                                f"No {limit}imum bound is available for "
+                                f"parameter '{key[3:]}'."
+                            )
+                        value = example.value
                     else:
-                        QMessageBox.critical(self,"Error", f" An error occurred:\n The parameter {key} does'nt have a default value.\n Please modify the 'autofill_parameters' function in main.py.")
+                        if key not in profile_values:
+                            raise ValueError(
+                                f"Profile '{profile.name}' has no value for "
+                                f"'{method}.{key}'."
+                            )
+                        value = profile_values[key]
+                    self._set_profile_value(widget, value)
+
+            for key, widget in self.entries_dict_cost_function.items():
+                example = cost_parameter_example(key)
+                if example is None:
+                    raise ValueError(
+                        'No example value is available for cost parameter '
+                        f"'{key}'."
+                    )
+                self._set_profile_value(widget, example.value)
         except Exception as e:
-            # Handle other exceptions with a generic error message
-            QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
+            QMessageBox.critical(
+                self,
+                'Error',
+                f'An error occurred: {str(e)}',
+            )
             traceback.print_exc()
+
+    def autofill_optimization_parameters(self):
+        """Apply the selected profile for compatibility with older callers."""
+        self.apply_optimization_profile()
             
     def get_global_optimization_args_dict(self,selected_optimization_method):
         reference_dict = get_parameters_for_optimization(selected_optimization_method)
@@ -1581,7 +1674,12 @@ class MainWindow(QMainWindow):
                 elif value_type == list:                     
                     if self.entries_dict_global_optimization[key].currentText() == '' and not optional:
                         raise ValueError(f"The parameter '{key}' must be provided for optimization method '{selected_optimization_method}'")
-                    to_return_dict[key] = self.entries_dict_global_optimization[key].currentText()
+                    selected_value = self.entries_dict_global_optimization[
+                        key
+                    ].currentText()
+                    to_return_dict[key] = (
+                        None if selected_value == 'None' else selected_value
+                    )
                 elif value_type == "sequence":
                     # Merge dict to get all the parameters to optimize
                     parameters_to_optimize = self.line_edit_dict_rate_model | self.line_edit_dict_vitrification_model | self.line_edit_dict_coupling_law
@@ -1657,7 +1755,12 @@ class MainWindow(QMainWindow):
                 elif value_type == list:
                     if self.entries_dict_local_optimization[key].currentText() == '' and not optional:
                         raise ValueError(f"The parameter '{key}' must be provided for optimization method '{selected_optimization_method}'")               
-                    options_dict[key] = self.entries_dict_local_optimization[key].currentText()
+                    selected_value = self.entries_dict_local_optimization[
+                        key
+                    ].currentText()
+                    options_dict[key] = (
+                        None if selected_value == 'None' else selected_value
+                    )
                 elif value_type == "sequence":
                     # Merge dict to get all the parameters to optimize
                     parameters_to_optimize = self.line_edit_dict_rate_model | self.line_edit_dict_vitrification_model | self.line_edit_dict_coupling_law
