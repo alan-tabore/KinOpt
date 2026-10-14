@@ -15,23 +15,31 @@ def quadratic(parameters, *args):
 def worker_factory(monkeypatch):
     monkeypatch.setenv('QT_QPA_PLATFORM', 'offscreen')
     from kinopt.src.main import OptimizationThread
+    from kinopt.src.optimization_runner import OptimizationRunConfig
 
-    def make_worker(global_name='', global_options=None):
-        return OptimizationThread(
+    def make_worker(
+        global_name='', global_options=None, global_optimizer=None,
+        local_optimizer=optimize.minimize,
+    ):
+        config = OptimizationRunConfig(
             cost_function=quadratic, initial_guess=np.array([1.]),
-            selected_global_optimization=global_name,
-            global_optimization=getattr(optimize, global_name) if global_name else None,
-            global_optimization_args_dict=global_options,
-            selected_local_optimization='Nelder-Mead', local_optimization=optimize.minimize,
-            local_optimization_args_dict={'method': 'Nelder-Mead', 'options': {'maxiter': 100}},
+            global_method=global_name,
+            global_optimizer=(
+                global_optimizer or getattr(optimize, global_name)
+                if global_name else None
+            ),
+            global_options=global_options,
+            local_method='Nelder-Mead', local_optimizer=local_optimizer,
+            local_options={'method': 'Nelder-Mead', 'options': {'maxiter': 100}},
             experimental_rate=np.array([0.]), rate_law=None,
-            experimental_args_for_rate=(), number_of_parameters_to_optimize_for_rate=0,
+            experimental_args_for_rate=(), rate_parameter_count=0,
             vitrification_law=None, experimental_args_for_vitrification=(),
-            number_of_parameters_to_optimize_for_vitrification=0,
+            vitrification_parameter_count=0,
             coupling_law=None, experimental_args_for_coupling=(), tg_law=None,
             experimental_args_for_tg=(), tg_args=(), cost_function_args=(),
-            experimental_args_for_cost_function=(), max_iter=100,
+            experimental_args_for_cost_function=(), max_iterations=100,
         )
+        return OptimizationThread(config)
     return make_worker
 
 
@@ -58,17 +66,18 @@ def test_supported_solvers_recover_known_minimum(worker_factory, solver, options
 
 
 def test_basinhopping_keeps_solver_result_after_rejected_trial(worker_factory):
-    worker = worker_factory('basinhopping', {'niter': 2})
     expected = optimize.OptimizeResult(x=np.array([5.]), fun=4., success=True)
     completed = []
-    worker.end_of_optimization.connect(lambda result, elapsed: completed.append(result))
 
     def solver(function, initial_guess, callback, **kwargs):
         callback(np.array([5.]), 4., True)
         callback(np.array([4.]), 1., False)
         return expected
 
-    worker.global_optimization = solver
+    worker = worker_factory(
+        'basinhopping', {'niter': 2}, global_optimizer=solver
+    )
+    worker.end_of_optimization.connect(lambda result, elapsed: completed.append(result))
     worker.run()
     assert completed == [expected]
     np.testing.assert_array_equal(expected.x, [5.])
@@ -77,8 +86,11 @@ def test_basinhopping_keeps_solver_result_after_rejected_trial(worker_factory):
 
 @pytest.mark.parametrize('parameters,cost', [(np.array([np.inf]), 0.), (np.array([3.]), np.nan)])
 def test_nonfinite_solver_result_is_reported_as_error(worker_factory, parameters, cost):
-    worker = worker_factory()
-    worker.local_optimization = lambda *args, **kwargs: optimize.OptimizeResult(x=parameters, fun=cost)
+    worker = worker_factory(
+        local_optimizer=lambda *args, **kwargs: optimize.OptimizeResult(
+            x=parameters, fun=cost
+        )
+    )
     completed, errors = [], []
     worker.end_of_optimization.connect(lambda *args: completed.append(args))
     worker.error_in_optimization_thread.connect(errors.append)

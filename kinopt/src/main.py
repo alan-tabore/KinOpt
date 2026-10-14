@@ -28,6 +28,11 @@ from kinopt.src import data_extraction
 from kinopt.src import isoconversional_methods as icm
 from kinopt.src import kinetic_models as km
 from kinopt.src import optimization as opt
+from kinopt.src.optimization_runner import (
+    OptimizationCancelled,
+    OptimizationRunConfig,
+    run_optimization,
+)
 from kinopt.paths import results_directory as resolve_results_directory
 
 import scipy
@@ -1490,30 +1495,40 @@ class MainWindow(QMainWindow):
             # =============================================================================
             # Start a thread to perform optimization without blocking the GUI         
             # =============================================================================
-            self.optimization_thread = OptimizationThread(self.cost_function,
-                                                          self.initial_guess,
-                                                          self.selected_global_optimization,
-                                                          self.global_optimization,
-                                                          self.global_optimization_args_dict,
-                                                          self.selected_local_optimization,
-                                                          self.local_optimization,
-                                                          self.local_optimization_args_dict,
-                                                          self.experimental_rate, 
-                                                          self.rate_law, 
-                                                          self.experimental_args_for_rate, 
-                                                          self.number_of_parameters_to_optimize_for_rate, 
-                                                          self.vitrification_law, 
-                                                          self.experimental_args_for_vitrification, 
-                                                          self.number_of_parameters_to_optimize_for_vitrification, 
-                                                          self.coupling_law, 
-                                                          self.experimental_args_for_coupling, 
-                                                          self.tg_law, 
-                                                          self.experimental_args_for_tg, 
-                                                          self.tg_args, 
-                                                          self.cost_function_args,                                                          
-                                                          self.experimental_args_for_cost_function,
-                                                          self.max_iter
-                                                          )
+            self.active_optimization_config = OptimizationRunConfig(
+                cost_function=self.cost_function,
+                initial_guess=self.initial_guess,
+                global_method=self.selected_global_optimization,
+                global_optimizer=self.global_optimization,
+                global_options=self.global_optimization_args_dict,
+                local_method=self.selected_local_optimization,
+                local_optimizer=self.local_optimization,
+                local_options=self.local_optimization_args_dict,
+                experimental_rate=self.experimental_rate,
+                rate_law=self.rate_law,
+                experimental_args_for_rate=self.experimental_args_for_rate or (),
+                rate_parameter_count=self.number_of_parameters_to_optimize_for_rate,
+                vitrification_law=self.vitrification_law,
+                experimental_args_for_vitrification=(
+                    self.experimental_args_for_vitrification or ()
+                ),
+                vitrification_parameter_count=(
+                    self.number_of_parameters_to_optimize_for_vitrification
+                ),
+                coupling_law=self.coupling_law,
+                experimental_args_for_coupling=self.experimental_args_for_coupling or (),
+                tg_law=self.tg_law,
+                experimental_args_for_tg=self.experimental_args_for_tg or (),
+                tg_args=self.tg_args,
+                cost_function_args=self.cost_function_args or (),
+                experimental_args_for_cost_function=(
+                    self.experimental_args_for_cost_function or ()
+                ),
+                max_iterations=int(self.max_iter),
+            )
+            self.optimization_thread = OptimizationThread(
+                self.active_optimization_config
+            )
             self.ui.pushButton_launch_optimization.setText("Cancel optimization")
             self.ui.pushButton_launch_optimization.clicked.disconnect()
             self.ui.pushButton_launch_optimization.clicked.connect(self.cancel_optimization)
@@ -2174,42 +2189,16 @@ class MainWindow(QMainWindow):
      
         
         
-class OptimizationCancelled(Exception):
-    """Internal signal to unwind an optimizer after a cancellation request."""
-
-
 class OptimizationThread(QThread):
     cancelled = pyqtSignal()
     end_of_optimization = pyqtSignal(scipy.optimize.OptimizeResult,float)
     update_progress_bar_signal = pyqtSignal(int)
     update_graph_signal = pyqtSignal(int,float,np.ndarray,object,object)
     error_in_optimization_thread = pyqtSignal(Exception)
-    def __init__(self, cost_function, initial_guess, selected_global_optimization, global_optimization, global_optimization_args_dict, selected_local_optimization, local_optimization, local_optimization_args_dict, experimental_rate, rate_law, experimental_args_for_rate, number_of_parameters_to_optimize_for_rate, vitrification_law, experimental_args_for_vitrification, number_of_parameters_to_optimize_for_vitrification, coupling_law, experimental_args_for_coupling, tg_law, experimental_args_for_tg, tg_args, cost_function_args,experimental_args_for_cost_function, max_iter):
+    def __init__(self, config):
         super().__init__()
-        self.cost_function = cost_function
-        self.initial_guess = initial_guess
-        self.selected_global_optimization = selected_global_optimization
-        self.global_optimization = global_optimization
-        from copy import deepcopy
-        self.global_optimization_args_dict = deepcopy(global_optimization_args_dict)
-        self.selected_local_optimization = selected_local_optimization
-        self.local_optimization = local_optimization
-        self.local_optimization_args_dict = deepcopy(local_optimization_args_dict)
-        self.experimental_rate = experimental_rate
-        self.rate_law = rate_law
-        self.experimental_args_for_rate = experimental_args_for_rate
-        self.number_of_parameters_to_optimize_for_rate = number_of_parameters_to_optimize_for_rate
-        self.vitrification_law = vitrification_law
-        self.experimental_args_for_vitrification = experimental_args_for_vitrification
-        self.number_of_parameters_to_optimize_for_vitrification = number_of_parameters_to_optimize_for_vitrification
-        self.coupling_law = coupling_law
-        self.experimental_args_for_coupling = experimental_args_for_coupling
-        self.tg_law = tg_law
-        self.experimental_args_for_tg = experimental_args_for_tg
-        self.tg_args = tg_args
-        self.cost_function_args = cost_function_args
-        self.experimental_args_for_cost_function = experimental_args_for_cost_function
-        self.max_iter = max_iter
+        self.config = config
+        self.max_iter = config.max_iterations
         self.start_time = None
         self.next_iteration_for_GUI_updtate = 1 
         self.time_between_GUI_update = 1 # in seconds
@@ -2218,117 +2207,20 @@ class OptimizationThread(QThread):
         
     def run(self):
         try:
-            if self.isInterruptionRequested():
-                raise OptimizationCancelled()
-            if self.selected_global_optimization != '':
-                    self.global_optimization_args_dict['callback'] = self.optimization_callback   
-            if self.selected_local_optimization != '':        
-                    if self.global_optimization == None:
-                        self.local_optimization_args_dict['callback'] = self.optimization_callback
-                        
-            # Initialize a self.count variable that will be used to display a progress bar
             self.count = 0
-            
-            # Initialize a self.count
             # perf_counter has sufficient resolution for very fast callbacks on
             # every supported platform, including Windows.
             self.start_time = time_module.perf_counter()
-            
-            if self.selected_global_optimization == 'basinhopping':
-                if self.selected_local_optimization == '':
-                    # If no local minimization method is selected the default local minimization is used
-                    # However, the arguments for local minimization still need to be given, hence the creation of the args dict
-                    self.local_optimization_args_dict = {}
-                self.local_optimization_args_dict['args'] = (self.experimental_rate,
-                                                            self.rate_law,
-                                                            self.experimental_args_for_rate,
-                                                            self.number_of_parameters_to_optimize_for_rate,
-                                                            self.vitrification_law,
-                                                            self.experimental_args_for_vitrification,
-                                                            self.number_of_parameters_to_optimize_for_vitrification,
-                                                            self.coupling_law,
-                                                            self.experimental_args_for_coupling,
-                                                            self.tg_law,
-                                                            self.experimental_args_for_tg,
-                                                            self.tg_args,
-                                                            *self.experimental_args_for_cost_function,
-                                                            *self.cost_function_args)
-                self.global_optimization_args_dict['minimizer_kwargs'] = self.local_optimization_args_dict
-                self.result = self.global_optimization(self.cost_function,
-                                                    self.initial_guess,
-                                                    **self.global_optimization_args_dict)
-            
-            elif self.selected_global_optimization == 'differential_evolution':
-                self.global_optimization_args_dict['args'] = (self.experimental_rate,
-                                                            self.rate_law,
-                                                            self.experimental_args_for_rate,
-                                                            self.number_of_parameters_to_optimize_for_rate,
-                                                            self.vitrification_law,
-                                                            self.experimental_args_for_vitrification,
-                                                            self.number_of_parameters_to_optimize_for_vitrification,
-                                                            self.coupling_law,
-                                                            self.experimental_args_for_coupling,
-                                                            self.tg_law,
-                                                            self.experimental_args_for_tg,
-                                                            self.tg_args,
-                                                            *self.experimental_args_for_cost_function,
-                                                            *self.cost_function_args)
-                self.bounds = self.global_optimization_args_dict['bounds']
-                self.global_optimization_args_dict.pop('bounds')
-                self.result = self.global_optimization(self.cost_function,
-                                                    self.bounds,
-                                                    **self.global_optimization_args_dict)
-                
-            elif self.selected_global_optimization == 'shgo':                
-                self.global_optimization_args_dict['args'] = (self.experimental_rate,
-                                                            self.rate_law,
-                                                            self.experimental_args_for_rate,
-                                                            self.number_of_parameters_to_optimize_for_rate,
-                                                            self.vitrification_law,
-                                                            self.experimental_args_for_vitrification,
-                                                            self.number_of_parameters_to_optimize_for_vitrification,
-                                                            self.coupling_law,
-                                                            self.experimental_args_for_coupling,
-                                                            self.tg_law,
-                                                            self.experimental_args_for_tg,
-                                                            self.tg_args,
-                                                            *self.experimental_args_for_cost_function,
-                                                            *self.cost_function_args)
-                
-                
-                
-                self.global_optimization_args_dict['minimizer_kwargs'] = self.local_optimization_args_dict
-                
-                self.bounds = self.global_optimization_args_dict['bounds']
-                self.global_optimization_args_dict.pop('bounds')                    
-                self.result = self.global_optimization(self.cost_function,
-                                                    self.bounds,
-                                                    **self.global_optimization_args_dict)
-            elif self.selected_global_optimization == '':
-                self.local_optimization_args_dict['args'] = (self.experimental_rate,
-                                                            self.rate_law,
-                                                            self.experimental_args_for_rate,
-                                                            self.number_of_parameters_to_optimize_for_rate,
-                                                            self.vitrification_law,
-                                                            self.experimental_args_for_vitrification,
-                                                            self.number_of_parameters_to_optimize_for_vitrification,
-                                                            self.coupling_law,
-                                                            self.experimental_args_for_coupling,
-                                                            self.tg_law,
-                                                            self.experimental_args_for_tg,
-                                                            self.tg_args,
-                                                            *self.experimental_args_for_cost_function,
-                                                            *self.cost_function_args)
-                self.result = self.local_optimization(self.cost_function,
-                                                    self.initial_guess,
-                                                    **self.local_optimization_args_dict)
-            
-            total_optimization_time = elapsed_time = time_module.perf_counter() - self.start_time
-            if self.isInterruptionRequested():
-                raise OptimizationCancelled()
-            if not np.all(np.isfinite(self.result.x)) or not np.isfinite(self.result.fun):
-                raise ValueError("Optimization returned non-finite parameters or cost.")
-            self.end_of_optimization.emit(self.result,total_optimization_time)
+            outcome = run_optimization(
+                self.config,
+                callback=self.optimization_callback,
+                is_cancelled=self.isInterruptionRequested,
+            )
+            self.result = outcome.result
+            self.end_of_optimization.emit(
+                outcome.result,
+                outcome.elapsed_seconds,
+            )
             
         except OptimizationCancelled:
             self.cancelled.emit()
@@ -2347,7 +2239,7 @@ class OptimizationThread(QThread):
         self.update_progress_bar_signal.emit(int(progress))
         
         
-        if self.selected_global_optimization == 'basinhopping':
+        if self.config.global_method == 'basinhopping':
             if self.count == 1:
                 self.xmin_bashinhopping = xk
                 self.fmin_bashinhopping = args[0]
@@ -2360,7 +2252,7 @@ class OptimizationThread(QThread):
                     kwargs["x_min_basinhopping_all_iterations"] = xk
                     kwargs["f_min_basinhopping_all_iterations"] = self.fmin_bashinhopping
         
-        if self.selected_global_optimization == 'differential_evolution':
+        if self.config.global_method == 'differential_evolution':
             kwargs["convergence"] = args
             args = None
             
