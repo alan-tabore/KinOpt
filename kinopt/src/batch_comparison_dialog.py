@@ -109,6 +109,19 @@ class BatchComparisonDialog(QDialog):
         for column, width in enumerate(widths):
             self.table.setColumnWidth(column, width)
 
+        self.note = QLabel()
+        close_buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        close_buttons.rejected.connect(self.close)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(explanation)
+        layout.addWidget(self.table)
+        layout.addWidget(self.note)
+        layout.addWidget(close_buttons)
+        self.set_jobs(jobs)
+
+    def set_jobs(self, jobs):
+        """Reload completed jobs so an open comparison stays current."""
         rows = _comparison_rows(jobs)
         self.table.setRowCount(len(rows))
         for row, (dataset, rank, job, comparison, error) in enumerate(rows):
@@ -135,16 +148,7 @@ class BatchComparisonDialog(QDialog):
                 if column in {0, 1, 5, 6, 7, 8, 9}:
                     item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                 self.table.setItem(row, column, item)
-
-        note = QLabel(
+        self.note.setText(
             f"{len(rows)} completed optimization(s) shown. "
             "RMSE has the same unit as the measured reaction rate."
         )
-        close_buttons = QDialogButtonBox(QDialogButtonBox.Close)
-        close_buttons.rejected.connect(self.close)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(explanation)
-        layout.addWidget(self.table)
-        layout.addWidget(note)
-        layout.addWidget(close_buttons)

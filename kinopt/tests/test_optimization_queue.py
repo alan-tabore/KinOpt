@@ -6,8 +6,10 @@ from threading import Barrier
 
 import numpy as np
 import pytest
+from scipy.optimize import OptimizeResult
 
 from kinopt.src.optimization_queue import JobStatus, OptimizationQueue
+from kinopt.src.optimization_runner import OptimizationRunResult
 
 
 def test_queue_preserves_order_names_and_configurations(
@@ -35,6 +37,58 @@ def test_queue_preserves_order_names_and_configurations(
         reopened_jobs[0].config.initial_guess,
         serializable_config.initial_guess,
     )
+
+
+def test_completed_external_run_is_recorded_atomically(
+    tmp_path,
+    serializable_config,
+):
+    queue = OptimizationQueue(tmp_path / 'queue.sqlite3')
+    outcome = OptimizationRunResult(
+        result=OptimizeResult(
+            x=np.array([1e8, 60000., 1.5]),
+            fun=0.125,
+            success=True,
+            message='Converged',
+            nit=12,
+            nfev=34,
+        ),
+        elapsed_seconds=2.5,
+    )
+
+    recorded = queue.record_completed(
+        serializable_config,
+        outcome,
+        name='Direct optimization',
+    )
+
+    assert recorded.name == 'Direct optimization'
+    assert recorded.status is JobStatus.COMPLETED
+    assert recorded.started_at is not None
+    assert recorded.finished_at is not None
+    assert recorded.message == 'Converged'
+    assert recorded.result.parameters == (1e8, 60000., 1.5)
+    assert recorded.result.cost == pytest.approx(0.125)
+    assert recorded.result.elapsed_seconds == pytest.approx(2.5)
+
+    reopened = OptimizationQueue(queue.database_path).get(recorded.identifier)
+    assert reopened.result == recorded.result
+
+
+def test_invalid_external_result_does_not_leave_a_partial_job(
+    tmp_path,
+    serializable_config,
+):
+    queue = OptimizationQueue(tmp_path / 'queue.sqlite3')
+    invalid_outcome = OptimizationRunResult(
+        result=OptimizeResult(x=np.array([np.nan]), fun=np.nan),
+        elapsed_seconds=1.,
+    )
+
+    with pytest.raises(ValueError):
+        queue.record_completed(serializable_config, invalid_outcome)
+
+    assert queue.list_jobs() == []
 
 
 def test_running_job_is_recovered_as_interrupted(tmp_path, serializable_config):
