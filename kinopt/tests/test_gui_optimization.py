@@ -135,9 +135,11 @@ def test_model_and_optimizer_selections_show_contextual_guidance(
 ):
     main, window, _, _ = optimization_window
     rate_guidance = window.selection_guidance_labels['rate']
+    rate_equation = window.selection_guidance_equation_labels['rate']
     local_guidance = window.selection_guidance_labels['local_optimization']
 
     assert rate_guidance.isHidden()
+    assert rate_equation.isHidden()
     assert local_guidance.isHidden()
 
     window.ui.comboBox_rate_model.setCurrentText('rate_for_kamal')
@@ -147,9 +149,14 @@ def test_model_and_optimizer_selections_show_contextual_guidance(
     assert not rate_guidance.isHidden()
     assert 'Kamal model' in rate_guidance.text()
     assert 'six fitted parameters' in rate_guidance.text()
-    assert 'dα/dt' in rate_guidance.text()
-    assert '<sup>m</sup>' in rate_guidance.text()
     assert rate_guidance.textFormat() == main.Qt.RichText
+    assert not rate_equation.isHidden()
+    assert rate_equation.pixmap() is not None
+    assert not rate_equation.pixmap().isNull()
+    assert rate_equation.pixmap().width() > 0
+    assert 'ordinary and autocatalytic' in (
+        rate_equation.accessibleDescription()
+    )
     assert not local_guidance.isHidden()
     assert 'parameter bounds' in local_guidance.text()
 
@@ -164,6 +171,7 @@ def test_model_and_optimizer_selections_show_contextual_guidance(
     window.clear_optimization_grids_and_combobox()
     main.QApplication.processEvents()
     assert rate_guidance.isHidden()
+    assert rate_equation.isHidden()
     assert local_guidance.isHidden()
 
 

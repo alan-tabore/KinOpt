@@ -23,7 +23,8 @@ a short explanation at the top of the current page. It describes the main
 assumption, a typical use, and the most important point to check. You can also
 hover over an option in a selection list to preview the same guidance before
 choosing it. When a mathematical expression applies, the contextual panel also
-shows the equation used by KinOpt.
+shows the equation used by KinOpt with composed exponents and stacked
+fractions.
 
 Empty parameter fields show a grey illustrative value and its unit when one is
 available. This text is only a placeholder: KinOpt does not treat it as an

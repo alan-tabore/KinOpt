@@ -30,9 +30,10 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QVBoxLayout,
 )
 from PyQt5.QtCore import Qt, QStringListModel, QThread, pyqtSignal
-from PyQt5.QtGui import QTextCursor
+from PyQt5.QtGui import QPixmap, QTextCursor
 from kinopt.src.kinopt_interface import Ui_MainWindow
 from kinopt.examples import KAMAL_EXAMPLE, included_example_files
 
@@ -46,6 +47,7 @@ from kinopt.src import isoconversional_methods as icm
 from kinopt.src import kinetic_models as km
 from kinopt.src import optimization as opt
 from kinopt.src.batch_optimization_dialog import BatchOptimizationDialog
+from kinopt.src.equation_rendering import render_equation_png
 from kinopt.src.optimization_queue import OptimizationQueue
 from kinopt.src.optimization_profiles import (
     DEFAULT_PROFILE_NAME,
@@ -288,34 +290,66 @@ class MainWindow(QMainWindow):
 
     def _configure_selection_guidance(self):
         """Add contextual explanations and tooltips to scientific choices."""
+        model_panel = QFrame(self.ui.page_models_and_parameters)
+        model_panel.setObjectName('panel_model_selection_guidance')
         model_guidance = QLabel(self.ui.page_models_and_parameters)
         model_guidance.setObjectName('label_model_selection_guidance')
-        optimization_guidance = QLabel(
+        model_equation = QLabel(model_panel)
+        model_equation.setObjectName('label_model_selection_equation')
+
+        optimization_panel = QFrame(
             self.ui.page_optimization_methods_and_parameters
+        )
+        optimization_panel.setObjectName(
+            'panel_optimization_selection_guidance'
+        )
+        optimization_guidance = QLabel(
+            optimization_panel
         )
         optimization_guidance.setObjectName(
             'label_optimization_selection_guidance'
         )
-        for label, accessible_name, layout in (
+        optimization_equation = QLabel(optimization_panel)
+        optimization_equation.setObjectName(
+            'label_optimization_selection_equation'
+        )
+
+        for panel, equation_label, label, accessible_name, layout in (
             (
+                model_panel,
+                model_equation,
                 model_guidance,
                 'Kinetic model selection guidance',
                 self.ui.verticalLayout_2,
             ),
             (
+                optimization_panel,
+                optimization_equation,
                 optimization_guidance,
                 'Optimization selection guidance',
                 self.ui.verticalLayout_4,
             ),
         ):
+            panel.setFrameShape(QFrame.StyledPanel)
+            panel_layout = QVBoxLayout(panel)
+            panel_layout.setContentsMargins(6, 6, 6, 6)
+            panel_layout.setSpacing(4)
+            equation_label.setAlignment(Qt.AlignCenter)
+            equation_label.setSizePolicy(
+                QSizePolicy.Expanding,
+                QSizePolicy.Fixed,
+            )
+            equation_label.setAccessibleName(f'{accessible_name} equation')
+            equation_label.hide()
             label.setWordWrap(True)
-            label.setMargin(6)
-            label.setFrameShape(QFrame.StyledPanel)
             label.setTextFormat(Qt.RichText)
             label.setTextInteractionFlags(Qt.TextSelectableByMouse)
             label.setAccessibleName(accessible_name)
             label.hide()
-            layout.insertWidget(0, label)
+            panel_layout.addWidget(equation_label)
+            panel_layout.addWidget(label)
+            panel.hide()
+            layout.insertWidget(0, panel)
 
         self.selection_guidance_labels = {
             'rate': model_guidance,
@@ -325,6 +359,24 @@ class MainWindow(QMainWindow):
             'global_optimization': optimization_guidance,
             'local_optimization': optimization_guidance,
             'cost_function': optimization_guidance,
+        }
+        self.selection_guidance_equation_labels = {
+            'rate': model_equation,
+            'vitrification': model_equation,
+            'coupling': model_equation,
+            'tg': model_equation,
+            'global_optimization': optimization_equation,
+            'local_optimization': optimization_equation,
+            'cost_function': optimization_equation,
+        }
+        self.selection_guidance_panels = {
+            'rate': model_panel,
+            'vitrification': model_panel,
+            'coupling': model_panel,
+            'tg': model_panel,
+            'global_optimization': optimization_panel,
+            'local_optimization': optimization_panel,
+            'cost_function': optimization_panel,
         }
         bindings = (
             (
@@ -383,24 +435,61 @@ class MainWindow(QMainWindow):
     def _update_selection_guidance(self, kind, name):
         """Show the explanation associated with the current selection."""
         label = self.selection_guidance_labels[kind]
+        equation_label = self.selection_guidance_equation_labels[kind]
+        panel = self.selection_guidance_panels[kind]
         guidance = selection_guidance_for(kind, name)
         if guidance is None:
             label.clear()
             label.hide()
+            equation_label.clear()
+            equation_label.hide()
+            panel.hide()
             return
-        equation = ''
+
         if guidance.equation:
-            equation = (
-                '<p align="center"><span style="font-size: 115%;">'
-                f'{guidance.equation}</span></p>'
+            color = label.palette().color(label.foregroundRole()).name()
+            pixmap = QPixmap()
+            pixmap.loadFromData(
+                render_equation_png(guidance.equation, color=color),
+                'PNG',
             )
+            available_width = max(
+                260,
+                min(700, panel.parentWidget().width() - 24),
+            )
+            if pixmap.width() > available_width:
+                pixmap = pixmap.scaledToWidth(
+                    available_width,
+                    Qt.SmoothTransformation,
+                )
+            equation_label.setPixmap(pixmap)
+            equation_label.setAccessibleDescription(
+                guidance.equation_accessible
+            )
+            equation_label.show()
+        else:
+            equation_label.clear()
+            equation_label.hide()
+
         label.setText(
             f'<b>{escape(guidance.title)}</b>'
-            f'{equation}'
+            '<br>'
             f'{escape(guidance.summary)}<br>'
             f'<i>Practical note:</i> {escape(guidance.advice)}'
         )
+        label.setAccessibleDescription(
+            ' '.join(
+                part
+                for part in (
+                    guidance.summary,
+                    guidance.equation_accessible,
+                    guidance.advice,
+                )
+                if part
+            )
+        )
         label.show()
+        panel.show()
 
     def _configure_optimization_profiles(self):
         """Add selectable calculation profiles below the solver fields."""
