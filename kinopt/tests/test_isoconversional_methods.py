@@ -37,3 +37,31 @@ def test_analysis_rejects_conversion_outside_experiments(isothermal_experiments)
     extents, times, temperatures, _ = isothermal_experiments
     with pytest.raises(ValueError, match="minimum"):
         icm.isoconversional_analysis_vyazovkin_method(extents, times, temperatures, 60000., 0., 0.9, 5)
+
+
+def test_prepared_vyazovkin_objective_matches_public_calculation():
+    time_arrays = (
+        np.linspace(0.0, 20.0, 101),
+        np.linspace(0.0, 16.0, 81),
+        np.linspace(0.0, 12.0, 61),
+    )
+    temperature_arrays = tuple(
+        330.0 + rate * time_values
+        for rate, time_values in zip((2.0, 3.0, 4.0), time_arrays)
+    )
+    prepared = tuple(
+        icm.prepare_integral_J(time_values, temperature_values)
+        for time_values, temperature_values in zip(
+            time_arrays,
+            temperature_arrays,
+        )
+    )
+
+    expected = icm.compute_function_to_minimize(
+        65000.0,
+        time_arrays,
+        temperature_arrays,
+    )
+    actual = icm.compute_prepared_function_to_minimize(65000.0, prepared)
+
+    assert actual == pytest.approx(expected, rel=1e-13)

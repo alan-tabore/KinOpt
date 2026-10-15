@@ -66,17 +66,63 @@ starting points. Differential evolution and SHGO already explore their bounded
 domain without using KinOpt's initial parameter values, so the multi-start
 control refuses those strategies instead of creating duplicate calculations.
 
+Trying representative two-stage fitting
+-----------------------------------------
+
+Choose an **Exploratory data fraction** and click **Add two-stage job** to
+prepare an optional local-solver strategy. Its first stage uses evenly spaced
+points from every fitting experiment and one quarter of the normal evaluation
+budget. Its second stage always starts a regular optimization on the complete
+fitting dataset from the exploratory result. Both stages are included in the
+displayed duration.
+
+This strategy is available only for local solvers. It can shorten a fit when a
+better starting point substantially reduces the full-data refinement, but it
+can also add overhead. The packaged benchmark accepts
+``--exploratory-fraction`` so timing, final parameters, and full-data RMSE can
+be compared on the target machine. KinOpt therefore keeps direct fitting as
+the default.
+
+Reserving an experiment for validation
+---------------------------------------
+
+When at least two experimental files were imported, choose a **Validation
+experiment** number and click **Add holdout validation job**. The queued job
+keeps the complete dataset, but the solver objective excludes every point from
+that experiment. The fitted parameters are then evaluated on the reserved
+experiment without refitting them.
+
+The result reports a fit RMSE on the experiments used by the solver, a
+validation RMSE on the reserved experiment, an overall RMSE, and one RMSE per
+experiment. A much larger validation error can reveal weak prediction outside
+the fitting data even when the fitted curves look convincing. Experiments with
+different reserved files are placed in separate ranking groups because their
+validation scores do not measure the same points.
+
 Running and monitoring jobs
 ---------------------------
 
-Click **Start pending jobs** to process the queue. The first version runs one
-optimization at a time so that several expensive calculations do not compete
-for the same processor and memory. Closing and reopening KinOpt preserves the
-queue and completed result summaries.
+Choose **Concurrent jobs** before starting the queue. The default value of one
+minimizes memory use. A larger value runs independent jobs simultaneously in
+separate processes, which is useful for model and multi-start comparisons.
+**Global process budget** limits their combined solver workers. For example, a
+differential-evolution job configured with four workers consumes four slots;
+KinOpt waits before starting another job if it would exceed the budget. One
+oversized job is still allowed to run by itself so that the queue cannot become
+blocked.
+
+Click **Start pending jobs** to process the queue. The concurrency controls are
+locked while it is running. Closing and reopening KinOpt preserves the queue
+and completed result summaries. A process that stops unexpectedly fails only
+its own job; the remaining jobs continue.
 
 The table displays the selected model and strategy, queue state, solver
-convergence, cost, duration, starting or fitted parameters, and the solver's
-final message.
+convergence, best cost, duration, evaluation count, starting/best/fitted
+parameters, and the solver's final message. Running jobs periodically persist
+their improving cost and parameter history in the queue database. **Rough ETA**
+extrapolates the consumed evaluation budget only while that estimate is
+meaningful; it is not a prediction of the distance to the optimum and can
+change substantially between solver phases.
 The queue state and solver result are separate: **Completed / Not converged**
 means the calculation finished and produced a finite result, but the solver
 stopped without reporting convergence, for example after using its iteration
@@ -85,10 +131,10 @@ budget.
 Queue controls
 --------------
 
-* **Pause after current job** lets the active optimization finish and leaves the
-  following jobs pending.
+* **Pause after current job** lets all active optimizations finish and leaves
+  jobs that have not started pending.
 * **Cancel selected/current job** cancels a selected pending job or requests a
-  cooperative stop of the active job.
+  cooperative stop of the selected active job. Other active jobs continue.
 * **Retry selected job** returns a failed, cancelled, or interrupted job to the
   pending queue.
 * **Recover stopped jobs** marks jobs left running by an application or system
@@ -100,21 +146,27 @@ Queue controls
 * **Delete selected** removes an inactive job after confirmation. Deleting a
   completed job also deletes its stored result from the batch table.
 * **Inspect result** opens measured and fitted rate curves for the selected
-  completed job, together with its residuals, RMSE, mean absolute error, mean
-  residual, largest residual, convergence status, and solver message.
+  completed job, together with its residuals, fit and validation RMSE, one row
+  per experiment, parameter review warnings, convergence status, and solver
+  message. A reserved validation region is shaded on the plots.
 * **Compare completed jobs** opens a table ranked by an unweighted RMSE
   recalculated from the model predictions and measured rates. This common score
   remains comparable when jobs use different solver cost functions. Lower is
   better. Jobs are grouped separately when their measured rate series differ.
+* **Import legacy results...** reads complete text results written by older
+  KinOpt versions and adds their model, measurements, fitted parameters, cost,
+  duration, and available solver counters to the structured comparison history.
+  The original file is left unchanged. Incomplete or unsupported files are
+  rejected with a specific message.
 
 Comparing completed results
 ---------------------------
 
 Complete at least two jobs, then click **Compare completed jobs**. The
-comparison table reports the common RMSE beside the solver cost, parameter
-count, evaluation count, and duration. A solver cost is useful for understanding
-the calculation that was requested, while the RMSE is the column to use for a
-direct fit comparison on the same measurements.
+comparison table reports fit, validation, and overall RMSE beside the solver
+cost, parameter count, evaluation count, and duration. A solver cost is useful
+for understanding the calculation that was requested, while RMSE is the metric
+to use for a direct comparison on the same measurements and training split.
 
 The **Multi-start groups** tab summarizes each generated group. It reports the
 number of completed and converged runs, the best and median RMSE, the best job,
@@ -122,6 +174,14 @@ and the largest relative range observed across the fitted parameters. A small
 range means that the completed runs returned similar parameter values. There is
 no universal acceptable percentage: interpret it together with convergence,
 the residual plots, parameter units, and the physical meaning of the model.
+The **Parameter stability** tab expands this indicator into minimum, median,
+maximum, and relative range for every fitted parameter instead of hiding the
+source of the largest spread.
+
+The result inspector also flags fitted values at or within one percent of a
+finite solver bound and values outside KinOpt's illustrative model-reference
+ranges. These are prompts for review rather than universal physical limits;
+material-specific knowledge remains decisive.
 
 Use **Export JSON...** to preserve the complete queued configurations, measured
 data, starting values, results, comparison metrics, group summaries, seeds, and

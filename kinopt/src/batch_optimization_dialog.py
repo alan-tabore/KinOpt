@@ -1,5 +1,7 @@
-"""Qt interface for the persistent sequential optimization queue."""
+"""Qt interface for the persistent optimization queue."""
 
+from dataclasses import replace
+import os
 from threading import Event
 
 from PyQt5.QtCore import Qt, QThread, QTimer, pyqtSignal
@@ -7,6 +9,8 @@ from PyQt5.QtWidgets import (
     QAbstractItemView,
     QDialog,
     QDialogButtonBox,
+    QDoubleSpinBox,
+    QFileDialog,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -25,8 +29,11 @@ from kinopt.src.optimization_diagnostics_dialog import (
     OptimizationDiagnosticsDialog,
 )
 from kinopt.src.optimization_multistart import generate_multistart_configs
+from kinopt.src.legacy_result_import import import_legacy_result
 from kinopt.src.optimization_queue import JobStatus
-from kinopt.src.optimization_scheduler import SequentialOptimizationScheduler
+from kinopt.src.optimization_scheduler import ConcurrentOptimizationScheduler
+from kinopt.src.optimization_strategies import representative_subsample_mask
+from kinopt.src.optimization_validation import with_validation_experiment
 
 
 class BatchOptimizationThread(QThread):
@@ -35,28 +42,58 @@ class BatchOptimizationThread(QThread):
     job_finished = pyqtSignal(object)
     execution_error = pyqtSignal(str)
 
-    def __init__(self, queue, parent=None):
+    def __init__(
+        self,
+        queue,
+        max_concurrent_jobs=1,
+        process_budget=None,
+        parent=None,
+    ):
         super().__init__(parent)
         self.queue = queue
+        self.max_concurrent_jobs = max_concurrent_jobs
+        self.process_budget = process_budget
         self._pause_requested = Event()
+        self._cancelled_identifiers = set()
+        self.scheduler = None
 
     def request_pause(self):
         """Finish the active job without claiming another one."""
         self._pause_requested.set()
 
-    def request_cancel(self):
-        """Cancel the active job and stop before the next one."""
-        self._pause_requested.set()
-        self.requestInterruption()
+    def request_cancel(self, identifier=None):
+        """Cancel one active job, or every active job during shutdown."""
+        if identifier is None:
+            self._pause_requested.set()
+            if self.scheduler is not None:
+                identifiers = self.scheduler.active_job_identifiers
+                self._cancelled_identifiers.update(identifiers)
+                for active_identifier in identifiers:
+                    self.scheduler.cancel(active_identifier)
+            return
+        self._cancelled_identifiers.add(identifier)
+        if self.scheduler is not None:
+            self.scheduler.cancel(identifier)
 
     def run(self):
         try:
-            SequentialOptimizationScheduler(self.queue).run_pending(
+            self.scheduler = ConcurrentOptimizationScheduler(
+                self.queue,
+                max_concurrent_jobs=self.max_concurrent_jobs,
+                process_budget=self.process_budget,
+            )
+            self.scheduler.run_pending(
                 cancellation_requested=(
-                    lambda job: self.isInterruptionRequested()
+                    lambda job: job.identifier in self._cancelled_identifiers
                 ),
                 should_continue=lambda: not self._pause_requested.is_set(),
                 job_finished=self.job_finished.emit,
+                progress_callback=(
+                    lambda job, progress: self.queue.update_progress(
+                        job.identifier,
+                        progress,
+                    )
+                ),
             )
         except Exception as error:
             self.execution_error.emit(f"{type(error).__name__}: {error}")
@@ -76,7 +113,10 @@ def _model_description(config):
 
 def _strategy_description(config):
     methods = [config.global_method, config.local_method]
-    return " → ".join(method for method in methods if method) or "—"
+    description = " → ".join(method for method in methods if method) or "—"
+    if config.exploratory_fraction is not None:
+        return f"Two-stage {config.exploratory_fraction:.0%} → {description}"
+    return description
 
 
 class BatchOptimizationDialog(QDialog):
@@ -95,6 +135,8 @@ class BatchOptimizationDialog(QDialog):
         "Duration",
         "Parameters",
         "Message",
+        "Evaluations",
+        "Rough ETA",
     )
 
     def __init__(self, queue, config_provider, execution_allowed=None, parent=None):
@@ -111,7 +153,7 @@ class BatchOptimizationDialog(QDialog):
         self.resize(1050, 480)
 
         explanation = QLabel(
-            "Save several configurations, then run them one at a time. "
+            "Save several configurations, then run them in isolated processes. "
             "A multi-start group tests one bounded setup from several initial "
             "parameter values. "
             "Changing the main form later does not modify queued jobs. "
@@ -128,12 +170,16 @@ class BatchOptimizationDialog(QDialog):
         self.table.verticalHeader().setVisible(False)
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Interactive)
-        header.setSectionResizeMode(len(self.HEADERS) - 1, QHeaderView.Stretch)
-        for column, width in enumerate((140, 145, 105, 80, 90, 80, 80, 185)):
+        header.setSectionResizeMode(8, QHeaderView.Stretch)
+        for column, width in enumerate(
+            (140, 145, 105, 80, 90, 80, 80, 185, 220, 90, 90)
+        ):
             self.table.setColumnWidth(column, width)
 
         self.add_button = QPushButton("Add current setup")
         self.multistart_button = QPushButton("Add multi-start jobs")
+        self.holdout_button = QPushButton("Add holdout validation job")
+        self.two_stage_button = QPushButton("Add two-stage job")
         self.plan_button = QPushButton("Build comparison plan…")
         self.name_edit = QLineEdit()
         self.name_edit.setPlaceholderText(
@@ -151,6 +197,37 @@ class BatchOptimizationDialog(QDialog):
         self.multistart_seed.setToolTip(
             "Use the same seed and bounds to reproduce the generated starts."
         )
+        self.validation_experiment = QSpinBox()
+        self.validation_experiment.setRange(1, 999)
+        self.validation_experiment.setValue(1)
+        self.validation_experiment.setToolTip(
+            "This experiment is kept in the stored configuration for scoring "
+            "but excluded from the solver objective."
+        )
+        self.two_stage_fraction = QDoubleSpinBox()
+        self.two_stage_fraction.setRange(0.05, 0.90)
+        self.two_stage_fraction.setSingleStep(0.05)
+        self.two_stage_fraction.setValue(0.25)
+        self.two_stage_fraction.setDecimals(2)
+        self.two_stage_fraction.setToolTip(
+            "Representative fraction used only for the exploratory stage; "
+            "the final stage always uses all fitting data."
+        )
+        available_cpus = max(1, os.cpu_count() or 1)
+        self.concurrent_jobs = QSpinBox()
+        self.concurrent_jobs.setRange(1, min(32, available_cpus))
+        self.concurrent_jobs.setValue(1)
+        self.concurrent_jobs.setToolTip(
+            "Maximum number of independent optimization jobs running at once. "
+            "Keep 1 for the lowest memory use."
+        )
+        self.process_budget = QSpinBox()
+        self.process_budget.setRange(1, min(256, available_cpus))
+        self.process_budget.setValue(available_cpus)
+        self.process_budget.setToolTip(
+            "Maximum total solver workers across active jobs. A job configured "
+            "with several workers consumes several slots."
+        )
         self.start_button = QPushButton("Start pending jobs")
         self.pause_button = QPushButton("Pause after current job")
         self.cancel_button = QPushButton("Cancel selected/current job")
@@ -163,6 +240,7 @@ class BatchOptimizationDialog(QDialog):
         self.delete_button = QPushButton("Delete selected")
         self.inspect_button = QPushButton("Inspect result")
         self.compare_button = QPushButton("Compare completed jobs")
+        self.import_legacy_button = QPushButton("Import legacy results…")
 
         add_controls = QHBoxLayout()
         add_controls.addWidget(QLabel("New job name:"))
@@ -177,12 +255,40 @@ class BatchOptimizationDialog(QDialog):
         multistart_controls.addWidget(self.multistart_button)
         multistart_controls.addStretch(1)
 
+        validation_controls = QHBoxLayout()
+        validation_controls.addWidget(QLabel("Validation experiment:"))
+        validation_controls.addWidget(self.validation_experiment)
+        validation_controls.addWidget(self.holdout_button)
+        validation_controls.addWidget(QLabel(
+            "Fit on every other imported experiment, then report predictive RMSE."
+        ))
+        validation_controls.addStretch(1)
+
+        two_stage_controls = QHBoxLayout()
+        two_stage_controls.addWidget(QLabel("Exploratory data fraction:"))
+        two_stage_controls.addWidget(self.two_stage_fraction)
+        two_stage_controls.addWidget(self.two_stage_button)
+        two_stage_controls.addWidget(QLabel(
+            "Optional local-solver strategy; final refinement uses all data."
+        ))
+        two_stage_controls.addStretch(1)
+
         plan_controls = QHBoxLayout()
         plan_controls.addWidget(self.plan_button)
         plan_controls.addWidget(QLabel(
             "Prepare combinations of rate models, local methods, and profiles."
         ))
         plan_controls.addStretch(1)
+
+        resource_controls = QHBoxLayout()
+        resource_controls.addWidget(QLabel("Concurrent jobs:"))
+        resource_controls.addWidget(self.concurrent_jobs)
+        resource_controls.addWidget(QLabel("Global process budget:"))
+        resource_controls.addWidget(self.process_budget)
+        resource_controls.addWidget(QLabel(
+            "One job remains the safe default; increase it for independent runs."
+        ))
+        resource_controls.addStretch(1)
 
         execution_controls = QHBoxLayout()
         for button in (
@@ -205,6 +311,7 @@ class BatchOptimizationDialog(QDialog):
             management_controls.addWidget(button)
 
         result_controls = QHBoxLayout()
+        result_controls.addWidget(self.import_legacy_button)
         result_controls.addWidget(self.inspect_button)
         result_controls.addWidget(self.compare_button)
         result_controls.addStretch(1)
@@ -217,7 +324,10 @@ class BatchOptimizationDialog(QDialog):
         layout.addWidget(self.table)
         layout.addLayout(add_controls)
         layout.addLayout(multistart_controls)
+        layout.addLayout(validation_controls)
+        layout.addLayout(two_stage_controls)
         layout.addLayout(plan_controls)
+        layout.addLayout(resource_controls)
         layout.addLayout(execution_controls)
         layout.addLayout(management_controls)
         layout.addLayout(result_controls)
@@ -226,6 +336,8 @@ class BatchOptimizationDialog(QDialog):
 
         self.add_button.clicked.connect(self.add_current_setup)
         self.multistart_button.clicked.connect(self.add_multi_start_jobs)
+        self.holdout_button.clicked.connect(self.add_holdout_job)
+        self.two_stage_button.clicked.connect(self.add_two_stage_job)
         self.plan_button.clicked.connect(self.build_comparison_plan)
         self.start_button.clicked.connect(self.start_pending_jobs)
         self.pause_button.clicked.connect(self.pause_after_current_job)
@@ -243,6 +355,7 @@ class BatchOptimizationDialog(QDialog):
         self.delete_button.clicked.connect(self.delete_selected_job)
         self.inspect_button.clicked.connect(self.show_selected_diagnostics)
         self.compare_button.clicked.connect(self.show_completed_comparison)
+        self.import_legacy_button.clicked.connect(self.import_legacy_results)
         self.table.itemSelectionChanged.connect(self._update_action_buttons)
         close_buttons.rejected.connect(self.close)
 
@@ -319,8 +432,12 @@ class BatchOptimizationDialog(QDialog):
     @staticmethod
     def _parameters(job):
         if job.result is None:
-            values = job.config.initial_guess
-            prefix = "Start: "
+            if job.progress_history:
+                values = job.progress_history[-1].best_parameters
+                prefix = "Best: "
+            else:
+                values = job.config.initial_guess
+                prefix = "Start: "
         else:
             values = job.result.parameters
             prefix = "Result: "
@@ -332,18 +449,47 @@ class BatchOptimizationDialog(QDialog):
         jobs = self.queue.list_jobs()
         self.table.setRowCount(len(jobs))
         for row, job in enumerate(jobs):
+            progress = job.progress_history[-1] if job.progress_history else None
+            current_cost = (
+                job.result.cost
+                if job.result is not None
+                else None if progress is None else progress.best_cost
+            )
+            current_duration = (
+                job.result.elapsed_seconds
+                if job.result is not None
+                else None if progress is None else progress.elapsed_seconds
+            )
+            current_evaluations = (
+                job.result.evaluations
+                if job.result is not None
+                else None if progress is None else progress.evaluations
+            )
             values = (
                 job.name,
                 _model_description(job.config),
                 _strategy_description(job.config),
                 job.status.value.capitalize(),
                 self._solver_state(job),
-                self._result_value(job, "cost", ".6g"),
-                self._result_value(job, "elapsed_seconds", ".2f") + (
-                    " s" if job.result is not None else ""
+                "—" if current_cost is None else format(current_cost, ".6g"),
+                (
+                    "—"
+                    if current_duration is None
+                    else f"{current_duration:.2f} s"
                 ),
                 self._parameters(job),
                 job.message or "",
+                (
+                    "—"
+                    if current_evaluations is None
+                    else str(current_evaluations)
+                ),
+                (
+                    "—"
+                    if progress is None
+                    or progress.estimated_remaining_seconds is None
+                    else f"~{progress.estimated_remaining_seconds:.0f} s"
+                ),
             )
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
@@ -355,6 +501,8 @@ class BatchOptimizationDialog(QDialog):
         self.pause_button.setEnabled(self.has_running_worker())
         self.start_button.setEnabled(not self.has_running_worker())
         self.recover_button.setEnabled(not self.has_running_worker())
+        self.concurrent_jobs.setEnabled(not self.has_running_worker())
+        self.process_budget.setEnabled(not self.has_running_worker())
         self.compare_button.setEnabled(
             sum(
                 job.status is JobStatus.COMPLETED and job.result is not None
@@ -414,6 +562,90 @@ class BatchOptimizationDialog(QDialog):
         self.refresh()
         self._restore_selection(jobs[0].identifier)
 
+    def add_holdout_job(self):
+        """Queue one run that excludes a complete experiment from fitting."""
+        config = self.config_provider()
+        if config is None:
+            return
+        experiment_number = self.validation_experiment.value()
+        try:
+            holdout_config = with_validation_experiment(
+                config,
+                experiment_number - 1,
+            )
+            base_name = self.name_edit.text().strip() or "Holdout validation"
+            job = self.queue.add(
+                holdout_config,
+                name=f"{base_name} - experiment {experiment_number}",
+            )
+        except (TypeError, ValueError) as error:
+            QMessageBox.critical(self, "Holdout validation", str(error))
+            return
+        self.status_label.setText(
+            f"Added {job.name}; experiment {experiment_number} will only be "
+            "used for validation."
+        )
+        self.name_edit.clear()
+        self.refresh()
+        self._restore_selection(job.identifier)
+
+    def import_legacy_results(self):
+        """Migrate historical text results into the structured queue."""
+        paths, _ = QFileDialog.getOpenFileNames(
+            self,
+            "Import legacy KinOpt results",
+            "",
+            "Text files (*.txt);;All files (*)",
+        )
+        if not paths:
+            return
+        try:
+            imported_results = [import_legacy_result(path) for path in paths]
+            jobs = [
+                self.queue.record_completed(
+                    imported.config,
+                    imported.outcome,
+                    imported.name,
+                )
+                for imported in imported_results
+            ]
+        except (OSError, TypeError, ValueError) as error:
+            QMessageBox.critical(self, "Import legacy results", str(error))
+            return
+        self.status_label.setText(
+            f"Imported {len(jobs)} legacy result(s) into comparisons."
+        )
+        self.refresh()
+        self._restore_selection(jobs[-1].identifier)
+
+    def add_two_stage_job(self):
+        """Queue a measured subset exploration followed by full refinement."""
+        config = self.config_provider()
+        if config is None:
+            return
+        fraction = self.two_stage_fraction.value()
+        try:
+            if config.global_method:
+                raise ValueError(
+                    "Two-stage fitting currently supports local solvers only."
+                )
+            representative_subsample_mask(config, fraction)
+            configured = replace(config, exploratory_fraction=fraction)
+            base_name = self.name_edit.text().strip() or "Two-stage fit"
+            job = self.queue.add(
+                configured,
+                name=f"{base_name} - {fraction:.0%} exploration",
+            )
+        except (TypeError, ValueError) as error:
+            QMessageBox.critical(self, "Two-stage optimization", str(error))
+            return
+        self.status_label.setText(
+            f"Added {job.name}; its final refinement will use all fitting data."
+        )
+        self.name_edit.clear()
+        self.refresh()
+        self._restore_selection(job.identifier)
+
     def build_comparison_plan(self):
         """Open the assistant using an immutable snapshot of the main form."""
         config = self.config_provider()
@@ -446,11 +678,19 @@ class BatchOptimizationDialog(QDialog):
             self.status_label.setText("There are no pending jobs.")
             return
 
-        self.worker = BatchOptimizationThread(self.queue, self)
+        self.worker = BatchOptimizationThread(
+            self.queue,
+            self.concurrent_jobs.value(),
+            self.process_budget.value(),
+            self,
+        )
         self.worker.job_finished.connect(self._job_finished)
         self.worker.execution_error.connect(self._execution_error)
         self.worker.finished.connect(self._worker_finished)
-        self.status_label.setText("Running pending jobs one at a time…")
+        count = self.concurrent_jobs.value()
+        self.status_label.setText(
+            f"Running up to {count} optimization job(s) at once…"
+        )
         self.execution_started.emit()
         self.refresh_timer.start()
         self.refresh()
@@ -482,7 +722,7 @@ class BatchOptimizationDialog(QDialog):
         if self.has_running_worker():
             self.worker.request_pause()
             self.status_label.setText(
-                "Pausing after the current optimization finishes…"
+                "Pausing after the active optimizations finish…"
             )
             self.pause_button.setEnabled(False)
 
@@ -493,15 +733,12 @@ class BatchOptimizationDialog(QDialog):
             (job for job in jobs if job.identifier == identifier),
             None,
         )
-        running = next(
-            (job for job in jobs if job.status is JobStatus.RUNNING),
-            None,
-        )
+        running = [job for job in jobs if job.status is JobStatus.RUNNING]
         target = (
             selected
             if selected is not None
             and selected.status in {JobStatus.PENDING, JobStatus.RUNNING}
-            else running
+            else running[0] if len(running) == 1 else None
         )
         if target is None:
             self.status_label.setText("Select a pending job to cancel.")
@@ -511,8 +748,8 @@ class BatchOptimizationDialog(QDialog):
                 self.queue.set_status(target.identifier, JobStatus.CANCELLED)
                 self.status_label.setText(f"Cancelled {target.name}.")
             elif target.status is JobStatus.RUNNING and self.has_running_worker():
-                self.worker.request_cancel()
-                self.status_label.setText("Cancelling the current optimization…")
+                self.worker.request_cancel(target.identifier)
+                self.status_label.setText(f"Cancelling {target.name}…")
             else:
                 self.status_label.setText(
                     "Only pending or currently running jobs can be cancelled."

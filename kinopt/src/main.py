@@ -46,6 +46,21 @@ from kinopt.src import isoconversional_methods as icm
 from kinopt.src import kinetic_models as km
 from kinopt.src import optimization as opt
 from kinopt.src.batch_optimization_dialog import BatchOptimizationDialog
+from kinopt.src.data_import_dialog import DataImportDialog
+from kinopt.src.application_registry import (
+    get_functions_for_isoconversional_method,
+    get_functions_for_kinetics,
+    get_functions_for_optimization,
+    get_main_args_dict_and_options_dict,
+    get_parameters_for_coupling,
+    get_parameters_for_isoconversional_method,
+    get_parameters_for_optimization,
+    get_parameters_for_rate,
+    get_parameters_for_rss,
+    get_parameters_for_tg,
+    get_parameters_for_vitrification,
+    pad_arrays,
+)
 from kinopt.src.model_metadata import (
     kinetic_model_metadata,
     kinetic_model_names,
@@ -84,6 +99,10 @@ import time as time_module
 import datetime
 
 
+# Preserve the public helper used by older scripts and tests.
+launch_extraction = data_extraction.launch_extraction
+
+
 class MainWindow(QMainWindow):
     def __init__(self, results_directory=None, queue_database=None):
         super().__init__()
@@ -98,6 +117,7 @@ class MainWindow(QMainWindow):
         self.batch_dialog = None
         self.active_optimization_config = None
         self.active_optimization_history_identifier = None
+        self.data_import_settings = None
 
         # Connect data extraction elements
         self.pushButton_load_example = QPushButton(
@@ -111,17 +131,41 @@ class MainWindow(QMainWindow):
             "Load and extract the four included heating-rate datasets, then "
             "prepare a Kamal model with a quick optimization profile."
         )
+        self.pushButton_import_assistant = QPushButton(
+            "Review data import…",
+            self.ui.widget_button_files,
+        )
+        self.pushButton_import_assistant.setToolTip(
+            "Preview columns, choose units, validate every selected file, and "
+            "extract standardized kinetic data."
+        )
         add_files_index = self.ui.verticalLayout_11.indexOf(
             self.ui.pushButton_add_files
         )
         self.ui.verticalLayout_11.insertWidget(
             add_files_index + 1,
+            self.pushButton_import_assistant,
+        )
+        self.ui.verticalLayout_11.insertWidget(
+            add_files_index + 2,
             self.pushButton_load_example,
         )
         self.ui.pushButton_add_files.clicked.connect(self.browse_files)
+        self.pushButton_import_assistant.clicked.connect(
+            self.open_data_import_assistant
+        )
         self.pushButton_load_example.clicked.connect(self.load_kamal_example)
         self.ui.pushButton_clear_all_files.clicked.connect(self.clear_files)
         self.ui.pushButton_extract_data.clicked.connect(self.extract_data)
+        self.ui.lineEdit_delimiter.textEdited.connect(
+            lambda *_: setattr(self, "data_import_settings", None)
+        )
+        self.ui.lineEdit_number_of_lines_to_skip.textEdited.connect(
+            lambda *_: setattr(self, "data_import_settings", None)
+        )
+        self.ui.checkBox_file_has_headers.toggled.connect(
+            lambda *_: setattr(self, "data_import_settings", None)
+        )
         
         # Connect isoconversional analysis elements
         self.selected_isoconversional_method = ''
@@ -666,6 +710,7 @@ class MainWindow(QMainWindow):
             )
             if file_paths:
                 self._select_data_files(file_paths)
+                self.open_data_import_assistant()
         except Exception as e:
             # Handle other exceptions with a generic error message
             QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
@@ -684,6 +729,33 @@ class MainWindow(QMainWindow):
         self.selected_shortened_file_paths = shortened_paths
         self.selected_full_file_paths = paths
         self.successful_extraction = False
+        self.data_import_settings = None
+
+    def open_data_import_assistant(self):
+        """Preview and validate selected experimental files before extraction."""
+        paths = getattr(self, "selected_full_file_paths", None)
+        if not paths:
+            QMessageBox.information(
+                self,
+                "Import kinetic data",
+                "Select one or more data files first.",
+            )
+            return
+        dialog = DataImportDialog(paths, self)
+        if dialog.exec_() != QDialog.Accepted:
+            return
+
+        settings = dialog.settings
+        delimiter_text = "tab" if settings.delimiter == "\t" else settings.delimiter
+        self.ui.lineEdit_delimiter.setText(delimiter_text)
+        self.ui.lineEdit_number_of_lines_to_skip.setText(str(settings.skip_lines))
+        self.ui.checkBox_file_has_headers.setChecked(settings.has_header)
+        self.data_import_settings = settings
+        self._apply_extracted_datasets(
+            dialog.datasets,
+            dialog.warning_messages,
+            show_success_message=True,
+        )
 
     def load_kamal_example(self):
         """Prepare the packaged Kamal data and a short guided setup."""
@@ -754,6 +826,7 @@ class MainWindow(QMainWindow):
         self.selected_full_file_paths = None
         # Empty the shortened file paths list
         self.selected_shortened_file_paths = None
+        self.data_import_settings = None
         # Reset the bool to indicate successful extraction
         self.successful_extraction = None
         
@@ -770,123 +843,37 @@ class MainWindow(QMainWindow):
         """Extract selected data with optional success guidance."""
         self.successful_extraction = False
         try:
-            # Get the selected file paths
             file_paths_list = self.selected_full_file_paths
-
-            # Check if no files have been selected
             if not file_paths_list:
-                # Show a warning message using PySide2
                 QMessageBox.warning(
                     self, "No File Selected", "Please select a file before extracting.")
                 return
-    
-            # Get the delimiter entry from the line edit field
-            delimiter_entry = self.ui.lineEdit_delimiter.text()
-            if delimiter_entry == "":
-                delimiter_entry = ","
-            elif delimiter_entry.lower() == "tab" or delimiter_entry == "\\t":
-                delimiter_entry = "\t"
-    
-            # Get the value of the file_has_header_var (Int variable indicating if files have headers)
-            has_header_entry = self.ui.checkBox_file_has_headers.isChecked()
-            
-            # Get the number of lines to skip from the line edit field and convert to integer
-            number_of_lines_to_skip = int(self.ui.lineEdit_number_of_lines_to_skip.text())
-                
-            # Launch the extraction process with provided parameters
-            self.successful_extraction, message, time_array, temp_array, rate_array, extent_array = launch_extraction(
-                file_paths_list,
-                delimiter=delimiter_entry,
-                has_header=has_header_entry,
-                skip_lines=number_of_lines_to_skip
-            )
-            
-            self.ax_data_extraction_rate.clear()
-            self.ax_data_extraction_extent.clear()
-            self.ax_data_extraction_temperature.clear()
-            
-            
-            # Check if the extraction was successful
-            if self.successful_extraction:
-                # Update experimental data arrays in the class instance
-                self.experimental_time = time_array
-                self.experimental_temperature = temp_array
-                self.experimental_rate = rate_array
-                self.experimental_extent = extent_array
-    
-                # Update listView background in green to indicate a successful extraction
-                self.ui.listView_files.viewport().setStyleSheet("background-color: #C8FFC8")
-                
-                if show_success_message:
-                    QMessageBox.information(
-                        self,
-                        "Extraction Successful",
-                        f"Successful extraction! \n {message}",
+            settings = self.data_import_settings
+            if settings is None:
+                settings = data_extraction.DataImportSettings(
+                    delimiter=data_extraction.normalize_delimiter(
+                        self.ui.lineEdit_delimiter.text()
+                    ),
+                    has_header=self.ui.checkBox_file_has_headers.isChecked(),
+                    skip_lines=int(
+                        self.ui.lineEdit_number_of_lines_to_skip.text()
+                    ),
+                )
+            datasets = []
+            with warnings.catch_warnings(record=True) as captured:
+                warnings.simplefilter("always", UserWarning)
+                for path in file_paths_list:
+                    datasets.append(
+                        data_extraction.extract_configured_data_single_file(
+                            path,
+                            settings,
+                        )
                     )
-    
-               
-                self.ax_optimization.clear()
-                # Create lists with data separated by files
-                self.experimental_times = []
-                self.experimental_temperatures = []
-                self.experimental_rates = []
-                self.experimental_extents = []
-                # launch_extraction already captured and reported warnings.
-                # Avoid emitting the same warnings again while rebuilding the
-                # per-file arrays used by the plots.
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore", UserWarning)
-                    for index, filepath in enumerate(
-                        self.selected_full_file_paths
-                    ):
-                        time, temperature, rate, extent = (
-                            data_extraction.extract_dsc_data_single_file(
-                                filepath,
-                                delimiter=delimiter_entry,
-                                has_header=has_header_entry,
-                                skip_lines=number_of_lines_to_skip,
-                            )
-                        )
-                        self.experimental_times.append(time)
-                        self.experimental_temperatures.append(temperature)
-                        self.experimental_rates.append(rate)
-                        self.experimental_extents.append(extent)
-
-                        label = self.selected_shortened_file_paths[index]
-                        self.ax_data_extraction_rate.plot(
-                            time, rate, label=label
-                        )
-                        self.ax_data_extraction_extent.plot(
-                            time, extent, label=label
-                        )
-                        self.ax_data_extraction_temperature.plot(
-                            time, temperature, label=label
-                        )
-                    
-                self.ax_data_extraction_rate.legend()
-                self.ax_data_extraction_extent.legend()
-                self.ax_data_extraction_temperature.legend()
-                
-                self.ax_data_extraction_rate.set_ylabel("Rate (s-1)")
-                self.ax_data_extraction_rate.set_xlabel("Time (s)")
-                self.ax_data_extraction_extent.set_ylabel("Extent")
-                self.ax_data_extraction_extent.set_xlabel("Time (s)")
-                self.ax_data_extraction_temperature.set_ylabel("Temperature (K)")
-                self.ax_data_extraction_temperature.set_xlabel("Time (s)")
-                
-                self.canvas_data_extraction_rate.draw_idle()
-                self.canvas_data_extraction_extent.draw_idle()
-                self.canvas_data_extraction_temperature.draw_idle()
-                
-                self.ui.tabWidget_visualization.setCurrentIndex(0)
-                
-
-            else:
-                # Update listView background in green to indicate a failed extraction
-                self.ui.listView_files.viewport().setStyleSheet("background-color: #FFC8C8")
-
-                QMessageBox.critical(self, "Extraction Failed", f"Extraction failed! \n {message}")
-                
+            self._apply_extracted_datasets(
+                tuple(datasets),
+                tuple(str(item.message) for item in captured),
+                show_success_message,
+            )
         except AttributeError as e:
             if str(e) == "'MainWindow' object has no attribute 'selected_full_file_paths'":
                 # Handle the specific AttributeError and display a customized error message
@@ -898,9 +885,76 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Error", f"An AttributeError occurred: {str(e)}")
         except Exception as e:
             # Handle other exceptions with a generic error message
+            self.ui.listView_files.viewport().setStyleSheet(
+                "background-color: #FFC8C8"
+            )
             QMessageBox.critical(
                 self, "Error", f"An error occurred: {str(e)}")
             traceback.print_exc()
+
+    def _apply_extracted_datasets(
+        self,
+        datasets,
+        warning_messages=(),
+        show_success_message=True,
+    ):
+        """Commit validated standard-unit datasets to the window and plots."""
+        if not datasets:
+            raise ValueError("Please select at least one data file.")
+        self.experimental_times = [dataset[0] for dataset in datasets]
+        self.experimental_temperatures = [dataset[1] for dataset in datasets]
+        self.experimental_rates = [dataset[2] for dataset in datasets]
+        self.experimental_extents = [dataset[3] for dataset in datasets]
+        self.experimental_time = np.concatenate(self.experimental_times)
+        self.experimental_temperature = np.concatenate(
+            self.experimental_temperatures
+        )
+        self.experimental_rate = np.concatenate(self.experimental_rates)
+        self.experimental_extent = np.concatenate(self.experimental_extents)
+        self.successful_extraction = True
+
+        self.ui.listView_files.viewport().setStyleSheet(
+            "background-color: #C8FFC8"
+        )
+        if show_success_message:
+            details = "\n".join(warning_messages)
+            summary = (
+                f"Imported {len(datasets)} file(s) and "
+                f"{sum(len(dataset[0]) for dataset in datasets)} data rows."
+            )
+            QMessageBox.information(
+                self,
+                "Extraction Successful",
+                summary + (f"\n\n{details}" if details else ""),
+            )
+
+        self.ax_data_extraction_rate.clear()
+        self.ax_data_extraction_extent.clear()
+        self.ax_data_extraction_temperature.clear()
+        self.ax_optimization.clear()
+        for index, dataset in enumerate(datasets):
+            time, temperature, rate, extent = dataset
+            label = self.selected_shortened_file_paths[index]
+            self.ax_data_extraction_rate.plot(time, rate, label=label)
+            self.ax_data_extraction_extent.plot(time, extent, label=label)
+            self.ax_data_extraction_temperature.plot(
+                time,
+                temperature,
+                label=label,
+            )
+        self.ax_data_extraction_rate.legend()
+        self.ax_data_extraction_extent.legend()
+        self.ax_data_extraction_temperature.legend()
+        self.ax_data_extraction_rate.set_ylabel("Rate (s-1)")
+        self.ax_data_extraction_rate.set_xlabel("Time (s)")
+        self.ax_data_extraction_extent.set_ylabel("Extent")
+        self.ax_data_extraction_extent.set_xlabel("Time (s)")
+        self.ax_data_extraction_temperature.set_ylabel("Temperature (K)")
+        self.ax_data_extraction_temperature.set_xlabel("Time (s)")
+        self.canvas_data_extraction_rate.draw_idle()
+        self.canvas_data_extraction_extent.draw_idle()
+        self.canvas_data_extraction_temperature.draw_idle()
+        self.ui.tabWidget_visualization.setCurrentIndex(0)
             
     def clear_data_extraction_plots(self):
         self.ax_data_extraction_rate.clear()
@@ -2185,6 +2239,9 @@ class MainWindow(QMainWindow):
                     self.experimental_args_for_cost_function or ()
                 ),
                 max_iterations=int(self.max_iter),
+                experiment_lengths=tuple(
+                    len(values) for values in self.experimental_times
+                ),
             )
         except Exception as e:
             traceback.print_exc()
@@ -3042,391 +3099,7 @@ class OptimizationThread(QThread):
         
         
         
-def launch_extraction(file_paths, delimiter=',', has_header=False, skip_lines=0):
-    """
-    Launch the data extraction process and processes warning and info messages.
-    
-    Parameters
-    ----------
-    file_paths : list
-        List of file paths to input txt or csv files containing DSC data.
-    delimiter : str, optional
-        Delimiter used in the input files. Default is ','.
-    has_header : bool, optional
-        Whether the input files have headers. Default is False.
-    skip_lines : int, optional
-        Number of lines to skip at the beginning of each file. Default is 0.
-    
-    Returns
-    -------
-    tuple
-        A tuple containing:
-            - boolean: Indicates whether the extraction was successful (True) or not (False).
-            - str: String containing any warning or info messages.
-            - numpy.ndarray: Time data.
-            - numpy.ndarray: Temperature data.
-            - numpy.ndarray: Rate of reaction data.
-            - numpy.ndarray: Extent of reaction data.
-    """
-    try:
-        with warnings.catch_warnings(record=True) as messages:
-            warnings.simplefilter("always", UserWarning)
-            arrays = data_extraction.extract_dsc_data_multiple_files(
-                file_paths, delimiter, has_header, skip_lines)
-        return True, "\n".join(str(message.message) for message in messages), *arrays
-    except (OSError, ValueError) as exc:
-        return False, str(exc), *(np.array([], dtype=float) for _ in range(4))
 
-# =============================================================================
-# Function for isoconversional analysis parameters
-# =============================================================================
-
-def get_functions_for_isoconversional_method():
-    # Get the isoconversional analysis methods from the isoconversional method module
-    isoconversional_methods = []
-    for element in dir(icm):
-        if callable(getattr(icm, element)):
-            if element[:24] == "isoconversional_analysis":
-                isoconversional_methods.append(element)
-    return isoconversional_methods
-
-
-def get_parameters_for_isoconversional_method(isoconversional_method_name):
-    # Get the parameters for a specified function in the isoconversional method module
-    module = icm
-    function = getattr(module, isoconversional_method_name, None)
-    if function is not None:
-        arguments = function.__code__.co_varnames[:function.__code__.co_argcount]
-        return arguments
-    return []
-# =============================================================================
-# Function for model parameters
-# =============================================================================
-
-def get_functions_for_kinetics():
-    """
-    Get the functions related to kinetics from the kinetic module.
-    
-    Returns
-    -------
-    tuple
-        A tuple containing four lists:
-        - rate_laws (list): List of functions related to rate laws.
-        - vitrification_laws (list): List of functions related to vitrification laws.
-        - tg_laws (list): List of functions related to tg laws.
-        - coupling_laws (list): List of functions related to coupling laws.
-    """
-    return (
-        list(kinetic_model_names("rate")),
-        list(kinetic_model_names("vitrification")),
-        list(kinetic_model_names("coupling")),
-        list(kinetic_model_names("tg")),
-    )
-
-
-def get_parameters_for_rate(rate_name):
-    """
-    Get the parameters for a specified kinetic law in the kinetic module.
-    
-    Parameters
-    ----------
-    rate_name : str
-        The name of the function in the kinetic module.
-    
-    Returns
-    -------
-    list or None
-        The list of parameters for the specified function if found, otherwise None.
-    """
-    metadata = kinetic_model_metadata("rate", rate_name)
-    return () if metadata is None else metadata.function_parameters
-
-
-def get_parameters_for_vitrification(vitrification_name):
-    """
-    Get the parameters for a specified vitrifiaction law in the kinetic module.
-    
-    Parameters
-    ----------
-    vitrification_name : str
-        The name of the function in the kinetic module.
-    
-    Returns
-    -------
-    list or None
-        The list of parameters for the specified function if found, otherwise None.
-    """
-    metadata = kinetic_model_metadata("vitrification", vitrification_name)
-    return () if metadata is None else metadata.function_parameters
-
-
-def get_parameters_for_coupling(coupling_name):
-    """
-    Get the parameters for a specified coupling law in the kinetic module.
-    
-    Parameters
-    ----------
-    coupling_name : str
-        The name of the function in the kinetic module.
-    
-    Returns
-    -------
-    list or None
-        The list of parameters for the specified function if found, otherwise None.
-    """
-    metadata = kinetic_model_metadata("coupling", coupling_name)
-    return () if metadata is None else metadata.function_parameters
-
-
-def get_parameters_for_tg(tg_name):
-    """
-    Get the parameters for a specified function in the kinetic module.
-    
-    Parameters
-    ----------
-    tg_name : str
-        The name of the function in the kinetic module.
-    
-    Returns
-    -------
-    list or None
-        The list of parameters for the specified function if found, otherwise None.
-    """
-    metadata = kinetic_model_metadata("tg", tg_name)
-    return () if metadata is None else metadata.function_parameters
-
-
-# =============================================================================
-# Functions for optimization parameters
-# =============================================================================
-
-def get_functions_for_optimization():
-    """
-    Get the parameters for a specified function in the kinetic module.
-    
-    Parameters
-    ----------
-    tg_name : str
-        The name of the function in the kinetic module.
-    
-    Returns
-    -------
-    list or None
-        The list of parameters for the specified function if found, otherwise None.
-    """
-    global_optimization_methods = ["basinhopping", "differential_evolution","shgo"]
-    local_optimization_methods = [
-        LOG_SPACE_LEAST_SQUARES,
-        "Nelder-Mead",
-        "CG",
-        "BFGS",
-        "L-BFGS-B",
-    ]
-    rss_methods = [element for element in dir(opt) if callable(getattr(opt, element)) and element.startswith("rss")]
-
-    return global_optimization_methods, local_optimization_methods, rss_methods
-
-
-def get_parameters_for_optimization(optimization_name):
-    """
-    Get the optimization parameters for a specified optimization method.
-    
-    This function returns a dictionary containing the parameters and their types for the selected optimization method.
-    
-    Parameters
-    ----------
-    optimization_name : str
-        The name of the optimization method.
-    
-    Returns
-    -------
-    dict
-        A dictionary of parameters, their types, and whether they are optional.
-    """
-    # Define a dictionary with parameters for each optimization method
-    optimization_parameters = {
-        LOG_SPACE_LEAST_SQUARES: {
-            "jac": {"type": list, "optional": False},
-            "max_nfev": {"type": int, "optional": False},
-            "ftol": {"type": float, "optional": True},
-            "xtol": {"type": float, "optional": True},
-            "gtol": {"type": float, "optional": True},
-            "bounds": {"type": "sequence", "optional": False},
-        },
-        "Nelder-Mead": {
-            "disp": {"type": bool, "optional": True},
-            "maxiter": {"type": int, "optional": False},
-            "maxfev": {"type": int, "optional": True},
-            "return_all": {"type": bool, "optional": True},
-            "xatol": {"type": float, "optional": True},
-            "fatol": {"type": float, "optional": True},
-            "adaptive": {"type": bool, "optional": True},
-            "bounds": {"type": "sequence", "optional": True}
-        },
-        "CG": {
-            "disp": {"type": bool, "optional": True},
-            "jac": {"type": list, "optional": True},
-            "maxiter": {"type": int, "optional": False},
-            "gtol": {"type": float, "optional": True},
-            "norm": {"type": float, "optional": True},
-            "eps": {"type": float, "optional": True},
-            "return_all": {"type": bool, "optional": True}
-        },
-        "BFGS": {
-            "disp": {"type": bool, "optional": True},
-            "jac": {"type": list, "optional": True},
-            "maxiter": {"type": int, "optional": False},
-            "gtol": {"type": float, "optional": True},
-            "norm": {"type": float, "optional": True},
-            "eps": {"type": float, "optional": True},
-            "return_all": {"type": bool, "optional": True},
-            "xrtol": {"type": float, "optional": True}
-        },
-        "L-BFGS-B": {
-            "disp": {"type": bool, "optional": True},
-            "jac": {"type": list, "optional": True},
-            "maxcor": {"type": int, "optional": True},
-            "maxfun": {"type": int, "optional": True},
-            "maxiter": {"type": int, "optional": False},
-            "iprint": {"type": int, "optional": True},
-            "maxls": {"type": int, "optional": True},
-            "ftol": {"type": float, "optional": True},
-            "gtol": {"type": float, "optional": True},
-            "eps": {"type": float, "optional": True},
-            "bounds": {"type": "sequence", "optional": True}
-        },
-        "basinhopping": {
-            "disp": {"type": bool, "optional": True},
-            "niter": {"type": int, "optional": False},
-            "T": {"type": float, "optional": True},
-            "stepsize": {"type": float, "optional": True},
-            "interval": {"type": int, "optional": True},
-            "niter_success": {"type": int, "optional": True},
-            "target_accept_rate": {"type": float, "optional": True},
-            "stepwise_factor": {"type": float, "optional": True}
-        },
-        "differential_evolution": {
-            "disp": {"type": bool, "optional": True},
-            "strategy": {"type": "strategy", "optional": True},
-            "maxiter": {"type": int, "optional": False},
-            "popsize": {"type": int, "optional": True},
-            "tol": {"type": float, "optional": True},
-            "mutation": {"type": float, "optional": True},
-            "recombination": {"type": float, "optional": True},
-            "polish": {"type": bool, "optional": True},
-            "init": {"type": "init", "optional": True},
-            "atol": {"type": float, "optional": True},
-            "updating": {"type": "updating", "optional": True},
-            "workers": {"type": int, "optional": False},
-            "vectorized": {"type": bool, "optional": True},
-            "bounds": {"type": "sequence", "optional": False}
-        },
-        "shgo": {
-            "n": {"type": int, "optional": False},
-            "iters": {"type": int, "optional": False},
-            "sampling_method": {"type": "sampling_method", "optional": True},
-            "workers": {"type": int, "optional": True},
-            "bounds": {"type": "sequence", "optional": False}
-        }
-    }
-    # Check if the optimization method is in the dictionary and return its parameters
-    if optimization_name in optimization_parameters:
-        return optimization_parameters[optimization_name]
-    else:
-        # Handle the case where the method is not found
-        return {}
-
-
-def get_parameters_for_rss(rss_name):
-    """
-    Get and clean the arguments of a specified function from a module.
-
-    This function retrieves the arguments of a specified function and removes any undesired arguments.
-
-    Parameters
-    ----------
-        rss_name : str 
-            The name of the function to retrieve arguments from.
-
-    Returns
-    -------
-        list: A list of cleaned arguments.
-    """
-    module = opt
-
-    # Try to get the specified function from the module
-    function = getattr(module, rss_name, None)
-
-    if function is not None:
-        # Get the arguments using function's code object
-        arguments = function.__code__.co_varnames[1:function.__code__.co_argcount]
-
-        # Define a list of arguments to exclude
-        arguments_to_exclude = [
-            "x",
-            "experimental_rate",
-            "rate_law",
-            "experimental_args_for_rate",
-            "number_of_parameters_to_optimize_for_rate",
-            "vitrification",
-            "vitrification_law",
-            "experimental_args_for_vitrification",
-            "number_of_parameters_to_optimize_for_vitrification",
-            "coupling_law",
-            "experimental_args_for_coupling",
-            "tg_law",
-            "experimental_args_for_tg",
-            "tg_args",
-            "rss_to_use_args"
-        ]
-
-        # Create a list of cleaned arguments by excluding undesired ones
-        clean_arguments = [item for item in arguments if item not in arguments_to_exclude]
-
-        return clean_arguments
-    else:
-        # Handle the case where the function is not found
-        return []
-
-
-def get_main_args_dict_and_options_dict(main_args_dict, method_dict):
-    """
-    Update the arguments dictionnary for the scipy.optimize.minimize() function with values existing in the arguments dictionnary of user selected method of optimization.
-    
-    For example, for the Nelder-Mead method, the arguments 'bounds' is both in the arguments of the main function and in the arguments specific to the method. It would be passed 2 times to the function, resulting in an error or conflict.
-
-    Parameters
-    ----------
-    main_args_dict : dict
-        Dictionnary containing the main arguments for scipy.optimize.minimize().
-    method_dict : dict
-        Dictionary containing arguments specific to the method of minimization selected by the user.
-
-    Returns
-    -------
-    None
-    """
-    keys_to_remove = []
-
-    for key in method_dict:
-        if key in main_args_dict:
-            main_args_dict[key] = method_dict[key]
-            keys_to_remove.append(key)
-
-    for key in keys_to_remove:
-        method_dict.pop(key)
-
-    return main_args_dict, method_dict
-
-def pad_arrays(array_list, fill_value=np.nan):
-    """Pad arrays in a list to match the length of the longest array."""
-    max_length = max(len(arr) for arr in array_list)
-    padded_arrays = [np.pad(arr, (0, max_length - len(arr)), constant_values=fill_value) for arr in array_list]
-    return np.array(padded_arrays)
-
-# =============================================================================
-#
-# =============================================================================
 
 if __name__ == '__main__':
     from kinopt.cli import main

@@ -18,7 +18,7 @@ from scipy import optimize
 
 from kinopt.examples import KAMAL_EXAMPLE, included_example_files
 from kinopt.src import kinetic_models, optimization
-from kinopt.src.data_extraction import extract_dsc_data_multiple_files
+from kinopt.src.data_extraction import extract_dsc_data_single_file
 from kinopt.src.optimization_profiles import (
     BALANCED_PROFILE_NAME,
     QUICK_PROFILE_NAME,
@@ -31,6 +31,7 @@ from kinopt.src.optimization_runner import (
     OptimizationRunResult,
     run_optimization,
 )
+from kinopt.src.optimization_strategies import run_exploratory_then_full
 from kinopt.src.parameter_examples import (
     bound_parameter_example,
     model_parameter_example,
@@ -75,11 +76,17 @@ def build_kamal_benchmark_config(
     paths = included_example_files(KAMAL_EXAMPLE)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message=".*zero initial extent.*")
-        _, temperature, rate, extent = extract_dsc_data_multiple_files(
-            paths,
-            delimiter=KAMAL_EXAMPLE.delimiter,
-            has_header=KAMAL_EXAMPLE.has_header,
+        datasets = tuple(
+            extract_dsc_data_single_file(
+                path,
+                delimiter=KAMAL_EXAMPLE.delimiter,
+                has_header=KAMAL_EXAMPLE.has_header,
+            )
+            for path in paths
         )
+    _, temperature, rate, extent = tuple(
+        np.concatenate(columns) for columns in zip(*datasets)
+    )
 
     initial_guess = np.array([
         float(model_parameter_example(name).value)
@@ -146,6 +153,7 @@ def build_kamal_benchmark_config(
         cost_function_args=(),
         experimental_args_for_cost_function=(),
         max_iterations=maximum_iterations,
+        experiment_lengths=tuple(len(dataset[0]) for dataset in datasets),
     )
 
 
@@ -210,6 +218,7 @@ def build_benchmark_report(
     solver: str = NELDER_MEAD_SOLVER,
     profile_name: str = QUICK_PROFILE_NAME,
     jacobian: Optional[str] = None,
+    exploratory_fraction: Optional[float] = None,
 ) -> dict:
     """Run the benchmark and return measurements suitable for JSON output."""
     if repeats < 1:
@@ -220,7 +229,17 @@ def build_benchmark_report(
         profile_name=profile_name,
         jacobian=jacobian,
     )
-    runs = [_run_record(config, runner, number) for number in range(1, repeats + 1)]
+    effective_runner = runner
+    if exploratory_fraction is not None:
+        effective_runner = lambda run_config: run_exploratory_then_full(
+            run_config,
+            fraction=exploratory_fraction,
+            runner=runner,
+        )
+    runs = [
+        _run_record(config, effective_runner, number)
+        for number in range(1, repeats + 1)
+    ]
     elapsed = [run["elapsed_seconds"] for run in runs]
     rmse = [run["rmse"] for run in runs]
 
@@ -254,6 +273,7 @@ def build_benchmark_report(
                 for name, value in zip(PARAMETER_NAMES, config.initial_guess)
             },
             "maximum_iterations": config.max_iterations,
+            "exploratory_fraction": exploratory_fraction,
         },
         "runs": runs,
         "summary": {
@@ -285,6 +305,14 @@ def _parser() -> argparse.ArgumentParser:
         type=int,
         default=3,
         help="number of complete optimizations to run (default: 3)",
+    )
+    parser.add_argument(
+        "--exploratory-fraction",
+        type=float,
+        help=(
+            "optional representative fraction for an exploratory local fit; "
+            "the reported result is always refined on all data"
+        ),
     )
     parser.add_argument(
         "--output",
@@ -322,6 +350,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             solver=args.solver,
             profile_name=PROFILE_NAMES[args.profile],
             jacobian=args.jacobian,
+            exploratory_fraction=args.exploratory_fraction,
         )
     except ValueError as error:
         print(f"error: {error}", file=sys.stderr)

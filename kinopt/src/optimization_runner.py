@@ -83,6 +83,10 @@ class OptimizationRunConfig:
     cost_function_args: Tuple[Any, ...]
     experimental_args_for_cost_function: Tuple[Any, ...]
     max_iterations: int
+    experiment_lengths: Tuple[int, ...] = ()
+    training_mask: Optional[np.ndarray] = None
+    exploratory_fraction: Optional[float] = None
+    exploratory_budget_fraction: float = 0.25
 
     def __post_init__(self) -> None:
         if not self.global_method and not self.local_method:
@@ -98,6 +102,43 @@ class OptimizationRunConfig:
         if self.max_iterations <= 0:
             raise ValueError("The iteration budget must be a positive integer.")
 
+        sample_count = np.asarray(self.experimental_rate).size
+        lengths = tuple(int(length) for length in self.experiment_lengths)
+        if lengths and (
+            any(length <= 0 for length in lengths)
+            or sum(lengths) != sample_count
+        ):
+            raise ValueError(
+                "Experiment lengths must be positive and cover every rate value."
+            )
+        object.__setattr__(self, "experiment_lengths", lengths)
+        if self.training_mask is not None:
+            mask = np.asarray(self.training_mask, dtype=bool)
+            if mask.ndim != 1 or mask.size != sample_count:
+                raise ValueError(
+                    "The training mask must select the experimental rate series."
+                )
+            if not np.any(mask):
+                raise ValueError("The training mask must keep at least one value.")
+            if np.all(mask):
+                raise ValueError(
+                    "Omit the training mask when every value is used for fitting."
+                )
+            object.__setattr__(self, "training_mask", mask)
+        if self.exploratory_fraction is not None:
+            if self.global_method:
+                raise ValueError(
+                    "Two-stage fitting currently supports local solvers only."
+                )
+            if not 0 < float(self.exploratory_fraction) < 1:
+                raise ValueError(
+                    "The exploratory fraction must be between 0 and 1."
+                )
+        if not 0 < float(self.exploratory_budget_fraction) <= 1:
+            raise ValueError(
+                "The exploratory budget fraction must be above 0 and at most 1."
+            )
+
         fields_to_freeze = (
             "initial_guess",
             "global_options",
@@ -110,6 +151,7 @@ class OptimizationRunConfig:
             "tg_args",
             "cost_function_args",
             "experimental_args_for_cost_function",
+            "training_mask",
         )
         for field_name in fields_to_freeze:
             object.__setattr__(self, field_name, _freeze(getattr(self, field_name)))
@@ -123,21 +165,120 @@ class OptimizationRunResult:
     elapsed_seconds: float
 
 
+@dataclass(frozen=True)
+class OptimizationProgress:
+    """Portable progress sample emitted while an objective is evaluated."""
+
+    evaluations: int
+    best_cost: float
+    elapsed_seconds: float
+    estimated_remaining_seconds: Optional[float]
+    best_parameters: Tuple[float, ...]
+
+
+class _ProgressReporter:
+    def __init__(self, callback, clock, started_at, budget):
+        self.callback = callback
+        self.clock = clock
+        self.started_at = started_at
+        self.budget = budget
+        self.evaluations = 0
+        self.best_cost = np.inf
+        self.best_parameters = ()
+        self.last_emitted_at = -np.inf
+
+    def observe(self, cost, parameters, evaluations=None, force=False):
+        if evaluations is None:
+            self.evaluations += 1
+        else:
+            self.evaluations = max(self.evaluations, int(evaluations))
+        numeric_cost = float(cost)
+        improved = np.isfinite(numeric_cost) and numeric_cost < self.best_cost
+        if improved:
+            self.best_cost = numeric_cost
+            self.best_parameters = tuple(
+                float(value) for value in np.asarray(parameters, dtype=float)
+            )
+        if self.callback is None or not np.isfinite(self.best_cost):
+            return
+        now = self.clock()
+        if not force and self.evaluations > 1 and now - self.last_emitted_at < 0.25:
+            return
+        elapsed = max(0.0, now - self.started_at)
+        remaining = None
+        if 1 < self.evaluations < self.budget:
+            remaining = elapsed * (
+                self.budget - self.evaluations
+            ) / self.evaluations
+        self.callback(
+            OptimizationProgress(
+                evaluations=self.evaluations,
+                best_cost=self.best_cost,
+                elapsed_seconds=elapsed,
+                estimated_remaining_seconds=remaining,
+                best_parameters=self.best_parameters,
+            )
+        )
+        self.last_emitted_at = now
+
+
 def _objective_arguments(config: OptimizationRunConfig) -> Tuple[Any, ...]:
+    training_mask = config.training_mask
+
+    def training_value(value):
+        thawed = _thaw(value)
+        if training_mask is None:
+            return thawed
+        if isinstance(thawed, np.ndarray):
+            if thawed.ndim > 0 and thawed.shape[0] == training_mask.size:
+                return thawed[training_mask]
+            return thawed
+        if (
+            isinstance(thawed, (tuple, list))
+            and config.experiment_lengths
+            and len(thawed) == len(config.experiment_lengths)
+            and all(
+                isinstance(item, np.ndarray)
+                and item.ndim > 0
+                and item.shape[0] == length
+                for item, length in zip(thawed, config.experiment_lengths)
+            )
+        ):
+            selected = []
+            start = 0
+            for item, length in zip(thawed, config.experiment_lengths):
+                experiment_mask = training_mask[start:start + length]
+                if np.all(experiment_mask):
+                    selected.append(item)
+                elif np.any(experiment_mask):
+                    selected.append(item[experiment_mask])
+                start += length
+            return tuple(selected)
+        return thawed
+
     return (
-        _thaw(config.experimental_rate),
+        training_value(config.experimental_rate),
         config.rate_law,
-        _thaw(config.experimental_args_for_rate),
+        tuple(training_value(value) for value in config.experimental_args_for_rate),
         config.rate_parameter_count,
         config.vitrification_law,
-        _thaw(config.experimental_args_for_vitrification),
+        tuple(
+            training_value(value)
+            for value in config.experimental_args_for_vitrification
+        ),
         config.vitrification_parameter_count,
         config.coupling_law,
-        _thaw(config.experimental_args_for_coupling),
+        tuple(
+            training_value(value)
+            for value in config.experimental_args_for_coupling
+        ),
         config.tg_law,
-        _thaw(config.experimental_args_for_tg),
+        tuple(training_value(value) for value in config.experimental_args_for_tg),
         _thaw(config.tg_args),
-        *_thaw(config.experimental_args_for_cost_function),
+        *tuple(
+            training_value(value)
+            for value in config.experimental_args_for_cost_function
+        ),
         *_thaw(config.cost_function_args),
     )
 
@@ -177,6 +318,7 @@ def _run_log_space_least_squares(
     local_options: Mapping[str, Any],
     callback: Optional[Callable[..., Any]],
     cancellation_requested: Callable[[], bool],
+    progress_reporter: _ProgressReporter,
 ) -> OptimizeResult:
     """Fit positive physical parameters in a numerically balanced log space."""
     options = dict(local_options)
@@ -274,6 +416,11 @@ def _run_log_space_least_squares(
                 residual_weights=residual_weights,
             )
         squared_norm = float(np.dot(residuals, residuals))
+        progress_reporter.observe(
+            squared_norm,
+            physical_parameters,
+            evaluations=residual_evaluations[0],
+        )
         if callback is not None and squared_norm < best_squared_norm[0]:
             best_squared_norm[0] = squared_norm
             callback(physical_parameters)
@@ -322,6 +469,7 @@ def run_optimization(
     config: OptimizationRunConfig,
     callback: Optional[Callable[..., Any]] = None,
     is_cancelled: Optional[Callable[[], bool]] = None,
+    progress_callback: Optional[Callable[[OptimizationProgress], Any]] = None,
     clock: Callable[[], float] = time.perf_counter,
 ) -> OptimizationRunResult:
     """Execute one configured SciPy optimization and return its result."""
@@ -340,7 +488,20 @@ def run_optimization(
     local_options = _thaw(config.local_options or {})
     objective_args = _objective_arguments(config)
     initial_guess = _thaw(config.initial_guess)
-    minimize_objective = config.cost_function
+    started_at = clock()
+    progress_reporter = _ProgressReporter(
+        progress_callback,
+        clock,
+        started_at,
+        config.max_iterations,
+    )
+
+    def tracked_objective(parameters, *args):
+        value = config.cost_function(parameters, *args)
+        progress_reporter.observe(value, parameters)
+        return value
+
+    minimize_objective = tracked_objective
     minimize_jacobian_source = None
     analytic_gradient_evaluations = [0]
 
@@ -398,6 +559,7 @@ def run_optimization(
                     cached_parameters[0] = np.array(parameters, copy=True)
                     cached_cost[0] = cost
                     cached_gradient[0] = gradient
+                    progress_reporter.observe(cost, parameters)
                 return cached_cost[0], cached_gradient[0]
 
             def analytic_objective(parameters, *unused_args):
@@ -427,12 +589,11 @@ def run_optimization(
     elif callback_required and config.local_method != LOG_SPACE_LEAST_SQUARES:
         local_options["callback"] = solver_callback
 
-    started_at = clock()
     if config.global_method == "basinhopping":
         local_options["args"] = objective_args
         global_options["minimizer_kwargs"] = local_options
         result = config.global_optimizer(
-            config.cost_function,
+            tracked_objective,
             initial_guess,
             **global_options,
         )
@@ -447,7 +608,7 @@ def run_optimization(
         if config.global_method == "shgo":
             global_options["minimizer_kwargs"] = local_options
         result = config.global_optimizer(
-            config.cost_function,
+            tracked_objective,
             bounds,
             **global_options,
         )
@@ -460,6 +621,7 @@ def run_optimization(
             local_options,
             callback,
             cancellation_requested,
+            progress_reporter,
         )
     else:
         local_options["args"] = objective_args
@@ -476,6 +638,12 @@ def run_optimization(
         )
 
     elapsed_seconds = clock() - started_at
+    progress_reporter.observe(
+        result.fun,
+        result.x,
+        evaluations=getattr(result, "nfev", None),
+        force=True,
+    )
     if cancellation_requested():
         raise OptimizationCancelled()
     if not np.all(np.isfinite(result.x)) or not np.all(np.isfinite(result.fun)):

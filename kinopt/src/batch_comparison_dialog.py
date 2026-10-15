@@ -41,7 +41,10 @@ def _model_description(config):
 
 def _strategy_description(config):
     methods = [config.global_method, config.local_method]
-    return " → ".join(method for method in methods if method) or "—"
+    description = " → ".join(method for method in methods if method) or "—"
+    if config.exploratory_fraction is not None:
+        return f"Two-stage {config.exploratory_fraction:.0%} → {description}"
+    return description
 
 
 def _comparison_rows(jobs):
@@ -87,7 +90,9 @@ class BatchComparisonDialog(QDialog):
         "Job",
         "Model",
         "Strategy",
-        "RMSE",
+        "Fit RMSE",
+        "Validation RMSE",
+        "Overall RMSE",
         "Solver cost",
         "Free parameters",
         "Evaluations",
@@ -110,8 +115,9 @@ class BatchComparisonDialog(QDialog):
         self.resize(1260, 430)
 
         explanation = QLabel(
-            "RMSE is recalculated from each model prediction and the measured "
-            "rates, independently of the selected solver cost. Lower is better. "
+            "Fit and validation RMSE are recalculated from each model prediction "
+            "and the measured rates, independently of the selected solver cost. "
+            "A validation score uses an experiment excluded from fitting. "
             "Jobs are ranked together only when their measured rate series match. "
             "For multi-start groups, a lower maximum relative parameter range "
             "means the fitted parameters agree more closely."
@@ -126,7 +132,7 @@ class BatchComparisonDialog(QDialog):
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Interactive)
         header.setSectionResizeMode(2, QHeaderView.Stretch)
-        widths = (60, 60, 190, 190, 135, 105, 110, 145, 110, 95)
+        widths = (60, 60, 190, 190, 135, 105, 120, 110, 110, 145, 110, 95)
         for column, width in enumerate(widths):
             self.table.setColumnWidth(column, width)
 
@@ -141,9 +147,20 @@ class BatchComparisonDialog(QDialog):
         for column, width in enumerate((180, 70, 105, 105, 230, 110, 120, 175)):
             self.summary_table.setColumnWidth(column, width)
 
+        self.stability_table = QTableWidget(0, 7, self)
+        self.stability_table.setHorizontalHeaderLabels(
+            ("Group", "Parameter", "Minimum", "Median", "Maximum", "Relative range", "Unit")
+        )
+        self.stability_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.stability_table.verticalHeader().setVisible(False)
+        self.stability_table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.Stretch
+        )
+
         self.tabs = QTabWidget(self)
         self.tabs.addTab(self.table, "Completed runs")
         self.tabs.addTab(self.summary_table, "Multi-start groups")
+        self.tabs.addTab(self.stability_table, "Parameter stability")
 
         self.export_json_button = QPushButton("Export JSON…")
         self.export_csv_button = QPushButton("Export CSV…")
@@ -184,6 +201,16 @@ class BatchComparisonDialog(QDialog):
                     if comparison is None
                     else format(comparison.rmse, ".6g")
                 ),
+                (
+                    "—"
+                    if comparison is None or comparison.validation_rmse is None
+                    else format(comparison.validation_rmse, ".6g")
+                ),
+                (
+                    "Unavailable"
+                    if comparison is None
+                    else format(comparison.overall_rmse, ".6g")
+                ),
                 format(result.cost, ".6g"),
                 str(len(result.parameters)),
                 "—" if result.evaluations is None else str(result.evaluations),
@@ -192,7 +219,7 @@ class BatchComparisonDialog(QDialog):
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
                 item.setToolTip(error or value)
-                if column in {0, 1, 5, 6, 7, 8, 9}:
+                if column in {0, 1, 5, 6, 7, 8, 9, 10, 11}:
                     item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                 self.table.setItem(row, column, item)
         summaries = summarize_multistart_groups(self.jobs)
@@ -229,6 +256,28 @@ class BatchComparisonDialog(QDialog):
                 if column in {1, 2, 3, 5, 6, 7}:
                     item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                 self.summary_table.setItem(row, column, item)
+
+        stability_rows = [
+            (summary.group_name, parameter)
+            for summary in summaries
+            for parameter in summary.parameter_stability
+        ]
+        self.stability_table.setRowCount(len(stability_rows))
+        for row, (group_name, parameter) in enumerate(stability_rows):
+            values = (
+                group_name,
+                parameter.name,
+                format(parameter.minimum, ".6g"),
+                format(parameter.median, ".6g"),
+                format(parameter.maximum, ".6g"),
+                format(parameter.relative_range, ".2%"),
+                parameter.unit or "—",
+            )
+            for column, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                if column in {2, 3, 4, 5}:
+                    item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                self.stability_table.setItem(row, column, item)
         self.note.setText(
             f"{len(rows)} completed optimization(s) shown. "
             f"{len(summaries)} multi-start group(s). "

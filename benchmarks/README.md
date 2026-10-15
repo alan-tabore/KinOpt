@@ -74,3 +74,42 @@ Jacobian and therefore makes the comparison explicit. The
 ``kinetic_evaluations`` field counts full kinetic calculation passes. With an
 analytic Jacobian, KinOpt calculates the rate and derivatives together and
 reuses them when SciPy asks for both at the same parameter vector.
+
+## Representative two-stage fitting
+
+For a local solver, `--exploratory-fraction` first fits evenly distributed
+points from every experiment with a fraction of the evaluation budget. KinOpt
+then uses those parameters as the starting point for a normal fit on every
+fitting point. The reported time includes both stages and the reported RMSE is
+always calculated on the complete dataset.
+
+Compare it with a direct run on the same machine before using it for a long
+campaign:
+
+```bash
+.venv/bin/python -m benchmarks.kamal_baseline \
+  --solver log-space-least-squares --profile quick --repeats 3 \
+  --output /tmp/kinopt-kamal-direct.json
+
+.venv/bin/python -m benchmarks.kamal_baseline \
+  --solver log-space-least-squares --profile quick --repeats 3 \
+  --exploratory-fraction 0.25 \
+  --output /tmp/kinopt-kamal-two-stage.json
+```
+
+The strategy is optional because its gain depends on the dataset, starting
+values, and solver. Compare timing, final parameters, convergence, and RMSE;
+do not select it from timing alone.
+
+## Isoconversional integral benchmark
+
+Vyazovkin analyses repeatedly evaluate the same time intervals and average
+temperatures at different activation energies. KinOpt prepares those fixed
+arrays once. The following benchmark compares the cached objective with a
+version that rebuilds them for every evaluation and verifies identical values:
+
+```bash
+.venv/bin/python -m benchmarks.isoconversional_baseline \
+  --repeats 5 --points 2000 --evaluations 200 \
+  --output /tmp/kinopt-isoconversional.json
+```

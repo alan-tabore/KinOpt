@@ -464,3 +464,46 @@ def test_basinhopping_local_refinement_receives_the_auto_gradient(
 
     assert result.jacobian_source == 'analytic-nth-order'
     assert result.analytic_gradient_evaluations == 1
+
+
+def test_holdout_values_are_excluded_from_solver_objective(serializable_config):
+    observed = {}
+
+    def inspect_optimizer(function, initial_guess, args, **kwargs):
+        observed['rate'] = np.asarray(args[0])
+        observed['extent'] = np.asarray(args[2][0])
+        return optimize.OptimizeResult(
+            x=initial_guess,
+            fun=function(initial_guess, *args),
+            success=True,
+        )
+
+    config = replace(
+        serializable_config,
+        local_optimizer=inspect_optimizer,
+        experiment_lengths=(1, 2),
+        training_mask=np.array([False, True, True]),
+    )
+
+    run_optimization(config)
+
+    np.testing.assert_array_equal(
+        observed['rate'],
+        serializable_config.experimental_rate[1:],
+    )
+    np.testing.assert_array_equal(observed['extent'], [0.3, 0.6])
+
+
+def test_runner_reports_best_cost_and_evaluation_progress(serializable_config):
+    progress = []
+
+    outcome = run_optimization(
+        serializable_config,
+        progress_callback=progress.append,
+    )
+
+    assert progress
+    assert progress[-1].evaluations >= 1
+    assert progress[-1].best_cost == pytest.approx(outcome.result.fun)
+    assert progress[-1].elapsed_seconds >= 0
+    assert len(progress[-1].best_parameters) == 3

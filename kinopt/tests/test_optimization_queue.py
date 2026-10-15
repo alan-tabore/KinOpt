@@ -10,7 +10,10 @@ import pytest
 from scipy.optimize import OptimizeResult
 
 from kinopt.src.optimization_queue import JobStatus, OptimizationQueue
-from kinopt.src.optimization_runner import OptimizationRunResult
+from kinopt.src.optimization_runner import (
+    OptimizationProgress,
+    OptimizationRunResult,
+)
 
 
 def test_queue_preserves_order_names_and_configurations(
@@ -240,7 +243,7 @@ def test_version_one_database_is_migrated(tmp_path):
                 'PRAGMA table_info(optimization_jobs)'
             ).fetchall()
         }
-    assert version == 3
+    assert version == 4
     assert {
         'started_at',
         'finished_at',
@@ -249,6 +252,7 @@ def test_version_one_database_is_migrated(tmp_path):
         'group_name',
         'group_kind',
         'group_seed',
+        'progress_json',
     } <= columns
 
 
@@ -284,13 +288,43 @@ def test_version_two_database_is_migrated(tmp_path):
                 'PRAGMA table_info(optimization_jobs)'
             ).fetchall()
         }
-    assert version == 3
+    assert version == 4
     assert {
         'group_identifier',
         'group_name',
         'group_kind',
         'group_seed',
+        'progress_json',
     } <= columns
+
+
+def test_running_progress_is_persisted_and_cleared_on_retry(
+    tmp_path,
+    serializable_config,
+):
+    queue = OptimizationQueue(tmp_path / "queue.sqlite3")
+    job = queue.add(serializable_config)
+    queue.set_status(job.identifier, JobStatus.RUNNING)
+
+    updated = queue.update_progress(
+        job.identifier,
+        OptimizationProgress(
+            evaluations=12,
+            best_cost=0.25,
+            elapsed_seconds=3.5,
+            estimated_remaining_seconds=5.0,
+            best_parameters=(1.0, 2.0, 3.0),
+        ),
+    )
+
+    assert updated.progress_history[-1].evaluations == 12
+    assert updated.progress_history[-1].best_cost == pytest.approx(0.25)
+    reopened = OptimizationQueue(queue.database_path).get(job.identifier)
+    assert reopened.progress_history == updated.progress_history
+
+    queue.set_status(job.identifier, JobStatus.INTERRUPTED)
+    retried = queue.set_status(job.identifier, JobStatus.PENDING)
+    assert retried.progress_history == ()
 
 
 def test_pending_job_can_only_be_claimed_once(tmp_path, serializable_config):

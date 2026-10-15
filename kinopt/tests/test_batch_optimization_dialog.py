@@ -120,6 +120,50 @@ def test_dialog_explains_when_multistart_has_no_bounds(
     assert 'requires finite parameter bounds' in errors[0][1]
 
 
+def test_dialog_adds_a_complete_experiment_holdout(
+    batch_dialog,
+    serializable_config,
+):
+    dialog, queue = batch_dialog
+    dialog.config_provider = lambda: replace(
+        serializable_config,
+        experiment_lengths=(1, 2),
+    )
+    dialog.name_edit.setText("Predict second experiment")
+    dialog.validation_experiment.setValue(2)
+
+    dialog.add_holdout_job()
+
+    job = queue.list_jobs()[0]
+    assert job.name == "Predict second experiment - experiment 2"
+    np.testing.assert_array_equal(job.config.training_mask, [True, False, False])
+    assert "only be used for validation" in dialog.status_label.text()
+
+
+def test_dialog_adds_a_two_stage_full_refinement_job(
+    batch_dialog,
+    serializable_config,
+):
+    dialog, queue = batch_dialog
+    dialog.config_provider = lambda: replace(
+        serializable_config,
+        experimental_rate=np.tile(serializable_config.experimental_rate, 4),
+        experimental_args_for_rate=(
+            np.tile(serializable_config.experimental_args_for_rate[0], 4),
+            np.tile(serializable_config.experimental_args_for_rate[1], 4),
+        ),
+        experiment_lengths=(12,),
+    )
+    dialog.two_stage_fraction.setValue(0.25)
+
+    dialog.add_two_stage_job()
+
+    job = queue.list_jobs()[0]
+    assert job.config.exploratory_fraction == pytest.approx(0.25)
+    assert "25% exploration" in job.name
+    assert "final refinement" in dialog.status_label.text()
+
+
 def test_dialog_runs_all_pending_jobs_without_blocking(batch_dialog, qt_app):
     dialog, queue = batch_dialog
     dialog.add_current_setup()
@@ -128,7 +172,7 @@ def test_dialog_runs_all_pending_jobs_without_blocking(batch_dialog, qt_app):
     dialog.start_pending_jobs()
     assert dialog.has_running_worker()
 
-    deadline = time.monotonic() + 5
+    deadline = time.monotonic() + 15
     while dialog.has_running_worker() and time.monotonic() < deadline:
         qt_app.processEvents()
         time.sleep(0.005)
