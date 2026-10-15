@@ -64,10 +64,18 @@ only on the solver's success flag.
 
 Keep the *jac* field on ``auto`` for normal use. With a standalone nth-order,
 autocatalytic, or Kamal rate model, KinOpt then uses its analytic derivatives
-to avoid the extra model calls needed by finite differences. Vitrification,
-coupled, and custom model combinations automatically use the ``2-point``
-numerical derivative. The explicit ``2-point``, ``3-point``, and ``cs``
-choices remain available for comparison and diagnosis.
+to avoid the extra model calls needed by finite differences. This applies to
+*Log-space least squares* and to the gradient-based *CG*, *BFGS*, and
+*L-BFGS-B* methods. For those three scalar minimizers, KinOpt derives the cost
+gradient from the rate Jacobian and the selected residual weighting. A
+*basinhopping* or *SHGO* run also uses it during a selected gradient-based local
+refinement. Their global search, and the derivative-free *Nelder-Mead* method,
+do not use derivatives.
+
+Vitrification, coupled, and custom model combinations automatically use a
+numerical derivative. The explicit ``None``, ``2-point``, ``3-point``, and
+``cs`` choices shown for the selected method remain available for comparison
+and diagnosis.
 
 The *Review setup…* window summarizes the exact configuration that would be
 sent to the optimizer: input files, number of measured points, selected models,
