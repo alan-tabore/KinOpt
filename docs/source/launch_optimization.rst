@@ -15,7 +15,8 @@ To perform the optimization of a kinetic model:
     2. If you selected the *'basinhopping'* or *'shgo'* global optimization method, it is recommended to also select a local optimization method.
     3. You must select a cost function (:func:`rss_mean<optimization.rss_mean>` is recommended)
 6. Select a calculation profile and click *Apply profile*
-7. Start the optimization by clicking the 'Start optimization' button
+7. Click *Review setup…* to inspect the frozen configuration and any warning
+8. Start from the review window, or click *Start optimization* to start directly
 
 When you select a model, optimization method, or cost function, KinOpt displays
 a short explanation at the top of the current page. It describes the main
@@ -45,6 +46,16 @@ currently displayed. Every field remains editable. Selecting another profile
 only changes its explanation; it does not replace your values until you click
 *Apply profile*. A larger calculation budget does not guarantee a better or
 physically meaningful model, so always inspect convergence and residuals.
+
+The *Review setup…* window summarizes the exact configuration that would be
+sent to the optimizer: input files, number of measured points, selected models,
+free and fixed parameters, starting values, bounds, methods, cost function, and
+calculation budget. It also highlights structural points such as an initial
+value outside its bounds, an unconstrained method, or a selected local method
+that the current global strategy will not execute. Returning to the form leaves
+the configuration editable. The displayed profile is the last one applied;
+individual fields may have been edited since then. Starting from this window
+uses the reviewed frozen snapshot even if a form value changes afterwards.
 
 
 ⚠ The start of optimization can take a few seconds up to a few minutes to start, please be patient.

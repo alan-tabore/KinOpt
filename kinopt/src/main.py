@@ -18,6 +18,7 @@ if not __package__:
 from PyQt5.QtWidgets import (
     QApplication,
     QComboBox,
+    QDialog,
     QFileDialog,
     QFrame,
     QLabel,
@@ -49,6 +50,8 @@ from kinopt.src.optimization_profiles import (
     optimization_profile,
     optimization_profile_names,
 )
+from kinopt.src.optimization_review import build_optimization_review
+from kinopt.src.optimization_review_dialog import OptimizationReviewDialog
 from kinopt.src.optimization_runner import (
     OptimizationCancelled,
     OptimizationRunConfig,
@@ -167,6 +170,24 @@ class MainWindow(QMainWindow):
             self.apply_optimization_profile
         )
         self.ui.pushButton_launch_optimization.clicked.connect(self.launch_optimization)
+        self.pushButton_review_optimization = QPushButton(
+            'Review setup…',
+            self.ui.dockWidgetContents_Optimization,
+        )
+        self.pushButton_review_optimization.setToolTip(
+            'Review the exact data, models, parameters, bounds, methods, and '
+            'calculation budget before starting.'
+        )
+        launch_button_index = self.ui.verticalLayout.indexOf(
+            self.ui.pushButton_launch_optimization
+        )
+        self.ui.verticalLayout.insertWidget(
+            launch_button_index,
+            self.pushButton_review_optimization,
+        )
+        self.pushButton_review_optimization.clicked.connect(
+            self.review_optimization_setup
+        )
         self.pushButton_batch_optimizations = QPushButton(
             "Batch optimizations…",
             self.ui.dockWidgetContents_Optimization,
@@ -370,6 +391,7 @@ class MainWindow(QMainWindow):
         )
         self.optimization_profile_combo.addItems(optimization_profile_names())
         self.optimization_profile_combo.setCurrentText(DEFAULT_PROFILE_NAME)
+        self.applied_optimization_profile = None
         self.optimization_profile_combo.setAccessibleName(
             'Optimization calculation profile'
         )
@@ -1201,6 +1223,7 @@ class MainWindow(QMainWindow):
         - None
         """
         try:
+            self.applied_optimization_profile = None
             if self.ui.comboBox_rate_model.currentText() == "":
                 self.ui.comboBox_global_optimization_methods.setCurrentIndex(-1)
                 QMessageBox.critical(self, 'Error', 'Please, select a rate law')
@@ -1358,6 +1381,7 @@ class MainWindow(QMainWindow):
         - None
         """
         try:
+            self.applied_optimization_profile = None
             if self.ui.comboBox_rate_model.currentText() == "":
                 QMessageBox.critical(self, "Error", "Please, select a rate law")
                 self.ui.comboBox_local_optimization_methods.setCurrentIndex(-1)
@@ -1481,6 +1505,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
     def update_cost_functions_formLayout(self):
+        self.applied_optimization_profile = None
         if self.ui.comboBox_cost_functions.currentText() == "":
             QMessageBox.critical(self,"Error", "Please, select a rate law")
             self.ui.comboBox_cost_functions.setCurrentIndex(-1)
@@ -1531,6 +1556,7 @@ class MainWindow(QMainWindow):
                 row = row + 1
     
     def clear_optimization_grids_and_combobox(self):
+        self.applied_optimization_profile = None
         # Clear parameter entry boxes    
         for i in reversed(range(self.ui.gridLayout_global_optimization.count())):
             widget = self.ui.gridLayout_global_optimization.itemAt(i).widget()
@@ -1633,6 +1659,7 @@ class MainWindow(QMainWindow):
                         f"'{key}'."
                     )
                 self._set_profile_value(widget, example.value)
+            self.applied_optimization_profile = profile.name
         except Exception as e:
             QMessageBox.critical(
                 self,
@@ -1845,11 +1872,13 @@ class MainWindow(QMainWindow):
             "Batch optimization running"
         )
         self.ui.pushButton_launch_optimization.setEnabled(False)
+        self.pushButton_review_optimization.setEnabled(False)
 
     def _batch_execution_finished(self):
         if self._direct_optimization_is_idle():
             self.ui.pushButton_launch_optimization.setText("Start optimization")
             self.ui.pushButton_launch_optimization.setEnabled(True)
+            self.pushButton_review_optimization.setEnabled(True)
 
     def prepare_optimization_config(self):
         """Validate the current form and return an immutable run snapshot."""
@@ -2034,18 +2063,47 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
             return None
 
-    def launch_optimization(self):
-        """Validate the form and run one optimization without blocking the GUI."""
+    def _optimization_start_is_available(self):
         if (
             self.batch_dialog is not None
             and self.batch_dialog.has_running_worker()
         ):
-            return
+            return False
         if self.optimization_thread is not None and self.optimization_thread.isRunning():
+            return False
+        return True
+
+    def review_optimization_setup(self):
+        """Review a frozen configuration and start that snapshot if accepted."""
+        if not self._optimization_start_is_available():
             return
-        self.active_optimization_config = self.prepare_optimization_config()
-        if self.active_optimization_config is None:
+        config = self.prepare_optimization_config()
+        if config is None:
             return
+        review = build_optimization_review(
+            config,
+            dataset_names=self.selected_shortened_file_paths or (),
+            profile_name=self.applied_optimization_profile,
+        )
+        dialog = OptimizationReviewDialog(review, self)
+        self.optimization_review_dialog = dialog
+        if dialog.exec_() == QDialog.Accepted:
+            self._start_optimization(config)
+
+    def launch_optimization(self):
+        """Validate the form and run one optimization without blocking the GUI."""
+        if not self._optimization_start_is_available():
+            return
+        config = self.prepare_optimization_config()
+        if config is None:
+            return
+        self._start_optimization(config)
+
+    def _start_optimization(self, config):
+        """Run an already validated and frozen configuration."""
+        if not self._optimization_start_is_available():
+            return
+        self.active_optimization_config = config
         try:
             self.results = None
             self.total_time_for_optimization = None
@@ -2057,6 +2115,7 @@ class MainWindow(QMainWindow):
             self.ui.pushButton_launch_optimization.setText("Cancel optimization")
             self.ui.pushButton_launch_optimization.clicked.disconnect()
             self.ui.pushButton_launch_optimization.clicked.connect(self.cancel_optimization)
+            self.pushButton_review_optimization.setEnabled(False)
             self.optimization_thread.update_progress_bar_signal.connect(self.update_progress_bar)
             self.optimization_thread.update_graph_signal.connect(self.update_graph)
             self.optimization_thread.end_of_optimization.connect(self.update_GUI_at_end_of_optimization)
@@ -2090,6 +2149,7 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_launch_optimization.setEnabled(True)
         self.ui.pushButton_launch_optimization.clicked.disconnect()
         self.ui.pushButton_launch_optimization.clicked.connect(self.launch_optimization)
+        self.pushButton_review_optimization.setEnabled(True)
         self.ui.toolBox_models_and_optimization_parameters.setEnabled(True)
         self.ui.dockWidgetData_extraction.setEnabled(True)
         self.ui.dockWidgetIsoconversionalAnalysis.setEnabled(True)
