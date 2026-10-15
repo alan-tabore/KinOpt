@@ -94,3 +94,4 @@ def test_review_html_escapes_user_controlled_dataset_names(serializable_config):
     assert '<unsafe>.csv' not in html
     assert 'Free parameters and starting values' in html
     assert 'Checks before starting' in html
+    assert 'Last applied profile' in html

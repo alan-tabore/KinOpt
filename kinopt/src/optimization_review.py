@@ -343,7 +343,7 @@ def review_to_html(review: OptimizationReview) -> str:
         f'<tr><td><b>Global method</b></td><td>{escape(review.global_method)}</td></tr>'
         f'<tr><td><b>Local method</b></td><td>{escape(review.local_method)}</td></tr>'
         f'<tr><td><b>Cost function</b></td><td>{escape(review.cost_function)}</td></tr>'
-        f'<tr><td><b>Applied profile</b></td><td>{escape(profile)}</td></tr>'
+        f'<tr><td><b>Last applied profile</b></td><td>{escape(profile)}</td></tr>'
         f'<tr><td><b>Budget</b></td><td>{escape(review.budget)}</td></tr>'
         '</table>'
         '<h2>Bounds</h2>'

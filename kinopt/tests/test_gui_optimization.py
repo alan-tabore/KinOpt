@@ -334,6 +334,57 @@ def test_current_setup_can_be_added_to_batch(optimization_window):
     assert jobs[0].config.local_method == 'Nelder-Mead'
 
 
+def test_reviewed_snapshot_is_the_one_started(
+    optimization_window,
+    monkeypatch,
+):
+    main, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+    reviewed = []
+
+    def accept_after_editing(dialog):
+        reviewed.append(dialog.review)
+        window.line_edit_dict_rate_model['A1'].setText('42')
+        return main.QDialog.Accepted
+
+    monkeypatch.setattr(
+        main.OptimizationReviewDialog,
+        'exec_',
+        accept_after_editing,
+    )
+
+    window.review_optimization_setup()
+
+    assert errors == []
+    assert len(reviewed) == 1
+    assert reviewed[0].datasets == ('synthetic.csv',)
+    assert reviewed[0].profile_name == 'Balanced (recommended)'
+    assert len(started) == 1
+    np.testing.assert_array_equal(
+        started[0].config.initial_guess,
+        [1e8, 60000., 1.5],
+    )
+
+
+def test_leaving_review_does_not_start_optimization(
+    optimization_window,
+    monkeypatch,
+):
+    main, window, started, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+    monkeypatch.setattr(
+        main.OptimizationReviewDialog,
+        'exec_',
+        lambda dialog: main.QDialog.Rejected,
+    )
+
+    window.pushButton_review_optimization.click()
+
+    assert started == []
+    assert errors == []
+    assert window.ui.pushButton_launch_optimization.isEnabled()
+
+
 def test_launch_uses_tg_fields_in_coupled_model(optimization_window):
     main, window, started, errors = optimization_window
     configure_optimization(window)
