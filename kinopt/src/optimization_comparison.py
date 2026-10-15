@@ -18,6 +18,20 @@ class FitComparison:
     dataset_fingerprint: str
 
 
+@dataclass(frozen=True)
+class FitDiagnostics:
+    """Pointwise model errors and understandable aggregate indicators."""
+
+    measured_rate: np.ndarray
+    model_rate: np.ndarray
+    residuals: np.ndarray
+    rmse: float
+    mean_absolute_error: float
+    mean_residual: float
+    maximum_absolute_error: float
+    sample_count: int
+
+
 def _experimental_rate(config):
     values = np.asarray(config.experimental_rate, dtype=np.float64)
     if values.size == 0:
@@ -36,8 +50,8 @@ def dataset_fingerprint(config):
     return digest.hexdigest()
 
 
-def compare_fit(config, parameters):
-    """Return an unweighted rate RMSE for one fitted parameter vector."""
+def diagnose_fit(config, parameters):
+    """Recalculate pointwise rate residuals and common error indicators."""
     experimental_rate = _experimental_rate(config)
     model_rate = np.asarray(
         optimization.model(
@@ -64,10 +78,40 @@ def compare_fit(config, parameters):
         raise ValueError("The model rates must be finite for comparison.")
     residuals = model_rate - experimental_rate
     rmse = float(np.sqrt(np.mean(np.square(residuals))))
-    if not math.isfinite(rmse):
-        raise ValueError("The comparison RMSE is not finite.")
-    return FitComparison(
+    mean_absolute_error = float(np.mean(np.abs(residuals)))
+    mean_residual = float(np.mean(residuals))
+    maximum_absolute_error = float(np.max(np.abs(residuals)))
+    indicators = (
+        rmse,
+        mean_absolute_error,
+        mean_residual,
+        maximum_absolute_error,
+    )
+    if not all(math.isfinite(value) for value in indicators):
+        raise ValueError("The fit diagnostics are not finite.")
+
+    arrays = []
+    for values in (experimental_rate, model_rate, residuals):
+        frozen = np.ascontiguousarray(values, dtype=np.float64)
+        frozen.setflags(write=False)
+        arrays.append(frozen)
+    return FitDiagnostics(
+        measured_rate=arrays[0],
+        model_rate=arrays[1],
+        residuals=arrays[2],
         rmse=rmse,
+        mean_absolute_error=mean_absolute_error,
+        mean_residual=mean_residual,
+        maximum_absolute_error=maximum_absolute_error,
         sample_count=experimental_rate.size,
+    )
+
+
+def compare_fit(config, parameters):
+    """Return an unweighted rate RMSE for one fitted parameter vector."""
+    diagnostics = diagnose_fit(config, parameters)
+    return FitComparison(
+        rmse=diagnostics.rmse,
+        sample_count=diagnostics.sample_count,
         dataset_fingerprint=dataset_fingerprint(config),
     )
