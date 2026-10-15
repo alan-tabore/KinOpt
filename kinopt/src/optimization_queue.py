@@ -1,7 +1,7 @@
 """Persistent local storage for sequential optimization jobs."""
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import json
 from pathlib import Path
@@ -238,6 +238,53 @@ class OptimizationQueue:
                     position,
                     timestamp,
                     timestamp,
+                ),
+            )
+        return self.get(identifier)
+
+    def record_completed(self, config, outcome, name=None):
+        """Atomically add an optimization that already finished elsewhere."""
+        serialized_config = serialize_config(config)
+        serialized_result = _serialize_result(outcome)
+        elapsed_seconds = float(outcome.elapsed_seconds)
+        if elapsed_seconds < 0:
+            raise ValueError("Optimization duration cannot be negative.")
+
+        identifier = str(uuid4())
+        finished_at = datetime.now(timezone.utc)
+        started_at = finished_at - timedelta(seconds=elapsed_seconds)
+        timestamp = finished_at.isoformat(timespec="microseconds")
+        message = str(getattr(outcome.result, "message", "")) or None
+
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT COALESCE(MAX(position), 0) + 1 FROM optimization_jobs"
+            ).fetchone()
+            position = int(row[0])
+            job_name = str(name).strip() if name is not None else ""
+            if not job_name:
+                job_name = f"Completed optimization {position:03d}"
+            connection.execute(
+                """
+                INSERT INTO optimization_jobs (
+                    identifier, name, config_json, status, position,
+                    created_at, updated_at, message, started_at, finished_at,
+                    result_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    identifier,
+                    job_name,
+                    serialized_config,
+                    JobStatus.COMPLETED.value,
+                    position,
+                    timestamp,
+                    timestamp,
+                    message,
+                    started_at.isoformat(timespec="microseconds"),
+                    timestamp,
+                    serialized_result,
                 ),
             )
         return self.get(identifier)
