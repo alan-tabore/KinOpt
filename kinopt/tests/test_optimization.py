@@ -193,3 +193,58 @@ def test_rss_small_rates_zones():
     )
     
     assert np.isclose(rss, 0.02, rtol=1e-10)
+
+
+@pytest.mark.parametrize(
+    "cost_function,cost_args,is_mean",
+    [
+        (opt.rss_standard, (), False),
+        (opt.rss_mean, (), True),
+        (opt.rss_relative, (), False),
+        (
+            opt.rss_increase_of_small_extents_impact,
+            (np.array([0.1, 0.5, 0.9]), 0.3, 2.0),
+            True,
+        ),
+        (
+            opt.rss_increase_of_small_rates_impact_with_zones,
+            (4.0, 2.0),
+            True,
+        ),
+    ],
+)
+def test_least_squares_residuals_preserve_supported_costs(
+    cost_function,
+    cost_args,
+    is_mean,
+):
+    def predicted_rate(_values, _temperature, scale):
+        return scale * np.array([0.2, 1.1, 2.1])
+
+    experimental_rate = np.array([0.1, 1.0, 2.0])
+    objective_args = (
+        experimental_rate,
+        predicted_rate,
+        (np.arange(3), np.full(3, 300.0)),
+        1,
+        None,
+        (),
+        0,
+        None,
+        (),
+        None,
+        (),
+        None,
+        *cost_args,
+    )
+
+    residuals = opt.residuals_for_least_squares(
+        [1.0],
+        cost_function,
+        *objective_args,
+    )
+    scalar_cost = cost_function([1.0], *objective_args)
+
+    squared_norm = np.dot(residuals, residuals)
+    expected = scalar_cost * len(experimental_rate) if is_mean else scalar_cost
+    assert squared_norm == pytest.approx(expected)

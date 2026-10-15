@@ -350,6 +350,87 @@ def rss_increase_of_small_rates_impact_with_zones(x, experimental_rate, rate_law
     return np.dot(modified_dif, modified_dif)/len(modified_dif)
 
 
+def residuals_for_least_squares(
+    x,
+    cost_function,
+    experimental_rate,
+    rate_law,
+    experimental_args_for_rate,
+    number_of_parameters_to_optimize_for_rate,
+    vitrification_law,
+    experimental_args_for_vitrification,
+    number_of_parameters_to_optimize_for_vitrification,
+    coupling_law,
+    experimental_args_for_coupling,
+    tg_law,
+    experimental_args_for_tg,
+    tg_args,
+    *cost_args,
+):
+    """Return a residual vector equivalent to a supported KinOpt cost.
+
+    ``scipy.optimize.least_squares`` needs one residual per measured point.
+    The two unweighted costs share the raw residual vector because dividing
+    its squared norm by the number of points does not change the optimum.
+    Weighted costs apply the same multipliers as their scalar counterparts.
+    """
+    experimental_rate = np.asarray(experimental_rate)
+    modeled_rate = model(
+        x,
+        rate_law,
+        experimental_args_for_rate,
+        number_of_parameters_to_optimize_for_rate,
+        vitrification_law,
+        experimental_args_for_vitrification,
+        number_of_parameters_to_optimize_for_vitrification,
+        coupling_law,
+        experimental_args_for_coupling,
+        tg_law,
+        experimental_args_for_tg,
+        tg_args,
+    )
+    residuals = np.asarray(modeled_rate) - experimental_rate
+
+    if cost_function in {rss_standard, rss_mean}:
+        if cost_args:
+            raise ValueError("The selected cost does not accept extra arguments.")
+        return residuals
+    if cost_function is rss_relative:
+        if cost_args:
+            raise ValueError("Relative RSS does not accept extra arguments.")
+        if np.any(experimental_rate == 0):
+            raise ValueError("Relative RSS requires nonzero experimental rates.")
+        return residuals / experimental_rate
+    if cost_function is rss_increase_of_small_extents_impact:
+        if len(cost_args) != 3:
+            raise ValueError(
+                "Early-conversion weighting requires extent, extent limit, "
+                "and amplification factor."
+            )
+        extent, extent_limit, amplification_factor = cost_args
+        return np.where(
+            np.asarray(extent) < extent_limit,
+            residuals * amplification_factor,
+            residuals,
+        )
+    if cost_function is rss_increase_of_small_rates_impact_with_zones:
+        if len(cost_args) != 2:
+            raise ValueError(
+                "Small-rate weighting requires a rate fraction and "
+                "amplification factor."
+            )
+        fraction_to_amplify, amplification_factor = cost_args
+        threshold = np.max(experimental_rate) / fraction_to_amplify
+        return np.where(
+            experimental_rate < threshold,
+            residuals * amplification_factor,
+            residuals,
+        )
+    raise ValueError(
+        "Log-space least squares does not support the selected cost function."
+    )
+
+
 
 
 

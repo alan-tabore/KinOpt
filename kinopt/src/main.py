@@ -55,6 +55,7 @@ from kinopt.src.optimization_profiles import (
 from kinopt.src.optimization_review import build_optimization_review
 from kinopt.src.optimization_review_dialog import OptimizationReviewDialog
 from kinopt.src.optimization_runner import (
+    LOG_SPACE_LEAST_SQUARES,
     OptimizationCancelled,
     OptimizationRunConfig,
     OptimizationRunResult,
@@ -1542,7 +1543,10 @@ class MainWindow(QMainWindow):
                     label = QLabel(key)
                     combobox = QComboBox()
                     if key == "jac":
-                        combobox.addItems(["None", "2-point", "3-point", "cs"])
+                        if self.selected_local_optimization == LOG_SPACE_LEAST_SQUARES:
+                            combobox.addItems(["2-point", "3-point", "cs"])
+                        else:
+                            combobox.addItems(["None", "2-point", "3-point", "cs"])
                     else:
                         QMessageBox.critical(self, "Unsupported Key", f"The key '{key}' is not handled by the program.")
                     self.labels_dict_local_optimization[key] = label
@@ -1932,6 +1936,9 @@ class MainWindow(QMainWindow):
                     raise AttributeError( f" An error occurred:\n The parameter {key} is not handled.\n Please modify the 'get_local_optimization_args_dict' function in main.py.")
                     traceback.print_exc()
                     
+            if selected_optimization_method == LOG_SPACE_LEAST_SQUARES:
+                return options_dict
+
             main_args_dict_for_local_optimization = {"jac": None, "hess": None, "hessp": None, "bounds": None,"constraints": (), "tol": None, "callback": None}
             keys_to_remove_from_option_dict = []
             for key, value in options_dict.items():
@@ -2093,13 +2100,17 @@ class MainWindow(QMainWindow):
                 self.global_optimization = None
                 self.global_optimization_args_dict = None
             if self.selected_local_optimization != '':
-                self.local_optimization = getattr(scipy.optimize, 'minimize')
+                if self.selected_local_optimization == LOG_SPACE_LEAST_SQUARES:
+                    self.local_optimization = scipy.optimize.least_squares
+                else:
+                    self.local_optimization = scipy.optimize.minimize
                 
                 self.local_optimization_args_dict = self.get_local_optimization_args_dict(self.selected_local_optimization)
                 if self.local_optimization_args_dict is None:
                     return
                 
-                self.local_optimization_args_dict['method'] = self.selected_local_optimization
+                if self.selected_local_optimization != LOG_SPACE_LEAST_SQUARES:
+                    self.local_optimization_args_dict['method'] = self.selected_local_optimization
             else:
                 self.local_optimization = None
                 self.local_optimization_args_dict = None
@@ -2119,9 +2130,13 @@ class MainWindow(QMainWindow):
                     if key in self.global_optimization_args_dict.keys():
                         self.max_iter = self.global_optimization_args_dict[key]
             else:
-                for key in keys_to_check_for_iterations:
-                    if key in self.local_optimization_args_dict['options'].keys():
-                        self.max_iter = self.local_optimization_args_dict['options'][key]
+                local_budget_options = self.local_optimization_args_dict.get(
+                    'options',
+                    self.local_optimization_args_dict,
+                )
+                for key in keys_to_check_for_iterations + ['max_nfev']:
+                    if key in local_budget_options:
+                        self.max_iter = local_budget_options[key]
 
             
             if not np.all(np.isfinite(self.initial_guess)):
@@ -3216,7 +3231,13 @@ def get_functions_for_optimization():
         The list of parameters for the specified function if found, otherwise None.
     """
     global_optimization_methods = ["basinhopping", "differential_evolution","shgo"]
-    local_optimization_methods = ["Nelder-Mead", "CG", "BFGS", "L-BFGS-B"]
+    local_optimization_methods = [
+        LOG_SPACE_LEAST_SQUARES,
+        "Nelder-Mead",
+        "CG",
+        "BFGS",
+        "L-BFGS-B",
+    ]
     rss_methods = [element for element in dir(opt) if callable(getattr(opt, element)) and element.startswith("rss")]
 
     return global_optimization_methods, local_optimization_methods, rss_methods
@@ -3240,6 +3261,14 @@ def get_parameters_for_optimization(optimization_name):
     """
     # Define a dictionary with parameters for each optimization method
     optimization_parameters = {
+        LOG_SPACE_LEAST_SQUARES: {
+            "jac": {"type": list, "optional": False},
+            "max_nfev": {"type": int, "optional": False},
+            "ftol": {"type": float, "optional": True},
+            "xtol": {"type": float, "optional": True},
+            "gtol": {"type": float, "optional": True},
+            "bounds": {"type": "sequence", "optional": False},
+        },
         "Nelder-Mead": {
             "disp": {"type": bool, "optional": True},
             "maxiter": {"type": int, "optional": False},

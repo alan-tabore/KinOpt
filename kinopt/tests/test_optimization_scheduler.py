@@ -1,10 +1,16 @@
 """Validate sequential execution and failure isolation for queued runs."""
 
+from dataclasses import replace
+
 import numpy as np
+from scipy import optimize
 from scipy.optimize import OptimizeResult
 
 from kinopt.src.optimization_queue import JobStatus, OptimizationQueue
-from kinopt.src.optimization_runner import OptimizationRunResult
+from kinopt.src.optimization_runner import (
+    LOG_SPACE_LEAST_SQUARES,
+    OptimizationRunResult,
+)
 from kinopt.src.optimization_scheduler import SequentialOptimizationScheduler
 
 
@@ -29,6 +35,38 @@ def test_scheduler_runs_and_persists_a_real_optimization(
 
     reopened = OptimizationQueue(database).get(queued.identifier)
     assert reopened.result == finished.result
+
+
+def test_scheduler_persists_log_space_least_squares_result(
+    tmp_path,
+    serializable_config,
+):
+    config = replace(
+        serializable_config,
+        local_method=LOG_SPACE_LEAST_SQUARES,
+        local_optimizer=optimize.least_squares,
+        local_options={
+            'jac': '2-point',
+            'max_nfev': 200,
+            'bounds': ((1e5, 1e10), (1e3, 2e5), (0.1, 5.0)),
+        },
+        max_iterations=200,
+    )
+    queue = OptimizationQueue(tmp_path / 'queue.sqlite3')
+    queued = queue.add(config, 'Scaled fit')
+
+    finished = SequentialOptimizationScheduler(queue).run_next()
+
+    assert finished.identifier == queued.identifier
+    assert finished.status is JobStatus.COMPLETED
+    assert finished.result.solver_success is True
+    assert finished.result.iterations is None
+    assert finished.result.evaluations is not None
+    np.testing.assert_allclose(
+        finished.result.parameters,
+        [1e8, 60000.0, 1.5],
+        rtol=1e-5,
+    )
 
 
 def test_failed_job_does_not_block_following_jobs(

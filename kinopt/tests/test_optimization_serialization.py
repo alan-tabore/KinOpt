@@ -7,7 +7,10 @@ import numpy as np
 import pytest
 from scipy import optimize
 
-from kinopt.src.optimization_runner import run_optimization
+from kinopt.src.optimization_runner import (
+    LOG_SPACE_LEAST_SQUARES,
+    run_optimization,
+)
 from kinopt.src.optimization_serialization import (
     config_from_dict,
     deserialize_config,
@@ -38,6 +41,32 @@ def test_configuration_round_trip_preserves_run(serializable_config):
         original_outcome.result.x,
     )
     assert restored_outcome.result.fun == original_outcome.result.fun
+
+
+def test_log_space_least_squares_configuration_round_trip(
+    serializable_config,
+):
+    config = replace(
+        serializable_config,
+        local_method=LOG_SPACE_LEAST_SQUARES,
+        local_optimizer=optimize.least_squares,
+        local_options={
+            'jac': '2-point',
+            'max_nfev': 100,
+            'bounds': ((1e5, 1e10), (1e3, 2e5), (0.1, 5.0)),
+        },
+        max_iterations=100,
+    )
+
+    restored = deserialize_config(serialize_config(config))
+
+    assert restored.local_method == LOG_SPACE_LEAST_SQUARES
+    assert restored.local_optimizer is optimize.least_squares
+    assert restored.local_options['bounds'] == (
+        (1e5, 1e10),
+        (1e3, 2e5),
+        (0.1, 5.0),
+    )
 
 
 def test_unregistered_functions_are_not_persisted(serializable_config):

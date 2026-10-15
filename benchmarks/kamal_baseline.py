@@ -19,17 +19,33 @@ from scipy import optimize
 from kinopt.examples import KAMAL_EXAMPLE, included_example_files
 from kinopt.src import kinetic_models, optimization
 from kinopt.src.data_extraction import extract_dsc_data_multiple_files
-from kinopt.src.optimization_profiles import optimization_profile
+from kinopt.src.optimization_profiles import (
+    BALANCED_PROFILE_NAME,
+    QUICK_PROFILE_NAME,
+    THOROUGH_PROFILE_NAME,
+    optimization_profile,
+)
 from kinopt.src.optimization_runner import (
+    LOG_SPACE_LEAST_SQUARES,
     OptimizationRunConfig,
     OptimizationRunResult,
     run_optimization,
 )
-from kinopt.src.parameter_examples import model_parameter_example
+from kinopt.src.parameter_examples import (
+    bound_parameter_example,
+    model_parameter_example,
+)
 
 
 BENCHMARK_NAME = "packaged-kamal-quick-check"
 PARAMETER_NAMES = ("A1", "E1", "A2", "E2", "m", "n")
+NELDER_MEAD_SOLVER = "nelder-mead"
+LOG_SPACE_LEAST_SQUARES_SOLVER = "log-space-least-squares"
+PROFILE_NAMES = {
+    "quick": QUICK_PROFILE_NAME,
+    "balanced": BALANCED_PROFILE_NAME,
+    "thorough": THOROUGH_PROFILE_NAME,
+}
 
 
 def _profile_value(value):
@@ -49,7 +65,10 @@ def _profile_value(value):
             return value
 
 
-def build_kamal_benchmark_config() -> OptimizationRunConfig:
+def build_kamal_benchmark_config(
+    solver: str = NELDER_MEAD_SOLVER,
+    profile_name: str = QUICK_PROFILE_NAME,
+) -> OptimizationRunConfig:
     """Build the same deterministic quick setup offered by the GUI example."""
     paths = included_example_files(KAMAL_EXAMPLE)
     with warnings.catch_warnings():
@@ -64,12 +83,34 @@ def build_kamal_benchmark_config() -> OptimizationRunConfig:
         float(model_parameter_example(name).value)
         for name in PARAMETER_NAMES
     ])
-    profile = optimization_profile(KAMAL_EXAMPLE.calculation_profile)
+    profile = optimization_profile(profile_name)
+    if solver == NELDER_MEAD_SOLVER:
+        method = KAMAL_EXAMPLE.local_method
+        local_optimizer = optimize.minimize
+    elif solver == LOG_SPACE_LEAST_SQUARES_SOLVER:
+        method = LOG_SPACE_LEAST_SQUARES
+        local_optimizer = optimize.least_squares
+    else:
+        raise ValueError(f"Unknown benchmark solver: {solver}")
+
     options = {
         name: converted
-        for name, value in profile.values_for(KAMAL_EXAMPLE.local_method).items()
+        for name, value in profile.values_for(method).items()
         if (converted := _profile_value(value)) is not None
     }
+    if method == LOG_SPACE_LEAST_SQUARES:
+        options["bounds"] = tuple(
+            (
+                float(bound_parameter_example(name, "min").value),
+                float(bound_parameter_example(name, "max").value),
+            )
+            for name in PARAMETER_NAMES
+        )
+        local_options = options
+        maximum_iterations = int(options["max_nfev"])
+    else:
+        local_options = {"method": method, "options": options}
+        maximum_iterations = int(options["maxiter"])
 
     return OptimizationRunConfig(
         cost_function=optimization.rss_mean,
@@ -77,12 +118,9 @@ def build_kamal_benchmark_config() -> OptimizationRunConfig:
         global_method="",
         global_optimizer=None,
         global_options=None,
-        local_method=KAMAL_EXAMPLE.local_method,
-        local_optimizer=optimize.minimize,
-        local_options={
-            "method": KAMAL_EXAMPLE.local_method,
-            "options": options,
-        },
+        local_method=method,
+        local_optimizer=local_optimizer,
+        local_options=local_options,
         experimental_rate=rate,
         rate_law=kinetic_models.rate_for_kamal,
         experimental_args_for_rate=(extent, temperature),
@@ -97,7 +135,7 @@ def build_kamal_benchmark_config() -> OptimizationRunConfig:
         tg_args=None,
         cost_function_args=(),
         experimental_args_for_cost_function=(),
-        max_iterations=int(options["maxiter"]),
+        max_iterations=maximum_iterations,
     )
 
 
@@ -123,6 +161,7 @@ def _run_record(
         config.tg_args,
     )
     rmse = float(np.sqrt(np.mean((modeled_rate - config.experimental_rate) ** 2)))
+    iterations = getattr(result, "nit", None)
     return {
         "run": number,
         "elapsed_seconds": float(outcome.elapsed_seconds),
@@ -130,7 +169,7 @@ def _run_record(
         "status": int(result.status),
         "message": str(result.message),
         "evaluations": int(result.nfev),
-        "iterations": int(result.nit),
+        "iterations": None if iterations is None else int(iterations),
         "cost": float(result.fun),
         "rmse": rmse,
         "parameters": {
@@ -143,12 +182,17 @@ def _run_record(
 def build_benchmark_report(
     repeats: int = 3,
     runner: Callable[[OptimizationRunConfig], OptimizationRunResult] = run_optimization,
+    solver: str = NELDER_MEAD_SOLVER,
+    profile_name: str = QUICK_PROFILE_NAME,
 ) -> dict:
     """Run the benchmark and return measurements suitable for JSON output."""
     if repeats < 1:
         raise ValueError("The repeat count must be at least 1.")
 
-    config = build_kamal_benchmark_config()
+    config = build_kamal_benchmark_config(
+        solver=solver,
+        profile_name=profile_name,
+    )
     runs = [_run_record(config, runner, number) for number in range(1, repeats + 1)]
     elapsed = [run["elapsed_seconds"] for run in runs]
     rmse = [run["rmse"] for run in runs]
@@ -171,8 +215,8 @@ def build_benchmark_report(
         "configuration": {
             "model": KAMAL_EXAMPLE.rate_model,
             "cost_function": KAMAL_EXAMPLE.cost_function,
-            "solver": KAMAL_EXAMPLE.local_method,
-            "profile": KAMAL_EXAMPLE.calculation_profile,
+            "solver": config.local_method,
+            "profile": profile_name,
             "initial_parameters": {
                 name: float(value)
                 for name, value in zip(PARAMETER_NAMES, config.initial_guess)
@@ -215,13 +259,29 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         help="optional path for the complete JSON report",
     )
+    parser.add_argument(
+        "--solver",
+        choices=(NELDER_MEAD_SOLVER, LOG_SPACE_LEAST_SQUARES_SOLVER),
+        default=NELDER_MEAD_SOLVER,
+        help="solver configuration to benchmark (default: nelder-mead)",
+    )
+    parser.add_argument(
+        "--profile",
+        choices=tuple(PROFILE_NAMES),
+        default="quick",
+        help="calculation profile to benchmark (default: quick)",
+    )
     return parser
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = _parser().parse_args(argv)
     try:
-        report = build_benchmark_report(args.repeats)
+        report = build_benchmark_report(
+            args.repeats,
+            solver=args.solver,
+            profile_name=PROFILE_NAMES[args.profile],
+        )
     except ValueError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -238,6 +298,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     quality = summary["rmse"]
     print(
         f"{report['benchmark']}: {summary['repeats']} run(s), "
+        f"{report['configuration']['solver']}, "
         f"median {timing['median']:.6f} s, "
         f"median RMSE {quality['median']:.6g}, "
         f"solver success {summary['successful_runs']}/{summary['repeats']}"

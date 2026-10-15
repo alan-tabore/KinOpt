@@ -30,3 +30,25 @@ default because timings depend on the machine and its current load.
 Run this benchmark before and after a numerical or performance change on the
 same machine. Compare the median time only when RMSE, solver status and the
 resulting parameters remain scientifically acceptable.
+
+To measure the scaled least-squares solver with the same data, starting values,
+bounds and Quick check budget:
+
+```bash
+.venv/bin/python -m benchmarks.kamal_baseline \
+  --solver log-space-least-squares \
+  --repeats 3 \
+  --output /tmp/kinopt-kamal-log-least-squares.json
+```
+
+The ``--profile quick|balanced|thorough`` option applies the corresponding GUI
+profile to either solver. For example, this measures whether a Thorough search
+with Nelder-Mead reaches a quality comparable to Quick log-space least squares:
+
+```bash
+.venv/bin/python -m benchmarks.kamal_baseline \
+  --solver nelder-mead \
+  --profile thorough \
+  --repeats 3 \
+  --output /tmp/kinopt-kamal-nelder-thorough.json
+```

@@ -351,6 +351,38 @@ def test_profile_converts_none_jacobian_choice_for_scipy(optimization_window):
     assert errors == []
 
 
+def test_log_space_least_squares_builds_a_bounded_solver_config(
+    optimization_window,
+):
+    main, window, _, errors = optimization_window
+    configure_optimization(window, with_vitrification=False)
+    window.ui.comboBox_local_optimization_methods.setCurrentText(
+        'least_squares_log'
+    )
+    window.update_local_optimization_gridLayout()
+    window.optimization_profile_combo.setCurrentText('Quick check')
+    window.apply_optimization_profile()
+
+    config = window.prepare_optimization_config()
+
+    assert errors == []
+    jacobian_choices = window.entries_dict_local_optimization['jac']
+    assert [
+        jacobian_choices.itemText(index)
+        for index in range(jacobian_choices.count())
+    ] == ['2-point', '3-point', 'cs']
+    assert config.local_method == 'least_squares_log'
+    assert config.local_optimizer is main.scipy.optimize.least_squares
+    assert config.local_options['jac'] == '2-point'
+    assert config.local_options['max_nfev'] == 100
+    assert config.local_options['bounds'] == (
+        (1.0, 1e20),
+        (1000.0, 350000.0),
+        (0.1, 20.0),
+    )
+    assert config.max_iterations == 100
+
+
 def test_current_setup_can_be_added_to_batch(optimization_window):
     _, window, started, errors = optimization_window
     configure_optimization(window, with_vitrification=False)

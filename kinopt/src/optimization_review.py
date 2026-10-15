@@ -136,6 +136,8 @@ def _bound_sets(config, parameter_names):
 
 def _budget_description(config, parameter_count):
     base = f'{config.max_iterations:,} iteration budget'
+    if config.local_method == 'least_squares_log':
+        return f'{config.max_iterations:,} function-evaluation budget'
     if config.global_method == 'differential_evolution':
         options = config.global_options or {}
         population_size = options.get('popsize')
