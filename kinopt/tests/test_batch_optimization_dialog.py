@@ -1,6 +1,7 @@
 """Exercise the first graphical controls for persistent batch runs."""
 
 from dataclasses import replace
+import json
 import os
 import time
 
@@ -8,7 +9,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import numpy as np
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
 import pytest
 from scipy.optimize import OptimizeResult
 
@@ -74,6 +75,10 @@ def test_dialog_adds_a_reproducible_multi_start_group(
 
     jobs = queue.list_jobs()
     assert len(jobs) == 4
+    assert len({job.group_identifier for job in jobs}) == 1
+    assert jobs[0].group_name == 'Nth-order starts'
+    assert jobs[0].group_kind == 'multi_start'
+    assert jobs[0].group_seed == 17
     assert [job.name for job in jobs] == [
         f'Nth-order starts - start {index:02d}/04 (seed 17)'
         for index in range(1, 5)
@@ -253,6 +258,73 @@ def test_dialog_compares_completed_jobs_by_common_rmse(batch_dialog, qt_app):
         comparison.table.item(row, 2).text()
         for row in range(comparison.table.rowCount())
     } == {"Exact fit", "Less accurate", "Direct optimization"}
+
+
+def test_dialog_summarizes_and_exports_a_multi_start_group(
+    batch_dialog,
+    qt_app,
+    serializable_config,
+    tmp_path,
+    monkeypatch,
+):
+    dialog, queue = batch_dialog
+    dialog.config_provider = lambda: replace(
+        serializable_config,
+        local_options={
+            **serializable_config.local_options,
+            'bounds': ((1e5, 1e10), (1e3, 2e5), (0.1, 5.0)),
+        },
+    )
+    dialog.multistart_count.setValue(2)
+    dialog.multistart_seed.setValue(23)
+    dialog.add_multi_start_jobs()
+    jobs = queue.list_jobs()
+    outcomes = (
+        OptimizationRunResult(
+            OptimizeResult(
+                x=np.array([1e8, 60000., 1.5]),
+                fun=0.,
+                success=True,
+                message='done',
+            ),
+            1.,
+        ),
+        OptimizationRunResult(
+            OptimizeResult(
+                x=np.array([8e7, 55000., 1.4]),
+                fun=1.,
+                success=False,
+                message='budget reached',
+            ),
+            2.,
+        ),
+    )
+    for job, outcome in zip(jobs, outcomes):
+        queue.set_status(job.identifier, JobStatus.RUNNING)
+        queue.complete(job.identifier, outcome)
+
+    dialog.refresh()
+    dialog.show_completed_comparison()
+    qt_app.processEvents()
+
+    comparison = dialog.comparison_dialog
+    assert comparison.summary_table.rowCount() == 1
+    assert comparison.summary_table.item(0, 1).text() == '23'
+    assert comparison.summary_table.item(0, 2).text() == '2/2'
+    assert comparison.summary_table.item(0, 3).text() == '1/2'
+    assert comparison.summary_table.item(0, 7).text() == '20.00%'
+
+    destination = tmp_path / 'comparison.json'
+    monkeypatch.setattr(
+        QFileDialog,
+        'getSaveFileName',
+        lambda *args: (str(destination), 'JSON files (*.json)'),
+    )
+    comparison.export_json()
+
+    payload = json.loads(destination.read_text(encoding='utf-8'))
+    assert payload['multi_start_groups'][0]['seed'] == 23
+    assert 'Exported JSON comparison' in comparison.note.text()
 
 
 def test_dialog_opens_residual_diagnostics_for_a_completed_job(

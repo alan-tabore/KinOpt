@@ -100,6 +100,19 @@ count, evaluation count, and duration. A solver cost is useful for understanding
 the calculation that was requested, while the RMSE is the column to use for a
 direct fit comparison on the same measurements.
 
+The **Multi-start groups** tab summarizes each generated group. It reports the
+number of completed and converged runs, the best and median RMSE, the best job,
+and the largest relative range observed across the fitted parameters. A small
+range means that the completed runs returned similar parameter values. There is
+no universal acceptable percentage: interpret it together with convergence,
+the residual plots, parameter units, and the physical meaning of the model.
+
+Use **Export JSON...** to preserve the complete queued configurations, measured
+data, starting values, results, comparison metrics, group summaries, seeds, and
+software versions in a structured file. **Export CSV...** creates a flat table
+for a spreadsheet, including one column per starting and fitted parameter plus
+the main group indicators.
+
 The RMSE has the same unit as the experimental reaction rate. It measures fit
 error on the data used by the optimization; it does not by itself show whether
 the fitted parameters are physically meaningful or whether the model predicts

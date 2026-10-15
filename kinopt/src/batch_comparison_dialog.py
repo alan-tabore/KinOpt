@@ -7,14 +7,23 @@ from PyQt5.QtWidgets import (
     QAbstractItemView,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QHeaderView,
+    QHBoxLayout,
     QLabel,
+    QMessageBox,
+    QPushButton,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QVBoxLayout,
 )
 
-from kinopt.src.optimization_comparison import compare_fit
+from kinopt.src.optimization_comparison import (
+    compare_fit,
+    summarize_multistart_groups,
+)
+from kinopt.src.optimization_export import write_batch_csv, write_batch_json
 from kinopt.src.optimization_queue import JobStatus
 
 
@@ -84,6 +93,16 @@ class BatchComparisonDialog(QDialog):
         "Evaluations",
         "Duration",
     )
+    SUMMARY_HEADERS = (
+        "Group",
+        "Seed",
+        "Completed",
+        "Converged",
+        "Best job",
+        "Best RMSE",
+        "Median RMSE",
+        "Max relative range",
+    )
 
     def __init__(self, jobs, parent=None):
         super().__init__(parent)
@@ -93,7 +112,9 @@ class BatchComparisonDialog(QDialog):
         explanation = QLabel(
             "RMSE is recalculated from each model prediction and the measured "
             "rates, independently of the selected solver cost. Lower is better. "
-            "Jobs are ranked together only when their measured rate series match."
+            "Jobs are ranked together only when their measured rate series match. "
+            "For multi-start groups, a lower maximum relative parameter range "
+            "means the fitted parameters agree more closely."
         )
         explanation.setWordWrap(True)
 
@@ -109,20 +130,46 @@ class BatchComparisonDialog(QDialog):
         for column, width in enumerate(widths):
             self.table.setColumnWidth(column, width)
 
+        self.summary_table = QTableWidget(0, len(self.SUMMARY_HEADERS), self)
+        self.summary_table.setHorizontalHeaderLabels(self.SUMMARY_HEADERS)
+        self.summary_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.summary_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.summary_table.verticalHeader().setVisible(False)
+        summary_header = self.summary_table.horizontalHeader()
+        summary_header.setSectionResizeMode(QHeaderView.Interactive)
+        summary_header.setSectionResizeMode(0, QHeaderView.Stretch)
+        for column, width in enumerate((180, 70, 105, 105, 230, 110, 120, 175)):
+            self.summary_table.setColumnWidth(column, width)
+
+        self.tabs = QTabWidget(self)
+        self.tabs.addTab(self.table, "Completed runs")
+        self.tabs.addTab(self.summary_table, "Multi-start groups")
+
+        self.export_json_button = QPushButton("Export JSON…")
+        self.export_csv_button = QPushButton("Export CSV…")
+        export_controls = QHBoxLayout()
+        export_controls.addWidget(self.export_json_button)
+        export_controls.addWidget(self.export_csv_button)
+        export_controls.addStretch(1)
+        self.export_json_button.clicked.connect(self.export_json)
+        self.export_csv_button.clicked.connect(self.export_csv)
+
         self.note = QLabel()
         close_buttons = QDialogButtonBox(QDialogButtonBox.Close)
         close_buttons.rejected.connect(self.close)
 
         layout = QVBoxLayout(self)
         layout.addWidget(explanation)
-        layout.addWidget(self.table)
+        layout.addWidget(self.tabs)
+        layout.addLayout(export_controls)
         layout.addWidget(self.note)
         layout.addWidget(close_buttons)
         self.set_jobs(jobs)
 
     def set_jobs(self, jobs):
         """Reload completed jobs so an open comparison stays current."""
-        rows = _comparison_rows(jobs)
+        self.jobs = tuple(jobs)
+        rows = _comparison_rows(self.jobs)
         self.table.setRowCount(len(rows))
         for row, (dataset, rank, job, comparison, error) in enumerate(rows):
             result = job.result
@@ -148,7 +195,72 @@ class BatchComparisonDialog(QDialog):
                 if column in {0, 1, 5, 6, 7, 8, 9}:
                     item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                 self.table.setItem(row, column, item)
+        summaries = summarize_multistart_groups(self.jobs)
+        self.summary_table.setRowCount(len(summaries))
+        for row, summary in enumerate(summaries):
+            values = (
+                summary.group_name,
+                "—" if summary.seed is None else str(summary.seed),
+                f"{summary.completed_count}/{summary.total_count}",
+                f"{summary.converged_count}/{summary.completed_count}",
+                summary.best_job_name or "—",
+                (
+                    "—"
+                    if summary.best_rmse is None
+                    else format(summary.best_rmse, ".6g")
+                ),
+                (
+                    "—"
+                    if summary.median_rmse is None
+                    else format(summary.median_rmse, ".6g")
+                ),
+                (
+                    "—"
+                    if summary.maximum_relative_parameter_range is None
+                    else format(
+                        summary.maximum_relative_parameter_range,
+                        ".2%",
+                    )
+                ),
+            )
+            for column, value in enumerate(values):
+                item = QTableWidgetItem(value)
+                item.setToolTip(summary.message or value)
+                if column in {1, 2, 3, 5, 6, 7}:
+                    item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                self.summary_table.setItem(row, column, item)
         self.note.setText(
             f"{len(rows)} completed optimization(s) shown. "
+            f"{len(summaries)} multi-start group(s). "
             "RMSE has the same unit as the measured reaction rate."
         )
+
+    def export_json(self):
+        """Ask for a destination and export complete queue configurations."""
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export optimization comparison as JSON",
+            "kinopt-optimization-comparison.json",
+            "JSON files (*.json)",
+        )
+        if path:
+            self._write_export(write_batch_json, path, "JSON")
+
+    def export_csv(self):
+        """Ask for a destination and export a spreadsheet-friendly table."""
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export optimization comparison as CSV",
+            "kinopt-optimization-comparison.csv",
+            "CSV files (*.csv)",
+        )
+        if path:
+            self._write_export(write_batch_csv, path, "CSV")
+
+    def _write_export(self, writer, path, format_name):
+        try:
+            writer(path, self.jobs)
+        except (OSError, TypeError, ValueError) as error:
+            QMessageBox.critical(self, "Export comparison", str(error))
+            return
+        self.note.setText(f"Exported {format_name} comparison to {path}.")
