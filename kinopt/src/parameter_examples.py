@@ -16,6 +16,7 @@ class ParameterExample:
 
     value: Optional[str]
     unit: str = ''
+    role: str = ''
 
     @property
     def placeholder(self):
@@ -29,8 +30,9 @@ class ParameterExample:
         if self.value is None:
             return 'Optional parameter. Leave it blank to use the solver default.'
         suffix = f' {self.unit}' if self.unit else ''
+        role = f'{self.role} ' if self.role else ''
         return (
-            f'Illustrative starting value: {self.value}{suffix}. '
+            f'{role}Illustrative starting value: {self.value}{suffix}. '
             'Adapt it to your material, data, and parameter units.'
         )
 
@@ -58,7 +60,7 @@ def _example_from_metadata(name):
     metadata = model_parameter_metadata(name)
     if metadata is None:
         return None
-    return ParameterExample(metadata.example, metadata.unit)
+    return ParameterExample(metadata.example, metadata.unit, metadata.role)
 
 
 MODEL_PARAMETER_EXAMPLES = {

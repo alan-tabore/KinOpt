@@ -129,6 +129,7 @@ def test_placeholder_is_distinct_from_an_actual_value():
 
     assert example.value == '50000'
     assert example.placeholder == 'Example: 50000 J/mol'
+    assert 'Activation energy' in example.tooltip
     assert 'Adapt it to your material' in example.tooltip
 
 
