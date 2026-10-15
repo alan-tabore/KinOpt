@@ -24,6 +24,15 @@ license = {file = "LICENSE"}
 [project.scripts]
 kinopt = "kinopt.cli:main"
 
+[tool.hatch.build.targets.wheel]
+packages = ["kinopt"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"kinopt/data" = "kinopt/data"
+
+[tool.hatch.build.targets.sdist.force-include]
+"kinopt/data" = "kinopt/data"
+
 [project.optional-dependencies]
 test = ["pytest>=7", "pytest-cov>=4"]
 
