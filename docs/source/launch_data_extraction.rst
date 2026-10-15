@@ -3,6 +3,13 @@ Extracting the data
 
 You've probably put a lot of efforts in collecting kinetic data, so let's use them.
 
+To discover the workflow first, click **Try Kamal example**. KinOpt loads and
+extracts its four included synthetic heating-rate files, selects the Kamal rate
+model, fills illustrative starting values, and prepares the **Quick check**
+profile. It does not start an optimization. Inspect the imported curves and
+review the prepared values before clicking **Review setup…** or starting the
+calculation.
+
 Ideally, you'll have collected kinetic data for multiple temperature program.
 Store them in the same folder and:
 

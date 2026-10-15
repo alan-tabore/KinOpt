@@ -231,6 +231,38 @@ def test_empty_parameter_fields_show_examples_without_entering_values(
     assert window.line_edit_dict_tg_law['coeff'].text() == '0.5'
 
 
+def test_included_kamal_example_prepares_a_complete_quick_setup(
+    optimization_window,
+):
+    _, window, started, errors = optimization_window
+
+    window.pushButton_load_example.click()
+
+    assert errors == []
+    assert started == []
+    assert window.successful_extraction is True
+    assert len(window.selected_full_file_paths) == 4
+    assert window.selected_shortened_file_paths[0].endswith(
+        '5C_per_min.txt'
+    )
+    assert window.ui.checkBox_file_has_headers.isChecked()
+    assert window.ui.lineEdit_delimiter.text() == ','
+    assert window.ui.lineEdit_number_of_lines_to_skip.text() == '0'
+    assert window.selected_rate == 'rate_for_kamal'
+    assert set(window.line_edit_dict_rate_model) == {
+        'A1', 'E1', 'A2', 'E2', 'm', 'n',
+    }
+    assert all(
+        field.text()
+        for field in window.line_edit_dict_rate_model.values()
+    )
+    assert window.selected_local_optimization == 'Nelder-Mead'
+    assert window.selected_cost_function == 'rss_mean'
+    assert window.applied_optimization_profile == 'Quick check'
+    assert window.entries_dict_local_optimization['maxiter'].text() == '200'
+    assert 'Kamal example ready' in window.statusBar().currentMessage()
+
+
 def test_calculation_profiles_explain_and_fill_selected_methods(
     optimization_window,
 ):

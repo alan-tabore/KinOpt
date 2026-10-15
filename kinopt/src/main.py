@@ -9,6 +9,7 @@ This script is used to define the graphical interface and its main functions.
 import sys
 import os
 import traceback
+import warnings
 from html import escape
 
 # Keep the documented `python main.py` launch working as well as package imports.
@@ -33,6 +34,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QStringListModel, QThread, pyqtSignal
 from PyQt5.QtGui import QTextCursor
 from kinopt.src.kinopt_interface import Ui_MainWindow
+from kinopt.examples import KAMAL_EXAMPLE, included_example_files
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -93,7 +95,26 @@ class MainWindow(QMainWindow):
         self.active_optimization_history_identifier = None
 
         # Connect data extraction elements
+        self.pushButton_load_example = QPushButton(
+            "Try Kamal example",
+            self.ui.widget_button_files,
+        )
+        self.pushButton_load_example.setObjectName(
+            "pushButton_load_kamal_example"
+        )
+        self.pushButton_load_example.setToolTip(
+            "Load and extract the four included heating-rate datasets, then "
+            "prepare a Kamal model with a quick optimization profile."
+        )
+        add_files_index = self.ui.verticalLayout_11.indexOf(
+            self.ui.pushButton_add_files
+        )
+        self.ui.verticalLayout_11.insertWidget(
+            add_files_index + 1,
+            self.pushButton_load_example,
+        )
         self.ui.pushButton_add_files.clicked.connect(self.browse_files)
+        self.pushButton_load_example.clicked.connect(self.load_kamal_example)
         self.ui.pushButton_clear_all_files.clicked.connect(self.clear_files)
         self.ui.pushButton_extract_data.clicked.connect(self.extract_data)
         
@@ -639,30 +660,84 @@ class MainWindow(QMainWindow):
                 "Text Files (*.txt);;CSV Files (*.csv);;All Files (*)"
             )
             if file_paths:
-                # Clear the data extraction plots in case previous files were extracted
-                self.clear_data_extraction_plots()
-                
-                # Update listView background in white to indicate no extraction was performed
-                self.ui.listView_files.viewport().setStyleSheet("background-color: white")
-                
-                # Create a string list model to hold the filenames
-                string_list_model = QStringListModel()
-    
-                # Populate the model with shortened filenames
-                string_list_model.setStringList([os.path.basename(fp) for fp in file_paths])
-                
-                # Save the shortened filenames
-                self.selected_shortened_file_paths = [os.path.basename(fp) for fp in file_paths]
-    
-                # Set the model for the list view
-                self.ui.listView_files.setModel(string_list_model)
-    
-                # Store the full file paths in an instance variable
-                self.selected_full_file_paths = file_paths
+                self._select_data_files(file_paths)
         except Exception as e:
             # Handle other exceptions with a generic error message
             QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
             traceback.print_exc()
+
+    def _select_data_files(self, file_paths):
+        """Display selected paths and invalidate any previous extraction."""
+        paths = [os.fspath(path) for path in file_paths]
+        self.clear_data_extraction_plots()
+        self.ui.listView_files.viewport().setStyleSheet(
+            "background-color: white"
+        )
+        shortened_paths = [os.path.basename(path) for path in paths]
+        string_list_model = QStringListModel(shortened_paths)
+        self.ui.listView_files.setModel(string_list_model)
+        self.selected_shortened_file_paths = shortened_paths
+        self.selected_full_file_paths = paths
+        self.successful_extraction = False
+
+    def load_kamal_example(self):
+        """Prepare the packaged Kamal data and a short guided setup."""
+        try:
+            example = KAMAL_EXAMPLE
+            self._select_data_files(included_example_files(example))
+            self.ui.checkBox_file_has_headers.setChecked(example.has_header)
+            self.ui.lineEdit_delimiter.setText(example.delimiter)
+            self.ui.lineEdit_number_of_lines_to_skip.setText("0")
+            self._extract_data(show_success_message=False)
+            if not self.successful_extraction:
+                return
+
+            self.clear_models_and_parameters_forms_and_combobox()
+            self.ui.comboBox_rate_model.setCurrentText(example.rate_model)
+            self.update_rate_formLayout(None)
+            self.autofill_models_parameters()
+
+            self.ui.comboBox_local_optimization_methods.setCurrentText(
+                example.local_method
+            )
+            self.update_local_optimization_gridLayout()
+            self.ui.comboBox_cost_functions.setCurrentText(
+                example.cost_function
+            )
+            self.update_cost_functions_formLayout()
+            self.optimization_profile_combo.setCurrentText(
+                example.calculation_profile
+            )
+            self.apply_optimization_profile()
+            self.ui.toolBox_models_and_optimization_parameters.setCurrentWidget(
+                self.ui.page_models_and_parameters
+            )
+            self.statusBar().showMessage(
+                "Kamal example ready: four datasets extracted and a Quick "
+                "check configured. Review the illustrative values before "
+                "starting.",
+                15000,
+            )
+            QMessageBox.information(
+                self,
+                "Kamal example ready",
+                "Four synthetic heating-rate datasets were extracted. KinOpt "
+                "also selected the Kamal rate model, illustrative starting "
+                "values, Nelder-Mead, the mean squared residual cost, and the "
+                "Quick check profile.\n\n"
+                "These experiments start at zero extent. The Kamal model's "
+                "non-autocatalytic term can initiate the reaction, while a "
+                "purely autocatalytic model needs special care at zero.\n\n"
+                "No optimization has started. Inspect the curves and review "
+                "the setup before running it.",
+            )
+        except Exception as error:
+            traceback.print_exc()
+            QMessageBox.critical(
+                self,
+                "Included example",
+                f"The included example could not be prepared: {error}",
+            )
             
     def clear_files(self):
         """Clear all the files in the listView_files object."""
@@ -684,6 +759,10 @@ class MainWindow(QMainWindow):
         
     def extract_data(self):
         """Extract data from selected files and update GUI elements based on extraction results."""
+        self._extract_data(show_success_message=True)
+
+    def _extract_data(self, show_success_message):
+        """Extract selected data with optional success guidance."""
         self.successful_extraction = False
         try:
             # Get the selected file paths
@@ -733,7 +812,12 @@ class MainWindow(QMainWindow):
                 # Update listView background in green to indicate a successful extraction
                 self.ui.listView_files.viewport().setStyleSheet("background-color: #C8FFC8")
                 
-                QMessageBox.information(self, "Extraction Successful", f"Successful extraction! \n {message}")
+                if show_success_message:
+                    QMessageBox.information(
+                        self,
+                        "Extraction Successful",
+                        f"Successful extraction! \n {message}",
+                    )
     
                
                 self.ax_optimization.clear()
@@ -742,17 +826,37 @@ class MainWindow(QMainWindow):
                 self.experimental_temperatures = []
                 self.experimental_rates = []
                 self.experimental_extents = []
-                for index, filepath in enumerate(self.selected_full_file_paths):
-                    time, temperature, rate, extent = data_extraction.extract_dsc_data_single_file(
-                        filepath, delimiter=delimiter_entry, has_header=has_header_entry, skip_lines=number_of_lines_to_skip)
-                    self.experimental_times.append(time)
-                    self.experimental_temperatures.append(temperature)
-                    self.experimental_rates.append(rate)
-                    self.experimental_extents.append(extent)
-                    
-                    self.ax_data_extraction_rate.plot(time,rate,label=f'{self.selected_shortened_file_paths[index]}')
-                    self.ax_data_extraction_extent.plot(time,extent,label=f'{self.selected_shortened_file_paths[index]}')
-                    self.ax_data_extraction_temperature.plot(time,temperature,label=f'{self.selected_shortened_file_paths[index]}')
+                # launch_extraction already captured and reported warnings.
+                # Avoid emitting the same warnings again while rebuilding the
+                # per-file arrays used by the plots.
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", UserWarning)
+                    for index, filepath in enumerate(
+                        self.selected_full_file_paths
+                    ):
+                        time, temperature, rate, extent = (
+                            data_extraction.extract_dsc_data_single_file(
+                                filepath,
+                                delimiter=delimiter_entry,
+                                has_header=has_header_entry,
+                                skip_lines=number_of_lines_to_skip,
+                            )
+                        )
+                        self.experimental_times.append(time)
+                        self.experimental_temperatures.append(temperature)
+                        self.experimental_rates.append(rate)
+                        self.experimental_extents.append(extent)
+
+                        label = self.selected_shortened_file_paths[index]
+                        self.ax_data_extraction_rate.plot(
+                            time, rate, label=label
+                        )
+                        self.ax_data_extraction_extent.plot(
+                            time, extent, label=label
+                        )
+                        self.ax_data_extraction_temperature.plot(
+                            time, temperature, label=label
+                        )
                     
                 self.ax_data_extraction_rate.legend()
                 self.ax_data_extraction_extent.legend()
@@ -2943,8 +3047,6 @@ def launch_extraction(file_paths, delimiter=',', has_header=False, skip_lines=0)
             - numpy.ndarray: Rate of reaction data.
             - numpy.ndarray: Extent of reaction data.
     """
-    import warnings
-
     try:
         with warnings.catch_warnings(record=True) as messages:
             warnings.simplefilter("always", UserWarning)
