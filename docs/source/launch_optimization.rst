@@ -47,6 +47,21 @@ only changes its explanation; it does not replace your values until you click
 *Apply profile*. A larger calculation budget does not guarantee a better or
 physically meaningful model, so always inspect convergence and residuals.
 
+For models whose fitted parameters are all strictly positive, *Log-space least
+squares* is a fast local option designed for rate-fitting objectives. KinOpt
+optimizes the base-10 logarithm of each parameter and converts the final result
+back to the physical values shown elsewhere in the application. This prevents
+a factor near ``1e13`` from sharing the same numerical scale as an exponent
+near ``1``. The method requires a positive lower and upper bound for every free
+parameter, and each starting value must lie inside its bounds. It runs on its
+own and cannot be combined with a global method.
+
+The method fits one residual per measured point and supports every cost
+function currently offered by KinOpt, including the relative and weighted
+variants. Its *max_nfev* field limits model evaluations. As with every local
+method, compare the final residuals and fitted parameters rather than relying
+only on the solver's success flag.
+
 The *Review setup…* window summarizes the exact configuration that would be
 sent to the optimizer: input files, number of measured points, selected models,
 free and fixed parameters, starting values, bounds, methods, cost function, and

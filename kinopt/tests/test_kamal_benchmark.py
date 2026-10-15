@@ -7,10 +7,12 @@ import numpy as np
 
 from benchmarks.kamal_baseline import (
     BENCHMARK_NAME,
+    LOG_SPACE_LEAST_SQUARES_SOLVER,
     PARAMETER_NAMES,
     build_benchmark_report,
     build_kamal_benchmark_config,
 )
+from kinopt.src.optimization_profiles import THOROUGH_PROFILE_NAME
 from kinopt.src.optimization import rss_mean
 from kinopt.src.optimization_runner import OptimizationRunResult
 
@@ -28,6 +30,26 @@ def test_benchmark_uses_the_complete_guided_example_setup():
         config.initial_guess,
         [1e8, 50_000, 1e8, 50_000, 2, 2],
     )
+
+
+def test_benchmark_can_measure_log_space_least_squares():
+    config = build_kamal_benchmark_config(
+        solver=LOG_SPACE_LEAST_SQUARES_SOLVER,
+    )
+
+    assert config.local_method == "least_squares_log"
+    assert config.local_options["max_nfev"] == 100
+    assert len(config.local_options["bounds"]) == len(PARAMETER_NAMES)
+    assert config.max_iterations == 100
+
+
+def test_benchmark_can_apply_a_larger_profile():
+    config = build_kamal_benchmark_config(
+        profile_name=THOROUGH_PROFILE_NAME,
+    )
+
+    assert config.local_options["options"]["maxiter"] == 3000
+    assert config.max_iterations == 3000
 
 
 def test_report_keeps_speed_and_fit_quality_for_each_run():
