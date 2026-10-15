@@ -105,7 +105,7 @@ class BatchOptimizationDialog(QDialog):
         explanation = QLabel(
             "Save several configurations, then run them one at a time. "
             "Changing the main form later does not modify queued jobs. "
-            "Successful optimizations started from the main window are also "
+            "Completed optimizations started from the main window are also "
             "added here automatically."
         )
         explanation.setWordWrap(True)
@@ -303,6 +303,8 @@ class BatchOptimizationDialog(QDialog):
             )
             >= 2
         )
+        if self.comparison_dialog is not None:
+            self.comparison_dialog.set_jobs(jobs)
         self._update_action_buttons()
 
     def add_current_setup(self):

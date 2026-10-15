@@ -5,10 +5,11 @@ KinOpt can save several model and optimizer configurations and run them in a
 persistent queue. This is useful for comparing models, initial guesses, bounds,
 or optimization methods on the same experimental data.
 
-A successful optimization started with the regular **Start optimization**
-button is added to this table automatically. It receives a dated ``Direct
-optimization`` name and can be compared with completed batch jobs or another
-direct run. Failed or cancelled direct runs are not added.
+An optimization started with the regular **Start optimization** button is added
+to this table automatically when it finishes with a finite result. It receives
+a dated ``Direct optimization`` name and can be compared with completed batch
+jobs or another direct run. Cancelled runs and runs stopped by an error are not
+added.
 
 Preparing the queue
 -------------------

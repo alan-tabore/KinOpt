@@ -177,3 +177,16 @@ def test_dialog_compares_completed_jobs_by_common_rmse(batch_dialog, qt_app):
     assert comparison.table.item(0, 2).text() == "Exact fit"
     assert float(comparison.table.item(0, 5).text()) == pytest.approx(0.)
     assert comparison.table.item(1, 2).text() == "Less accurate"
+
+    queue.record_completed(
+        jobs[0].config,
+        outcomes[1],
+        name="Direct optimization",
+    )
+    dialog.refresh()
+
+    assert comparison.table.rowCount() == 3
+    assert {
+        comparison.table.item(row, 2).text()
+        for row in range(comparison.table.rowCount())
+    } == {"Exact fit", "Less accurate", "Direct optimization"}
