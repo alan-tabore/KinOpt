@@ -10,6 +10,8 @@ To create the global kinetic of reaction, multiple elements are available:
 
 """
 
+from dataclasses import dataclass
+
 import numpy as np
 import scipy
 
@@ -191,7 +193,14 @@ def rate_for_kamal(extent,T,A1,E1,A2,E2,m,n):
     >>>  plt.show()
     
     """
-    return (arrhenius_rate_constant(T,A1,E1) + (arrhenius_rate_constant(T,A2,E2) * extent**m)) * (1 - extent)**n
+    extent, T = np.broadcast_arrays(
+        np.asarray(extent, dtype=float),
+        np.asarray(T, dtype=float),
+    )
+    inverse_RT = 1 / (8.31446261815324 * T)
+    regular_contribution = A1 * np.exp(-E1 * inverse_RT)
+    autocatalytic_contribution = A2 * np.exp(-E2 * inverse_RT) * extent**m
+    return (regular_contribution + autocatalytic_contribution) * (1 - extent)**n
 
     
 def vitrification_WLF_rate(T,Tg,Ad,C1,C2):
@@ -427,6 +436,32 @@ def jac_for_rate_for_kamal(extent, T, A1, E1, A2, E2, m, n):
         (1 - x)^n \log(1 - x) (A_2 x^m e^{-\frac{E_2}{RT}} + A_1 e^{-\frac{E_1}{RT}})
         \end{bmatrix}
     """
+    _, jacobian = kamal_rate_and_jacobian(
+        extent,
+        T,
+        A1,
+        E1,
+        A2,
+        E2,
+        m,
+        n,
+    )
+    return jacobian
+
+
+@dataclass(frozen=True)
+class PreparedKamalData:
+    """Parameter-independent arrays reused by Kamal rate evaluations."""
+
+    extent: np.ndarray
+    inverse_RT: np.ndarray
+    remaining_extent: np.ndarray
+    log_extent: np.ndarray
+    log_remaining_extent: np.ndarray
+
+
+def prepare_kamal_data(extent, T):
+    """Validate and prepare experimental arrays shared by Kamal evaluations."""
     R = 8.31446261815324  # Ideal gas constant
     extent, T = np.broadcast_arrays(
         np.asarray(extent, dtype=float),
@@ -437,35 +472,74 @@ def jac_for_rate_for_kamal(extent, T, A1, E1, A2, E2, m, n):
     if not np.all(np.isfinite(T)) or np.any(T <= 0):
         raise ValueError("Kamal temperature must be finite and strictly positive.")
 
-    exp_E1_RT = np.exp(-E1 / (R * T))
-    exp_E2_RT = np.exp(-E2 / (R * T))
-    extent_to_m = extent ** m
     remaining_extent = 1 - extent
+    log_extent = np.zeros_like(extent)
+    positive_extent = extent > 0
+    log_extent[positive_extent] = np.log(extent[positive_extent])
+    log_remaining_extent = np.zeros_like(remaining_extent)
+    positive_remaining_extent = remaining_extent > 0
+    log_remaining_extent[positive_remaining_extent] = np.log(
+        remaining_extent[positive_remaining_extent]
+    )
+    return PreparedKamalData(
+        extent=extent,
+        inverse_RT=1 / (R * T),
+        remaining_extent=remaining_extent,
+        log_extent=log_extent,
+        log_remaining_extent=log_remaining_extent,
+    )
+
+
+def kamal_rate_and_jacobian_from_prepared(
+    prepared_data,
+    A1,
+    E1,
+    A2,
+    E2,
+    m,
+    n,
+):
+    """Compute the Kamal rate and Jacobian from prepared experimental data."""
+    extent = prepared_data.extent
+    inverse_RT = prepared_data.inverse_RT
+    remaining_extent = prepared_data.remaining_extent
+    exp_E1_RT = np.exp(-E1 * inverse_RT)
+    exp_E2_RT = np.exp(-E2 * inverse_RT)
+    extent_to_m = extent ** m
     one_minus_extent_to_n = remaining_extent ** n
 
-    extent_power_log = np.zeros_like(extent)
-    positive_extent = extent > 0
-    extent_power_log[positive_extent] = (
-        extent_to_m[positive_extent] * np.log(extent[positive_extent])
-    )
-    remaining_power_log = np.zeros_like(remaining_extent)
-    positive_remaining_extent = remaining_extent > 0
-    remaining_power_log[positive_remaining_extent] = (
-        one_minus_extent_to_n[positive_remaining_extent]
-        * np.log(remaining_extent[positive_remaining_extent])
-    )
-
-    return np.stack(
+    regular_contribution = A1 * exp_E1_RT
+    autocatalytic_contribution = A2 * extent_to_m * exp_E2_RT
+    rate = (
+        regular_contribution + autocatalytic_contribution
+    ) * one_minus_extent_to_n
+    jacobian = np.stack(
         (
             one_minus_extent_to_n * exp_E1_RT,
-            -(A1 * one_minus_extent_to_n * exp_E1_RT) / (R * T),
+            -regular_contribution * one_minus_extent_to_n * inverse_RT,
             extent_to_m * one_minus_extent_to_n * exp_E2_RT,
-            -(A2 * extent_to_m * one_minus_extent_to_n * exp_E2_RT) / (R * T),
-            A2 * one_minus_extent_to_n * extent_power_log * exp_E2_RT,
-            remaining_power_log
-            * (A2 * extent_to_m * exp_E2_RT + A1 * exp_E1_RT),
+            -autocatalytic_contribution * one_minus_extent_to_n * inverse_RT,
+            autocatalytic_contribution
+            * one_minus_extent_to_n
+            * prepared_data.log_extent,
+            rate * prepared_data.log_remaining_extent,
         ),
         axis=-1,
+    )
+    return rate, jacobian
+
+
+def kamal_rate_and_jacobian(extent, T, A1, E1, A2, E2, m, n):
+    """Compute a Kamal rate and all six derivatives in one array pass."""
+    prepared_data = prepare_kamal_data(extent, T)
+    return kamal_rate_and_jacobian_from_prepared(
+        prepared_data,
+        A1,
+        E1,
+        A2,
+        E2,
+        m,
+        n,
     )
 
 

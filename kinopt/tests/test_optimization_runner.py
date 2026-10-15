@@ -234,6 +234,12 @@ def test_auto_jacobian_reduces_kamal_residual_evaluations():
     assert numerical.jacobian_source == '2-point'
     assert analytic.analytic_jacobian_evaluations > 0
     assert analytic.residual_evaluations < numerical.residual_evaluations
+    assert analytic.kinetic_evaluations == analytic.residual_evaluations
+    assert analytic.kinetic_evaluations < (
+        analytic.residual_evaluations
+        + analytic.analytic_jacobian_evaluations
+    )
+    assert numerical.kinetic_evaluations == numerical.residual_evaluations
     np.testing.assert_allclose(analytic.x, numerical.x, rtol=1e-6)
 
 

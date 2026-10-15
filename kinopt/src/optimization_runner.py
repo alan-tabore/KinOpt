@@ -9,7 +9,7 @@ import time
 import numpy as np
 from scipy.optimize import OptimizeResult
 
-from kinopt.src import optimization
+from kinopt.src import kinetic_models, optimization
 
 
 LOG_SPACE_LEAST_SQUARES = "least_squares_log"
@@ -198,20 +198,77 @@ def _run_log_space_least_squares(
             config.tg_law,
         )
     )
+    residual_weights = optimization.least_squares_residual_weights(
+        config.cost_function,
+        objective_args[0],
+        *objective_args[12:],
+    )
+    prepared_rate_data = (
+        kinetic_models.prepare_kamal_data(*objective_args[2])
+        if use_analytic_jacobian
+        else None
+    )
     residual_evaluations = [0]
     analytic_jacobian_evaluations = [0]
+    kinetic_evaluations = [0]
     best_squared_norm = [np.inf]
+    cached_transformed_parameters = [None]
+    cached_physical_parameters = [None]
+    cached_residuals = [None]
+    cached_jacobian = [None]
+
+    def evaluate_analytic_kamal(transformed_parameters):
+        if (
+            cached_transformed_parameters[0] is None
+            or not np.array_equal(
+                transformed_parameters,
+                cached_transformed_parameters[0],
+            )
+        ):
+            kinetic_evaluations[0] += 1
+            physical_parameters = np.power(10.0, transformed_parameters)
+            residuals, physical_jacobian = (
+                optimization.analytic_residuals_and_jacobian_for_least_squares(
+                    physical_parameters,
+                    config.cost_function,
+                    *objective_args,
+                    residual_weights=residual_weights,
+                    prepared_rate_data=prepared_rate_data,
+                )
+            )
+            log_space_derivative = np.log(10.0) * physical_parameters
+            cached_transformed_parameters[0] = np.array(
+                transformed_parameters,
+                copy=True,
+            )
+            cached_physical_parameters[0] = physical_parameters
+            cached_residuals[0] = residuals
+            cached_jacobian[0] = (
+                physical_jacobian * log_space_derivative[np.newaxis, :]
+            )
+        return (
+            cached_physical_parameters[0],
+            cached_residuals[0],
+            cached_jacobian[0],
+        )
 
     def residual_function(transformed_parameters):
         if cancellation_requested():
             raise OptimizationCancelled()
         residual_evaluations[0] += 1
-        physical_parameters = np.power(10.0, transformed_parameters)
-        residuals = optimization.residuals_for_least_squares(
-            physical_parameters,
-            config.cost_function,
-            *objective_args,
-        )
+        if use_analytic_jacobian:
+            physical_parameters, residuals, _ = evaluate_analytic_kamal(
+                transformed_parameters
+            )
+        else:
+            kinetic_evaluations[0] += 1
+            physical_parameters = np.power(10.0, transformed_parameters)
+            residuals = optimization.residuals_for_least_squares(
+                physical_parameters,
+                config.cost_function,
+                *objective_args,
+                residual_weights=residual_weights,
+            )
         squared_norm = float(np.dot(residuals, residuals))
         if callback is not None and squared_norm < best_squared_norm[0]:
             best_squared_norm[0] = squared_norm
@@ -223,14 +280,10 @@ def _run_log_space_least_squares(
             if cancellation_requested():
                 raise OptimizationCancelled()
             analytic_jacobian_evaluations[0] += 1
-            physical_parameters = np.power(10.0, transformed_parameters)
-            physical_jacobian = optimization.analytic_jacobian_for_least_squares(
-                physical_parameters,
-                config.cost_function,
-                *objective_args,
+            _, _, jacobian = evaluate_analytic_kamal(
+                transformed_parameters
             )
-            log_space_derivative = np.log(10.0) * physical_parameters
-            return physical_jacobian * log_space_derivative[np.newaxis, :]
+            return jacobian
 
         options["jac"] = jacobian_function
         jacobian_source = "analytic-kamal"
@@ -254,6 +307,7 @@ def _run_log_space_least_squares(
     result.fun = float(config.cost_function(result.x, *objective_args))
     result.residual_evaluations = residual_evaluations[0]
     result.analytic_jacobian_evaluations = analytic_jacobian_evaluations[0]
+    result.kinetic_evaluations = kinetic_evaluations[0]
     result.jacobian_source = jacobian_source
     return result
 

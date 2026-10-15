@@ -297,10 +297,23 @@ def test_kamal_least_squares_jacobian_matches_weighted_residuals(
         *cost_args,
     )
 
-    analytic = opt.analytic_jacobian_for_least_squares(
+    combined_residuals, analytic = (
+        opt.analytic_residuals_and_jacobian_for_least_squares(
+            parameters,
+            cost_function,
+            *objective_args,
+        )
+    )
+    expected_residuals = opt.residuals_for_least_squares(
         parameters,
         cost_function,
         *objective_args,
+    )
+    np.testing.assert_allclose(
+        combined_residuals,
+        expected_residuals,
+        rtol=3e-15,
+        atol=1e-15,
     )
     numerical_columns = []
     for parameter_index, parameter in enumerate(parameters):
