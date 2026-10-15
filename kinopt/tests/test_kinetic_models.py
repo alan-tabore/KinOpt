@@ -61,6 +61,84 @@ def test_rate_for_kamal():
     assert np.allclose(results, expected_results), "Rate for kamal reaction calculation failed."
 
 
+def test_kamal_jacobian_matches_finite_differences_for_vector_data():
+    extent = np.array([0.05, 0.2, 0.55, 0.9])
+    temperature = np.array([330.0, 360.0, 410.0, 470.0])
+    parameters = np.array([1.3e7, 52_000.0, 4.1e9, 76_000.0, 0.8, 1.4])
+
+    analytic = km.jac_for_rate_for_kamal(
+        extent,
+        temperature,
+        *parameters,
+    )
+    numerical_columns = []
+    for parameter_index, parameter in enumerate(parameters):
+        step = max(abs(parameter) * 1e-5, 1e-7)
+        lower = parameters.copy()
+        upper = parameters.copy()
+        lower[parameter_index] -= step
+        upper[parameter_index] += step
+        numerical_columns.append(
+            (
+                km.rate_for_kamal(extent, temperature, *upper)
+                - km.rate_for_kamal(extent, temperature, *lower)
+            )
+            / (2 * step)
+        )
+
+    numerical = np.column_stack(numerical_columns)
+    assert analytic.shape == (extent.size, parameters.size)
+    np.testing.assert_allclose(analytic, numerical, rtol=2e-8, atol=1e-12)
+
+
+def test_kamal_jacobian_is_finite_at_conversion_endpoints():
+    jacobian = km.jac_for_rate_for_kamal(
+        np.array([0.0, 1.0]),
+        np.array([350.0, 450.0]),
+        1e8,
+        50_000.0,
+        1e10,
+        75_000.0,
+        0.8,
+        1.2,
+    )
+
+    assert jacobian.shape == (2, 6)
+    assert np.all(np.isfinite(jacobian))
+    assert jacobian[0, 4] == 0
+    np.testing.assert_array_equal(jacobian[1], np.zeros(6))
+
+
+def test_kamal_jacobian_keeps_scalar_shape():
+    jacobian = km.jac_for_rate_for_kamal(
+        0.5,
+        400.0,
+        1e8,
+        50_000.0,
+        1e10,
+        75_000.0,
+        0.8,
+        1.2,
+    )
+
+    assert jacobian.shape == (6,)
+
+
+@pytest.mark.parametrize("extent", [-0.1, 1.1, np.nan, np.inf])
+def test_kamal_jacobian_rejects_invalid_conversion(extent):
+    with pytest.raises(ValueError, match="between 0 and 1"):
+        km.jac_for_rate_for_kamal(
+            extent,
+            400.0,
+            1e8,
+            50_000.0,
+            1e10,
+            75_000.0,
+            0.8,
+            1.2,
+        )
+
+
 @pytest.mark.parametrize("extent", [-0.1, 1.1, np.nan, np.inf])
 def test_autocatalytic_rejects_invalid_conversion(extent):
     with pytest.raises(ValueError, match="between 0 and 1"):

@@ -19,7 +19,7 @@ class OptimizationProfile:
 
 _COMMON_METHOD_VALUES = {
     'least_squares_log': {
-        'jac': '2-point',
+        'jac': 'auto',
     },
     'Nelder-Mead': {
         'disp': 'No',

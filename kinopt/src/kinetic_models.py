@@ -384,10 +384,10 @@ def jac_for_rate_for_kamal(extent, T, A1, E1, A2, E2, m, n):
 
     Parameters
     ----------
-    extent : float
-        Extent of the reaction.
-    T : float
-        Temperature in Kelvin.
+    extent : float or array-like
+        Extent of the reaction, between 0 and 1.
+    T : float or array-like
+        Temperature in Kelvin. It must be broadcastable with ``extent``.
     A1 : float
         Pre-exponential factor for reaction 1.
     E1 : float
@@ -404,16 +404,16 @@ def jac_for_rate_for_kamal(extent, T, A1, E1, A2, E2, m, n):
     Returns
     -------
     jac : ndarray
-        Jacobian vector of shape (6,) representing the first derivatives
-        of the rate expression with respect to (A1, E1, A2, E2, m, n).
+        First derivatives of the rate with respect to
+        ``(A1, E1, A2, E2, m, n)``. The final dimension has length 6;
+        scalar inputs therefore return shape ``(6,)`` and vector inputs
+        return shape ``(number_of_points, 6)``.
 
     Notes
     -----
-    This function computes the Jacobian vector for a rate expression
-    based on the extent of the reaction, temperature, pre-exponential
-    factors, activation energies, and power terms for two reactions.
-    The Jacobian vector represents the first derivatives of the rate
-    expression with respect to the extent of the reaction.
+    The logarithmic terms use their mathematical limit at conversion 0 and
+    1, so the derivatives stay finite at both endpoints when ``m`` and ``n``
+    are positive.
 
     The Jacobian vector J is given by:
 
@@ -428,24 +428,45 @@ def jac_for_rate_for_kamal(extent, T, A1, E1, A2, E2, m, n):
         \end{bmatrix}
     """
     R = 8.31446261815324  # Ideal gas constant
-    
+    extent, T = np.broadcast_arrays(
+        np.asarray(extent, dtype=float),
+        np.asarray(T, dtype=float),
+    )
+    if not np.all(np.isfinite(extent)) or np.any((extent < 0) | (extent > 1)):
+        raise ValueError("Kamal conversion must be finite and between 0 and 1.")
+    if not np.all(np.isfinite(T)) or np.any(T <= 0):
+        raise ValueError("Kamal temperature must be finite and strictly positive.")
+
     exp_E1_RT = np.exp(-E1 / (R * T))
     exp_E2_RT = np.exp(-E2 / (R * T))
-    log_extent = np.log(extent)
-    log_1_minus_extent = np.log(1 - extent)
     extent_to_m = extent ** m
-    one_minus_extent_to_n = (1 - extent) ** n
-    
-    jac = np.zeros(6)
-    
-    jac[0] = one_minus_extent_to_n * exp_E1_RT
-    jac[1] = -(A1 * one_minus_extent_to_n * exp_E1_RT) / (R * T)
-    jac[2] = extent_to_m * one_minus_extent_to_n * exp_E2_RT
-    jac[3] = -(A2 * extent_to_m * one_minus_extent_to_n * exp_E2_RT) / (R * T)
-    jac[4] = A2 * extent_to_m * one_minus_extent_to_n * log_extent * exp_E2_RT
-    jac[5] = one_minus_extent_to_n * log_1_minus_extent * (A2 * extent_to_m * exp_E2_RT + A1 * exp_E1_RT)
-    
-    return jac
+    remaining_extent = 1 - extent
+    one_minus_extent_to_n = remaining_extent ** n
+
+    extent_power_log = np.zeros_like(extent)
+    positive_extent = extent > 0
+    extent_power_log[positive_extent] = (
+        extent_to_m[positive_extent] * np.log(extent[positive_extent])
+    )
+    remaining_power_log = np.zeros_like(remaining_extent)
+    positive_remaining_extent = remaining_extent > 0
+    remaining_power_log[positive_remaining_extent] = (
+        one_minus_extent_to_n[positive_remaining_extent]
+        * np.log(remaining_extent[positive_remaining_extent])
+    )
+
+    return np.stack(
+        (
+            one_minus_extent_to_n * exp_E1_RT,
+            -(A1 * one_minus_extent_to_n * exp_E1_RT) / (R * T),
+            extent_to_m * one_minus_extent_to_n * exp_E2_RT,
+            -(A2 * extent_to_m * one_minus_extent_to_n * exp_E2_RT) / (R * T),
+            A2 * one_minus_extent_to_n * extent_power_log * exp_E2_RT,
+            remaining_power_log
+            * (A2 * extent_to_m * exp_E2_RT + A1 * exp_E1_RT),
+        ),
+        axis=-1,
+    )
 
 
 def hess_for_rate_for_kamal(extent, T, A1, E1, A2, E2, m, n):

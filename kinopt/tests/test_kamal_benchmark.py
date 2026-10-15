@@ -38,9 +38,19 @@ def test_benchmark_can_measure_log_space_least_squares():
     )
 
     assert config.local_method == "least_squares_log"
+    assert config.local_options["jac"] == "auto"
     assert config.local_options["max_nfev"] == 100
     assert len(config.local_options["bounds"]) == len(PARAMETER_NAMES)
     assert config.max_iterations == 100
+
+
+def test_benchmark_can_compare_numerical_and_automatic_jacobians():
+    config = build_kamal_benchmark_config(
+        solver=LOG_SPACE_LEAST_SQUARES_SOLVER,
+        jacobian="2-point",
+    )
+
+    assert config.local_options["jac"] == "2-point"
 
 
 def test_benchmark_can_apply_a_larger_profile():
@@ -94,6 +104,9 @@ def test_report_keeps_speed_and_fit_quality_for_each_run():
     }
     assert report["summary"]["successful_runs"] == 0
     assert report["runs"][0]["evaluations"] == 20
+    assert report["runs"][0]["residual_evaluations"] == 20
+    assert report["runs"][0]["jacobian_evaluations"] is None
+    assert report["runs"][0]["jacobian_source"] is None
     assert report["runs"][0]["message"] == "budget reached"
     assert report["runs"][0]["rmse"] > 0
     json.dumps(report, allow_nan=False)

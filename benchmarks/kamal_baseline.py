@@ -41,6 +41,7 @@ BENCHMARK_NAME = "packaged-kamal-quick-check"
 PARAMETER_NAMES = ("A1", "E1", "A2", "E2", "m", "n")
 NELDER_MEAD_SOLVER = "nelder-mead"
 LOG_SPACE_LEAST_SQUARES_SOLVER = "log-space-least-squares"
+JACOBIAN_CHOICES = ("auto", "2-point", "3-point", "cs")
 PROFILE_NAMES = {
     "quick": QUICK_PROFILE_NAME,
     "balanced": BALANCED_PROFILE_NAME,
@@ -68,6 +69,7 @@ def _profile_value(value):
 def build_kamal_benchmark_config(
     solver: str = NELDER_MEAD_SOLVER,
     profile_name: str = QUICK_PROFILE_NAME,
+    jacobian: Optional[str] = None,
 ) -> OptimizationRunConfig:
     """Build the same deterministic quick setup offered by the GUI example."""
     paths = included_example_files(KAMAL_EXAMPLE)
@@ -99,6 +101,10 @@ def build_kamal_benchmark_config(
         if (converted := _profile_value(value)) is not None
     }
     if method == LOG_SPACE_LEAST_SQUARES:
+        if jacobian is not None:
+            if jacobian not in JACOBIAN_CHOICES:
+                raise ValueError(f"Unknown Jacobian mode: {jacobian}")
+            options["jac"] = jacobian
         options["bounds"] = tuple(
             (
                 float(bound_parameter_example(name, "min").value),
@@ -109,6 +115,10 @@ def build_kamal_benchmark_config(
         local_options = options
         maximum_iterations = int(options["max_nfev"])
     else:
+        if jacobian is not None:
+            raise ValueError(
+                "A Jacobian mode can only be selected for log-space least squares."
+            )
         local_options = {"method": method, "options": options}
         maximum_iterations = int(options["maxiter"])
 
@@ -162,6 +172,7 @@ def _run_record(
     )
     rmse = float(np.sqrt(np.mean((modeled_rate - config.experimental_rate) ** 2)))
     iterations = getattr(result, "nit", None)
+    jacobian_evaluations = getattr(result, "njev", None)
     return {
         "run": number,
         "elapsed_seconds": float(outcome.elapsed_seconds),
@@ -169,6 +180,13 @@ def _run_record(
         "status": int(result.status),
         "message": str(result.message),
         "evaluations": int(result.nfev),
+        "residual_evaluations": int(
+            getattr(result, "residual_evaluations", result.nfev)
+        ),
+        "jacobian_evaluations": (
+            None if jacobian_evaluations is None else int(jacobian_evaluations)
+        ),
+        "jacobian_source": getattr(result, "jacobian_source", None),
         "iterations": None if iterations is None else int(iterations),
         "cost": float(result.fun),
         "rmse": rmse,
@@ -184,6 +202,7 @@ def build_benchmark_report(
     runner: Callable[[OptimizationRunConfig], OptimizationRunResult] = run_optimization,
     solver: str = NELDER_MEAD_SOLVER,
     profile_name: str = QUICK_PROFILE_NAME,
+    jacobian: Optional[str] = None,
 ) -> dict:
     """Run the benchmark and return measurements suitable for JSON output."""
     if repeats < 1:
@@ -192,6 +211,7 @@ def build_benchmark_report(
     config = build_kamal_benchmark_config(
         solver=solver,
         profile_name=profile_name,
+        jacobian=jacobian,
     )
     runs = [_run_record(config, runner, number) for number in range(1, repeats + 1)]
     elapsed = [run["elapsed_seconds"] for run in runs]
@@ -217,6 +237,11 @@ def build_benchmark_report(
             "cost_function": KAMAL_EXAMPLE.cost_function,
             "solver": config.local_method,
             "profile": profile_name,
+            "jacobian": (
+                config.local_options.get("jac")
+                if config.local_method == LOG_SPACE_LEAST_SQUARES
+                else None
+            ),
             "initial_parameters": {
                 name: float(value)
                 for name, value in zip(PARAMETER_NAMES, config.initial_guess)
@@ -271,6 +296,14 @@ def _parser() -> argparse.ArgumentParser:
         default="quick",
         help="calculation profile to benchmark (default: quick)",
     )
+    parser.add_argument(
+        "--jacobian",
+        choices=JACOBIAN_CHOICES,
+        help=(
+            "Jacobian mode for log-space least squares; by default the "
+            "selected profile uses auto"
+        ),
+    )
     return parser
 
 
@@ -281,6 +314,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             args.repeats,
             solver=args.solver,
             profile_name=PROFILE_NAMES[args.profile],
+            jacobian=args.jacobian,
         )
     except ValueError as error:
         print(f"error: {error}", file=sys.stderr)

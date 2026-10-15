@@ -8,6 +8,7 @@ Created on Tue Apr  2 10:32:20 2024
 import pytest
 import inspect
 import numpy as np
+from kinopt.src import kinetic_models
 from kinopt.src import optimization as opt
 
 
@@ -248,3 +249,97 @@ def test_least_squares_residuals_preserve_supported_costs(
     squared_norm = np.dot(residuals, residuals)
     expected = scalar_cost * len(experimental_rate) if is_mean else scalar_cost
     assert squared_norm == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    "cost_function,cost_args",
+    [
+        (opt.rss_standard, ()),
+        (opt.rss_mean, ()),
+        (opt.rss_relative, ()),
+        (
+            opt.rss_increase_of_small_extents_impact,
+            (np.array([0.05, 0.2, 0.55, 0.9]), 0.3, 2.5),
+        ),
+        (opt.rss_increase_of_small_rates_impact_with_zones, (4.0, 2.5)),
+    ],
+)
+def test_kamal_least_squares_jacobian_matches_weighted_residuals(
+    cost_function,
+    cost_args,
+):
+    extent = np.array([0.05, 0.2, 0.55, 0.9])
+    temperature = np.array([330.0, 360.0, 410.0, 470.0])
+    parameters = np.array([1.3e7, 52_000.0, 4.1e9, 76_000.0, 0.8, 1.4])
+    experimental_rate = kinetic_models.rate_for_kamal(
+        extent,
+        temperature,
+        1e7,
+        50_000.0,
+        5e9,
+        78_000.0,
+        0.9,
+        1.2,
+    )
+    objective_args = (
+        experimental_rate,
+        kinetic_models.rate_for_kamal,
+        (extent, temperature),
+        6,
+        None,
+        (),
+        0,
+        None,
+        (),
+        None,
+        (),
+        None,
+        *cost_args,
+    )
+
+    analytic = opt.analytic_jacobian_for_least_squares(
+        parameters,
+        cost_function,
+        *objective_args,
+    )
+    numerical_columns = []
+    for parameter_index, parameter in enumerate(parameters):
+        step = max(abs(parameter) * 1e-5, 1e-7)
+        lower = parameters.copy()
+        upper = parameters.copy()
+        lower[parameter_index] -= step
+        upper[parameter_index] += step
+        numerical_columns.append(
+            (
+                opt.residuals_for_least_squares(
+                    upper,
+                    cost_function,
+                    *objective_args,
+                )
+                - opt.residuals_for_least_squares(
+                    lower,
+                    cost_function,
+                    *objective_args,
+                )
+            )
+            / (2 * step)
+        )
+
+    np.testing.assert_allclose(
+        analytic,
+        np.column_stack(numerical_columns),
+        rtol=2e-8,
+        atol=1e-12,
+    )
+
+
+def test_analytic_least_squares_jacobian_rejects_an_unsupported_model():
+    assert not opt.has_analytic_jacobian_for_least_squares(
+        3,
+        kinetic_models.rate_for_nth_order,
+        3,
+        None,
+        0,
+        None,
+        None,
+    )

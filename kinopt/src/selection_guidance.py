@@ -101,7 +101,7 @@ GUIDANCE_BY_KIND = {
         'least_squares_log': SelectionGuidance(
             'Log-space least squares',
             'Fits the rate residuals directly while scaling every positive parameter logarithmically.',
-            'Recommended for positive kinetic parameters with justified bounds; it cannot be combined with a global method.',
+            'Recommended for positive kinetic parameters with justified bounds; keep jac on auto, and do not combine it with a global method.',
         ),
         'Nelder-Mead': SelectionGuidance(
             'Nelder-Mead',
