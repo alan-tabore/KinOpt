@@ -1,5 +1,6 @@
-"""Qt interface for the persistent sequential optimization queue."""
+"""Qt interface for the persistent optimization queue."""
 
+import os
 from threading import Event
 
 from PyQt5.QtCore import Qt, QThread, QTimer, pyqtSignal
@@ -26,7 +27,7 @@ from kinopt.src.optimization_diagnostics_dialog import (
 )
 from kinopt.src.optimization_multistart import generate_multistart_configs
 from kinopt.src.optimization_queue import JobStatus
-from kinopt.src.optimization_scheduler import SequentialOptimizationScheduler
+from kinopt.src.optimization_scheduler import ConcurrentOptimizationScheduler
 
 
 class BatchOptimizationThread(QThread):
@@ -35,25 +36,49 @@ class BatchOptimizationThread(QThread):
     job_finished = pyqtSignal(object)
     execution_error = pyqtSignal(str)
 
-    def __init__(self, queue, parent=None):
+    def __init__(
+        self,
+        queue,
+        max_concurrent_jobs=1,
+        process_budget=None,
+        parent=None,
+    ):
         super().__init__(parent)
         self.queue = queue
+        self.max_concurrent_jobs = max_concurrent_jobs
+        self.process_budget = process_budget
         self._pause_requested = Event()
+        self._cancelled_identifiers = set()
+        self.scheduler = None
 
     def request_pause(self):
         """Finish the active job without claiming another one."""
         self._pause_requested.set()
 
-    def request_cancel(self):
-        """Cancel the active job and stop before the next one."""
-        self._pause_requested.set()
-        self.requestInterruption()
+    def request_cancel(self, identifier=None):
+        """Cancel one active job, or every active job during shutdown."""
+        if identifier is None:
+            self._pause_requested.set()
+            if self.scheduler is not None:
+                identifiers = self.scheduler.active_job_identifiers
+                self._cancelled_identifiers.update(identifiers)
+                for active_identifier in identifiers:
+                    self.scheduler.cancel(active_identifier)
+            return
+        self._cancelled_identifiers.add(identifier)
+        if self.scheduler is not None:
+            self.scheduler.cancel(identifier)
 
     def run(self):
         try:
-            SequentialOptimizationScheduler(self.queue).run_pending(
+            self.scheduler = ConcurrentOptimizationScheduler(
+                self.queue,
+                max_concurrent_jobs=self.max_concurrent_jobs,
+                process_budget=self.process_budget,
+            )
+            self.scheduler.run_pending(
                 cancellation_requested=(
-                    lambda job: self.isInterruptionRequested()
+                    lambda job: job.identifier in self._cancelled_identifiers
                 ),
                 should_continue=lambda: not self._pause_requested.is_set(),
                 job_finished=self.job_finished.emit,
@@ -111,7 +136,7 @@ class BatchOptimizationDialog(QDialog):
         self.resize(1050, 480)
 
         explanation = QLabel(
-            "Save several configurations, then run them one at a time. "
+            "Save several configurations, then run them in isolated processes. "
             "A multi-start group tests one bounded setup from several initial "
             "parameter values. "
             "Changing the main form later does not modify queued jobs. "
@@ -151,6 +176,21 @@ class BatchOptimizationDialog(QDialog):
         self.multistart_seed.setToolTip(
             "Use the same seed and bounds to reproduce the generated starts."
         )
+        available_cpus = max(1, os.cpu_count() or 1)
+        self.concurrent_jobs = QSpinBox()
+        self.concurrent_jobs.setRange(1, min(32, available_cpus))
+        self.concurrent_jobs.setValue(1)
+        self.concurrent_jobs.setToolTip(
+            "Maximum number of independent optimization jobs running at once. "
+            "Keep 1 for the lowest memory use."
+        )
+        self.process_budget = QSpinBox()
+        self.process_budget.setRange(1, min(256, available_cpus))
+        self.process_budget.setValue(available_cpus)
+        self.process_budget.setToolTip(
+            "Maximum total solver workers across active jobs. A job configured "
+            "with several workers consumes several slots."
+        )
         self.start_button = QPushButton("Start pending jobs")
         self.pause_button = QPushButton("Pause after current job")
         self.cancel_button = QPushButton("Cancel selected/current job")
@@ -183,6 +223,16 @@ class BatchOptimizationDialog(QDialog):
             "Prepare combinations of rate models, local methods, and profiles."
         ))
         plan_controls.addStretch(1)
+
+        resource_controls = QHBoxLayout()
+        resource_controls.addWidget(QLabel("Concurrent jobs:"))
+        resource_controls.addWidget(self.concurrent_jobs)
+        resource_controls.addWidget(QLabel("Global process budget:"))
+        resource_controls.addWidget(self.process_budget)
+        resource_controls.addWidget(QLabel(
+            "One job remains the safe default; increase it for independent runs."
+        ))
+        resource_controls.addStretch(1)
 
         execution_controls = QHBoxLayout()
         for button in (
@@ -218,6 +268,7 @@ class BatchOptimizationDialog(QDialog):
         layout.addLayout(add_controls)
         layout.addLayout(multistart_controls)
         layout.addLayout(plan_controls)
+        layout.addLayout(resource_controls)
         layout.addLayout(execution_controls)
         layout.addLayout(management_controls)
         layout.addLayout(result_controls)
@@ -355,6 +406,8 @@ class BatchOptimizationDialog(QDialog):
         self.pause_button.setEnabled(self.has_running_worker())
         self.start_button.setEnabled(not self.has_running_worker())
         self.recover_button.setEnabled(not self.has_running_worker())
+        self.concurrent_jobs.setEnabled(not self.has_running_worker())
+        self.process_budget.setEnabled(not self.has_running_worker())
         self.compare_button.setEnabled(
             sum(
                 job.status is JobStatus.COMPLETED and job.result is not None
@@ -446,11 +499,19 @@ class BatchOptimizationDialog(QDialog):
             self.status_label.setText("There are no pending jobs.")
             return
 
-        self.worker = BatchOptimizationThread(self.queue, self)
+        self.worker = BatchOptimizationThread(
+            self.queue,
+            self.concurrent_jobs.value(),
+            self.process_budget.value(),
+            self,
+        )
         self.worker.job_finished.connect(self._job_finished)
         self.worker.execution_error.connect(self._execution_error)
         self.worker.finished.connect(self._worker_finished)
-        self.status_label.setText("Running pending jobs one at a time…")
+        count = self.concurrent_jobs.value()
+        self.status_label.setText(
+            f"Running up to {count} optimization job(s) at once…"
+        )
         self.execution_started.emit()
         self.refresh_timer.start()
         self.refresh()
@@ -482,7 +543,7 @@ class BatchOptimizationDialog(QDialog):
         if self.has_running_worker():
             self.worker.request_pause()
             self.status_label.setText(
-                "Pausing after the current optimization finishes…"
+                "Pausing after the active optimizations finish…"
             )
             self.pause_button.setEnabled(False)
 
@@ -493,15 +554,12 @@ class BatchOptimizationDialog(QDialog):
             (job for job in jobs if job.identifier == identifier),
             None,
         )
-        running = next(
-            (job for job in jobs if job.status is JobStatus.RUNNING),
-            None,
-        )
+        running = [job for job in jobs if job.status is JobStatus.RUNNING]
         target = (
             selected
             if selected is not None
             and selected.status in {JobStatus.PENDING, JobStatus.RUNNING}
-            else running
+            else running[0] if len(running) == 1 else None
         )
         if target is None:
             self.status_label.setText("Select a pending job to cancel.")
@@ -511,8 +569,8 @@ class BatchOptimizationDialog(QDialog):
                 self.queue.set_status(target.identifier, JobStatus.CANCELLED)
                 self.status_label.setText(f"Cancelled {target.name}.")
             elif target.status is JobStatus.RUNNING and self.has_running_worker():
-                self.worker.request_cancel()
-                self.status_label.setText("Cancelling the current optimization…")
+                self.worker.request_cancel(target.identifier)
+                self.status_label.setText(f"Cancelling {target.name}…")
             else:
                 self.status_label.setText(
                     "Only pending or currently running jobs can be cancelled."

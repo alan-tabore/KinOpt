@@ -128,7 +128,7 @@ def test_dialog_runs_all_pending_jobs_without_blocking(batch_dialog, qt_app):
     dialog.start_pending_jobs()
     assert dialog.has_running_worker()
 
-    deadline = time.monotonic() + 5
+    deadline = time.monotonic() + 15
     while dialog.has_running_worker() and time.monotonic() < deadline:
         qt_app.processEvents()
         time.sleep(0.005)

@@ -543,8 +543,27 @@ class OptimizationQueue:
                 )
         return self.get(identifier)
 
-    def claim_next_pending(self):
-        """Atomically mark and return the first pending job."""
+    def peek_next_pending(self):
+        """Return the first pending job without changing its state."""
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT * FROM optimization_jobs
+                WHERE status = ?
+                ORDER BY position, created_at
+                LIMIT 1
+                """,
+                (JobStatus.PENDING.value,),
+            ).fetchone()
+        return None if row is None else self._row_to_job(row)
+
+    def claim_next_pending(self, expected_identifier=None):
+        """Atomically mark and return the first pending job.
+
+        ``expected_identifier`` lets a resource-aware scheduler inspect the
+        next job before claiming it while still detecting a concurrent queue
+        change.
+        """
         timestamp = _utc_now()
         with self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
@@ -560,6 +579,11 @@ class OptimizationQueue:
             if row is None:
                 return None
             identifier = row["identifier"]
+            if (
+                expected_identifier is not None
+                and identifier != expected_identifier
+            ):
+                return None
             cursor = connection.execute(
                 """
                 UPDATE optimization_jobs

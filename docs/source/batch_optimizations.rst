@@ -69,10 +69,19 @@ control refuses those strategies instead of creating duplicate calculations.
 Running and monitoring jobs
 ---------------------------
 
-Click **Start pending jobs** to process the queue. The first version runs one
-optimization at a time so that several expensive calculations do not compete
-for the same processor and memory. Closing and reopening KinOpt preserves the
-queue and completed result summaries.
+Choose **Concurrent jobs** before starting the queue. The default value of one
+minimizes memory use. A larger value runs independent jobs simultaneously in
+separate processes, which is useful for model and multi-start comparisons.
+**Global process budget** limits their combined solver workers. For example, a
+differential-evolution job configured with four workers consumes four slots;
+KinOpt waits before starting another job if it would exceed the budget. One
+oversized job is still allowed to run by itself so that the queue cannot become
+blocked.
+
+Click **Start pending jobs** to process the queue. The concurrency controls are
+locked while it is running. Closing and reopening KinOpt preserves the queue
+and completed result summaries. A process that stops unexpectedly fails only
+its own job; the remaining jobs continue.
 
 The table displays the selected model and strategy, queue state, solver
 convergence, cost, duration, starting or fitted parameters, and the solver's
@@ -85,10 +94,10 @@ budget.
 Queue controls
 --------------
 
-* **Pause after current job** lets the active optimization finish and leaves the
-  following jobs pending.
+* **Pause after current job** lets all active optimizations finish and leaves
+  jobs that have not started pending.
 * **Cancel selected/current job** cancels a selected pending job or requests a
-  cooperative stop of the active job.
+  cooperative stop of the selected active job. Other active jobs continue.
 * **Retry selected job** returns a failed, cancelled, or interrupted job to the
   pending queue.
 * **Recover stopped jobs** marks jobs left running by an application or system
