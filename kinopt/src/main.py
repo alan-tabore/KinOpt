@@ -46,6 +46,10 @@ from kinopt.src import isoconversional_methods as icm
 from kinopt.src import kinetic_models as km
 from kinopt.src import optimization as opt
 from kinopt.src.batch_optimization_dialog import BatchOptimizationDialog
+from kinopt.src.model_metadata import (
+    kinetic_model_metadata,
+    kinetic_model_names,
+)
 from kinopt.src.optimization_queue import OptimizationQueue
 from kinopt.src.optimization_profiles import (
     DEFAULT_PROFILE_NAME,
@@ -3112,22 +3116,12 @@ def get_functions_for_kinetics():
         - tg_laws (list): List of functions related to tg laws.
         - coupling_laws (list): List of functions related to coupling laws.
     """
-    rate_laws = []
-    vitrification_laws = []
-    tg_laws = []
-    coupling_laws = []
-
-    for element in dir(km):
-        if callable(getattr(km, element)):
-            if element[:4] == "rate":
-                rate_laws.append(element)
-            elif element[:13] == "vitrification":
-                vitrification_laws.append(element)            
-            elif element[:8] == "coupling":
-                coupling_laws.append(element)
-            elif element[:2] == "tg":
-                tg_laws.append(element)
-    return rate_laws, vitrification_laws, coupling_laws, tg_laws
+    return (
+        list(kinetic_model_names("rate")),
+        list(kinetic_model_names("vitrification")),
+        list(kinetic_model_names("coupling")),
+        list(kinetic_model_names("tg")),
+    )
 
 
 def get_parameters_for_rate(rate_name):
@@ -3144,11 +3138,8 @@ def get_parameters_for_rate(rate_name):
     list or None
         The list of parameters for the specified function if found, otherwise None.
     """
-    module = km
-    function = getattr(module, rate_name, None)
-    if function is not None:
-        arguments = function.__code__.co_varnames[:function.__code__.co_argcount]
-    return arguments
+    metadata = kinetic_model_metadata("rate", rate_name)
+    return () if metadata is None else metadata.function_parameters
 
 
 def get_parameters_for_vitrification(vitrification_name):
@@ -3165,11 +3156,8 @@ def get_parameters_for_vitrification(vitrification_name):
     list or None
         The list of parameters for the specified function if found, otherwise None.
     """
-    module = km
-    function = getattr(module, vitrification_name, None)
-    if function is not None:
-        arguments = function.__code__.co_varnames[:function.__code__.co_argcount]
-    return arguments
+    metadata = kinetic_model_metadata("vitrification", vitrification_name)
+    return () if metadata is None else metadata.function_parameters
 
 
 def get_parameters_for_coupling(coupling_name):
@@ -3186,11 +3174,8 @@ def get_parameters_for_coupling(coupling_name):
     list or None
         The list of parameters for the specified function if found, otherwise None.
     """
-    module = km
-    function = getattr(module, coupling_name, None)
-    if function is not None:
-        arguments = function.__code__.co_varnames[:function.__code__.co_argcount]
-    return arguments
+    metadata = kinetic_model_metadata("coupling", coupling_name)
+    return () if metadata is None else metadata.function_parameters
 
 
 def get_parameters_for_tg(tg_name):
@@ -3207,11 +3192,8 @@ def get_parameters_for_tg(tg_name):
     list or None
         The list of parameters for the specified function if found, otherwise None.
     """
-    module = km
-    function = getattr(module, tg_name, None)
-    if function is not None:
-        arguments = function.__code__.co_varnames[:function.__code__.co_argcount]
-    return arguments
+    metadata = kinetic_model_metadata("tg", tg_name)
+    return () if metadata is None else metadata.function_parameters
 
 
 # =============================================================================

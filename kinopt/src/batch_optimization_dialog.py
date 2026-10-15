@@ -20,6 +20,7 @@ from PyQt5.QtWidgets import (
 )
 
 from kinopt.src.batch_comparison_dialog import BatchComparisonDialog
+from kinopt.src.comparison_plan_dialog import ComparisonPlanDialog
 from kinopt.src.optimization_diagnostics_dialog import (
     OptimizationDiagnosticsDialog,
 )
@@ -103,6 +104,7 @@ class BatchOptimizationDialog(QDialog):
         self.execution_allowed = execution_allowed or (lambda: True)
         self.worker = None
         self.comparison_dialog = None
+        self.plan_dialog = None
         self.diagnostics_dialog = None
 
         self.setWindowTitle("Batch optimizations")
@@ -132,6 +134,7 @@ class BatchOptimizationDialog(QDialog):
 
         self.add_button = QPushButton("Add current setup")
         self.multistart_button = QPushButton("Add multi-start jobs")
+        self.plan_button = QPushButton("Build comparison plan…")
         self.name_edit = QLineEdit()
         self.name_edit.setPlaceholderText(
             "Optional name, for example: Kamal - wide bounds"
@@ -174,6 +177,13 @@ class BatchOptimizationDialog(QDialog):
         multistart_controls.addWidget(self.multistart_button)
         multistart_controls.addStretch(1)
 
+        plan_controls = QHBoxLayout()
+        plan_controls.addWidget(self.plan_button)
+        plan_controls.addWidget(QLabel(
+            "Prepare combinations of rate models, local methods, and profiles."
+        ))
+        plan_controls.addStretch(1)
+
         execution_controls = QHBoxLayout()
         for button in (
             self.start_button,
@@ -207,6 +217,7 @@ class BatchOptimizationDialog(QDialog):
         layout.addWidget(self.table)
         layout.addLayout(add_controls)
         layout.addLayout(multistart_controls)
+        layout.addLayout(plan_controls)
         layout.addLayout(execution_controls)
         layout.addLayout(management_controls)
         layout.addLayout(result_controls)
@@ -215,6 +226,7 @@ class BatchOptimizationDialog(QDialog):
 
         self.add_button.clicked.connect(self.add_current_setup)
         self.multistart_button.clicked.connect(self.add_multi_start_jobs)
+        self.plan_button.clicked.connect(self.build_comparison_plan)
         self.start_button.clicked.connect(self.start_pending_jobs)
         self.pause_button.clicked.connect(self.pause_after_current_job)
         self.cancel_button.clicked.connect(self.cancel_selected_or_current_job)
@@ -399,6 +411,23 @@ class BatchOptimizationDialog(QDialog):
             "The first keeps the current starting values."
         )
         self.name_edit.clear()
+        self.refresh()
+        self._restore_selection(jobs[0].identifier)
+
+    def build_comparison_plan(self):
+        """Open the assistant using an immutable snapshot of the main form."""
+        config = self.config_provider()
+        if config is None:
+            return
+        self.plan_dialog = ComparisonPlanDialog(self.queue, config, self)
+        if self.plan_dialog.exec_() != QDialog.Accepted:
+            return
+        jobs = self.plan_dialog.created_jobs
+        if not jobs:
+            return
+        self.status_label.setText(
+            f"Added {len(jobs)} comparison-plan jobs."
+        )
         self.refresh()
         self._restore_selection(jobs[0].identifier)
 
