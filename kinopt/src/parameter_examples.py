@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from kinopt.src.model_metadata import model_parameter_metadata
 from kinopt.src.optimization_profiles import (
     DEFAULT_PROFILE_NAME,
     optimization_profile,
@@ -34,23 +35,35 @@ class ParameterExample:
         )
 
 
+_MODEL_PARAMETER_NAMES = (
+    'A',
+    'A1',
+    'A2',
+    'E',
+    'Ea',
+    'E1',
+    'E2',
+    'm',
+    'n',
+    'Ad',
+    'C1',
+    'C2',
+    'Tg_0',
+    'Tg_inf',
+    'coeff',
+)
+
+
+def _example_from_metadata(name):
+    metadata = model_parameter_metadata(name)
+    if metadata is None:
+        return None
+    return ParameterExample(metadata.example, metadata.unit)
+
+
 MODEL_PARAMETER_EXAMPLES = {
-    'A': ParameterExample('1e8', 's^-1'),
-    'A1': ParameterExample('1e8', 's^-1'),
-    'A2': ParameterExample('1e8', 's^-1'),
-    'E': ParameterExample('50000', 'J/mol'),
-    'Ea': ParameterExample('50000', 'J/mol'),
-    'E1': ParameterExample('50000', 'J/mol'),
-    'E2': ParameterExample('50000', 'J/mol'),
-    'm': ParameterExample('2'),
-    'n': ParameterExample('2'),
-    'Ad': ParameterExample('1', 's^-1'),
-    'C': ParameterExample('50'),
-    'C1': ParameterExample('50'),
-    'C2': ParameterExample('50', 'K'),
-    'Tg_0': ParameterExample('290', 'K'),
-    'Tg_inf': ParameterExample('450', 'K'),
-    'coeff': ParameterExample('0.5'),
+    name: _example_from_metadata(name)
+    for name in _MODEL_PARAMETER_NAMES
 }
 
 
@@ -70,22 +83,15 @@ COST_PARAMETER_EXAMPLES = {
 
 
 BOUND_PARAMETER_EXAMPLES = {
-    'A': (ParameterExample('1', 's^-1'), ParameterExample('1e20', 's^-1')),
-    'A1': (ParameterExample('1', 's^-1'), ParameterExample('1e20', 's^-1')),
-    'A2': (ParameterExample('1', 's^-1'), ParameterExample('1e20', 's^-1')),
-    'Ad': (
-        ParameterExample('1e-20', 's^-1'),
-        ParameterExample('1e20', 's^-1'),
-    ),
-    'E': (ParameterExample('1000', 'J/mol'), ParameterExample('350000', 'J/mol')),
-    'Ea': (ParameterExample('1000', 'J/mol'), ParameterExample('350000', 'J/mol')),
-    'E1': (ParameterExample('1000', 'J/mol'), ParameterExample('350000', 'J/mol')),
-    'E2': (ParameterExample('1000', 'J/mol'), ParameterExample('350000', 'J/mol')),
-    'm': (ParameterExample('0.1'), ParameterExample('20')),
-    'n': (ParameterExample('0.1'), ParameterExample('20')),
-    'C': (ParameterExample('1'), ParameterExample('350')),
-    'C1': (ParameterExample('1'), ParameterExample('350')),
-    'C2': (ParameterExample('1', 'K'), ParameterExample('350', 'K')),
+    name: (
+        ParameterExample(metadata.lower_bound, metadata.unit),
+        ParameterExample(metadata.upper_bound, metadata.unit),
+    )
+    for name in _MODEL_PARAMETER_NAMES
+    for metadata in (model_parameter_metadata(name),)
+    if metadata is not None
+    and metadata.lower_bound is not None
+    and metadata.upper_bound is not None
 }
 
 
