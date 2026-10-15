@@ -7,6 +7,7 @@ import pytest
 from scipy import optimize
 
 from kinopt.src.optimization_runner import (
+    LOG_SPACE_LEAST_SQUARES,
     OptimizationCancelled,
     OptimizationRunConfig,
     run_optimization,
@@ -96,4 +97,77 @@ def test_runner_honours_cancellation_during_solver_callback():
         run_optimization(
             config,
             is_cancelled=lambda: next(cancellation_checks),
+        )
+
+
+def test_log_space_least_squares_returns_physical_parameters(
+    serializable_config,
+):
+    config = replace(
+        serializable_config,
+        local_method=LOG_SPACE_LEAST_SQUARES,
+        local_optimizer=optimize.least_squares,
+        local_options={
+            'jac': '2-point',
+            'max_nfev': 200,
+            'ftol': 1e-10,
+            'xtol': 1e-10,
+            'gtol': 1e-10,
+            'bounds': ((1e5, 1e10), (1e3, 2e5), (0.1, 5.0)),
+        },
+        max_iterations=200,
+    )
+    callbacks = []
+
+    outcome = run_optimization(config, callback=lambda values: callbacks.append(values))
+
+    assert outcome.result.success
+    assert outcome.result.fun < 1e-15
+    np.testing.assert_allclose(
+        outcome.result.x,
+        [1e8, 60000.0, 1.5],
+        rtol=1e-5,
+    )
+    assert outcome.result.residuals.shape == config.experimental_rate.shape
+    assert callbacks
+    assert np.all(callbacks[0] > 0)
+
+
+@pytest.mark.parametrize(
+    'initial_guess,bounds,message',
+    [
+        (np.array([0.0]), ((0.1, 10.0),), 'starting values'),
+        (np.array([1.0]), ((0.0, 10.0),), 'bounds'),
+        (np.array([1.0]), ((2.0, 10.0),), 'inside'),
+        (np.array([1.0]), ((0.1, 10.0), (0.1, 10.0)), 'one lower'),
+    ],
+)
+def test_log_space_least_squares_rejects_invalid_positive_domain(
+    initial_guess,
+    bounds,
+    message,
+):
+    config = replace(
+        make_config(initial_guess=initial_guess),
+        local_method=LOG_SPACE_LEAST_SQUARES,
+        local_optimizer=optimize.least_squares,
+        local_options={'bounds': bounds, 'max_nfev': 10},
+        max_iterations=10,
+    )
+
+    with pytest.raises(ValueError, match=message):
+        run_optimization(config)
+
+
+def test_log_space_least_squares_cannot_be_nested_in_a_global_method(
+    serializable_config,
+):
+    with pytest.raises(ValueError, match='without a global optimizer'):
+        replace(
+            serializable_config,
+            global_method='basinhopping',
+            global_optimizer=optimize.basinhopping,
+            global_options={'niter': 2},
+            local_method=LOG_SPACE_LEAST_SQUARES,
+            local_optimizer=optimize.least_squares,
         )

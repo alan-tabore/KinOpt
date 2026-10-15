@@ -9,6 +9,11 @@ import time
 import numpy as np
 from scipy.optimize import OptimizeResult
 
+from kinopt.src import optimization
+
+
+LOG_SPACE_LEAST_SQUARES = "least_squares_log"
+
 
 class OptimizationCancelled(Exception):
     """Stop an optimization cooperatively from a solver callback."""
@@ -85,6 +90,10 @@ class OptimizationRunConfig:
             raise ValueError("The selected global optimizer is not available.")
         if self.local_method and self.local_optimizer is None:
             raise ValueError("The selected local optimizer is not available.")
+        if self.global_method and self.local_method == LOG_SPACE_LEAST_SQUARES:
+            raise ValueError(
+                "Run log-space least squares without a global optimizer."
+            )
         if self.max_iterations <= 0:
             raise ValueError("The iteration budget must be a positive integer.")
 
@@ -132,6 +141,80 @@ def _objective_arguments(config: OptimizationRunConfig) -> Tuple[Any, ...]:
     )
 
 
+def _log_space_bounds(bounds: Any, initial_guess: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Validate physical bounds and convert them to base-10 log space."""
+    if bounds is None:
+        raise ValueError("Log-space least squares requires parameter bounds.")
+    pairs = np.asarray(bounds, dtype=float)
+    expected_shape = (initial_guess.size, 2)
+    if pairs.shape != expected_shape:
+        raise ValueError(
+            "Log-space least squares requires one lower and upper bound "
+            f"for each parameter; expected {expected_shape[0]} pairs."
+        )
+    lower, upper = pairs.T
+    if not np.all(np.isfinite(pairs)):
+        raise ValueError("Log-space least-squares bounds must be finite.")
+    if np.any(lower <= 0) or np.any(upper <= 0):
+        raise ValueError("Log-space least-squares bounds must be strictly positive.")
+    if np.any(lower >= upper):
+        raise ValueError("Each lower parameter bound must be below its upper bound.")
+    if not np.all(np.isfinite(initial_guess)) or np.any(initial_guess <= 0):
+        raise ValueError(
+            "Log-space least-squares starting values must be strictly positive."
+        )
+    if np.any(initial_guess < lower) or np.any(initial_guess > upper):
+        raise ValueError(
+            "Every starting value must lie inside its least-squares bounds."
+        )
+    return np.log10(lower), np.log10(upper)
+
+
+def _run_log_space_least_squares(
+    config: OptimizationRunConfig,
+    objective_args: Tuple[Any, ...],
+    local_options: Mapping[str, Any],
+    callback: Optional[Callable[..., Any]],
+    cancellation_requested: Callable[[], bool],
+) -> OptimizeResult:
+    """Fit positive physical parameters in a numerically balanced log space."""
+    options = dict(local_options)
+    bounds = options.pop("bounds", None)
+    initial_guess = np.asarray(_thaw(config.initial_guess), dtype=float)
+    lower, upper = _log_space_bounds(bounds, initial_guess)
+    transformed_initial_guess = np.log10(initial_guess)
+    options.setdefault("x_scale", "jac")
+    options.setdefault("method", "trf")
+    best_squared_norm = [np.inf]
+
+    def residual_function(transformed_parameters):
+        if cancellation_requested():
+            raise OptimizationCancelled()
+        physical_parameters = np.power(10.0, transformed_parameters)
+        residuals = optimization.residuals_for_least_squares(
+            physical_parameters,
+            config.cost_function,
+            *objective_args,
+        )
+        squared_norm = float(np.dot(residuals, residuals))
+        if callback is not None and squared_norm < best_squared_norm[0]:
+            best_squared_norm[0] = squared_norm
+            callback(physical_parameters)
+        return residuals
+
+    result = config.local_optimizer(
+        residual_function,
+        transformed_initial_guess,
+        bounds=(lower, upper),
+        **options,
+    )
+    residual_vector = np.asarray(result.fun, dtype=float)
+    result.x = np.power(10.0, result.x)
+    result.residuals = residual_vector
+    result.fun = float(config.cost_function(result.x, *objective_args))
+    return result
+
+
 def run_optimization(
     config: OptimizationRunConfig,
     callback: Optional[Callable[..., Any]] = None,
@@ -158,7 +241,7 @@ def run_optimization(
     callback_required = callback is not None or is_cancelled is not None
     if config.global_method and callback_required:
         global_options["callback"] = solver_callback
-    elif callback_required:
+    elif callback_required and config.local_method != LOG_SPACE_LEAST_SQUARES:
         local_options["callback"] = solver_callback
 
     started_at = clock()
@@ -187,6 +270,14 @@ def run_optimization(
         )
     elif config.global_method:
         raise ValueError(f"Unsupported global optimizer: {config.global_method}")
+    elif config.local_method == LOG_SPACE_LEAST_SQUARES:
+        result = _run_log_space_least_squares(
+            config,
+            objective_args,
+            local_options,
+            callback,
+            cancellation_requested,
+        )
     else:
         local_options["args"] = objective_args
         result = config.local_optimizer(
@@ -198,6 +289,6 @@ def run_optimization(
     elapsed_seconds = clock() - started_at
     if cancellation_requested():
         raise OptimizationCancelled()
-    if not np.all(np.isfinite(result.x)) or not np.isfinite(result.fun):
+    if not np.all(np.isfinite(result.x)) or not np.all(np.isfinite(result.fun)):
         raise ValueError("Optimization returned non-finite parameters or cost.")
     return OptimizationRunResult(result=result, elapsed_seconds=elapsed_seconds)
