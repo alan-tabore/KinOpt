@@ -231,6 +231,94 @@ def test_empty_parameter_fields_show_examples_without_entering_values(
     assert window.line_edit_dict_tg_law['coeff'].text() == '0.5'
 
 
+def test_calculation_profiles_explain_and_fill_selected_methods(
+    optimization_window,
+):
+    main, window, _, errors = optimization_window
+    window.ui.comboBox_rate_model.setCurrentText('rate_for_nth_order')
+    window.update_rate_formLayout(None)
+
+    window.ui.comboBox_global_optimization_methods.setCurrentText(
+        'differential_evolution'
+    )
+    window.update_global_optimization_gridLayout()
+    window.ui.comboBox_local_optimization_methods.setCurrentText('Nelder-Mead')
+    window.update_local_optimization_gridLayout()
+    window.ui.comboBox_cost_functions.setCurrentText(
+        'rss_increase_of_small_extents_impact'
+    )
+    window.update_cost_functions_formLayout()
+
+    assert window.optimization_profile_combo.currentText() == (
+        'Balanced (recommended)'
+    )
+    assert 'routine fit' in window.optimization_profile_description.text()
+    assert window.ui.pushButton_autofill_optimization.text() == 'Apply profile'
+
+    window.optimization_profile_combo.setCurrentText('Quick check')
+    main.QApplication.processEvents()
+    assert 'preliminary fit' in window.optimization_profile_description.text()
+    window.ui.pushButton_autofill_optimization.click()
+
+    global_entries = window.entries_dict_global_optimization
+    local_entries = window.entries_dict_local_optimization
+    assert global_entries['maxiter'].text() == '100'
+    assert global_entries['popsize'].text() == '8'
+    assert global_entries['polish'].currentText() == 'No'
+    assert global_entries['workers'].text() == '1'
+    assert global_entries['minA1'].text() == '1'
+    assert global_entries['maxE1'].text() == '350000'
+    assert local_entries['maxiter'].text() == '200'
+    assert local_entries['xatol'].text() == '1e-3'
+    assert (
+        window.entries_dict_cost_function['extent_limit'].text() == '0.707'
+    )
+
+    local_entries['maxiter'].setText('42')
+    window.optimization_profile_combo.setCurrentText('Thorough search')
+    main.QApplication.processEvents()
+    assert local_entries['maxiter'].text() == '42'
+    window.apply_optimization_profile()
+    assert local_entries['maxiter'].text() == '3000'
+    assert errors == []
+
+    window.ui.toolBox_models_and_optimization_parameters.setCurrentWidget(
+        window.ui.page_optimization_methods_and_parameters
+    )
+    window.resize(640, 480)
+    window.show()
+    profile_scroll = window.ui.scrollArea_optimization_methods
+    profile_scroll.ensureWidgetVisible(
+        window.ui.pushButton_autofill_optimization
+    )
+    main.QApplication.processEvents()
+    button_position = window.ui.pushButton_autofill_optimization.mapTo(
+        profile_scroll.viewport(),
+        window.ui.pushButton_autofill_optimization.rect().topLeft(),
+    )
+    assert button_position.y() < profile_scroll.viewport().height()
+    assert (
+        button_position.y()
+        + window.ui.pushButton_autofill_optimization.height()
+        > 0
+    )
+
+
+def test_profile_converts_none_jacobian_choice_for_scipy(optimization_window):
+    _, window, _, errors = optimization_window
+    window.ui.comboBox_rate_model.setCurrentText('rate_for_nth_order')
+    window.update_rate_formLayout(None)
+    window.ui.comboBox_local_optimization_methods.setCurrentText('BFGS')
+    window.update_local_optimization_gridLayout()
+
+    window.apply_optimization_profile()
+    arguments = window.get_local_optimization_args_dict('BFGS')
+
+    assert arguments['jac'] is None
+    assert arguments['options']['maxiter'] == 1000
+    assert errors == []
+
+
 def test_current_setup_can_be_added_to_batch(optimization_window):
     _, window, started, errors = optimization_window
     configure_optimization(window, with_vitrification=False)

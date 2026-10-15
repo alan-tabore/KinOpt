@@ -19,6 +19,10 @@ from kinopt.src.parameter_examples import (
     model_parameter_example,
     optimization_parameter_example,
 )
+from kinopt.src.optimization_profiles import (
+    DEFAULT_PROFILE_NAME,
+    optimization_profile,
+)
 
 
 EXPERIMENTAL_MODEL_PARAMETERS = {
@@ -126,3 +130,14 @@ def test_placeholder_is_distinct_from_an_actual_value():
     assert example.value == '50000'
     assert example.placeholder == 'Example: 50000 J/mol'
     assert 'Adapt it to your material' in example.tooltip
+
+
+def test_optimizer_placeholders_match_the_default_profile():
+    global_methods, local_methods, _ = get_functions_for_optimization()
+    profile = optimization_profile(DEFAULT_PROFILE_NAME)
+
+    for method in global_methods + local_methods:
+        for name, value in profile.values_for(method).items():
+            details = get_parameters_for_optimization(method)[name]
+            if details['type'] in (int, float):
+                assert optimization_parameter_example(method, name).value == value

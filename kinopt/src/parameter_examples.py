@@ -3,6 +3,11 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from kinopt.src.optimization_profiles import (
+    DEFAULT_PROFILE_NAME,
+    optimization_profile,
+)
+
 
 @dataclass(frozen=True)
 class ParameterExample:
@@ -64,62 +69,6 @@ COST_PARAMETER_EXAMPLES = {
 }
 
 
-OPTIMIZATION_PARAMETER_EXAMPLES = {
-    'Nelder-Mead': {
-        'maxiter': ParameterExample('1200'),
-        'maxfev': ParameterExample(None),
-        'xatol': ParameterExample('1e-4'),
-        'fatol': ParameterExample('1e-4'),
-    },
-    'CG': {
-        'maxiter': ParameterExample('1200'),
-        'gtol': ParameterExample('1e-5'),
-        'norm': ParameterExample(None),
-        'eps': ParameterExample(None),
-    },
-    'BFGS': {
-        'maxiter': ParameterExample('1200'),
-        'gtol': ParameterExample('1e-5'),
-        'norm': ParameterExample(None),
-        'eps': ParameterExample(None),
-        'xrtol': ParameterExample('0'),
-    },
-    'L-BFGS-B': {
-        'maxcor': ParameterExample('10'),
-        'maxfun': ParameterExample('15000'),
-        'maxiter': ParameterExample('1200'),
-        'iprint': ParameterExample(None),
-        'maxls': ParameterExample('20'),
-        'ftol': ParameterExample('1e-9'),
-        'gtol': ParameterExample('1e-5'),
-        'eps': ParameterExample(None),
-    },
-    'basinhopping': {
-        'niter': ParameterExample('100'),
-        'T': ParameterExample('1'),
-        'stepsize': ParameterExample('0.5'),
-        'interval': ParameterExample('50'),
-        'niter_success': ParameterExample(None),
-        'target_accept_rate': ParameterExample('0.5'),
-        'stepwise_factor': ParameterExample('0.9'),
-    },
-    'differential_evolution': {
-        'maxiter': ParameterExample('1000'),
-        'popsize': ParameterExample('15'),
-        'tol': ParameterExample('0.01'),
-        'mutation': ParameterExample('0.8'),
-        'recombination': ParameterExample('0.7'),
-        'atol': ParameterExample('0'),
-        'workers': ParameterExample('1'),
-    },
-    'shgo': {
-        'n': ParameterExample('100'),
-        'iters': ParameterExample('1'),
-        'workers': ParameterExample('1'),
-    },
-}
-
-
 BOUND_PARAMETER_EXAMPLES = {
     'A': (ParameterExample('1', 's^-1'), ParameterExample('1e20', 's^-1')),
     'A1': (ParameterExample('1', 's^-1'), ParameterExample('1e20', 's^-1')),
@@ -153,7 +102,10 @@ def cost_parameter_example(name):
 
 
 def optimization_parameter_example(method, name):
-    return OPTIMIZATION_PARAMETER_EXAMPLES.get(method, {}).get(name)
+    values = optimization_profile(DEFAULT_PROFILE_NAME).values_for(method)
+    if name not in values:
+        return None
+    return ParameterExample(values[name])
 
 
 def bound_parameter_example(name, limit):
