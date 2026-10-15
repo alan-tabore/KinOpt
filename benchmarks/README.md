@@ -70,4 +70,7 @@ baseline explicitly on the same machine:
 Each run records both SciPy's ``evaluations`` value and the actual number of
 calls to KinOpt's residual function in ``residual_evaluations``. This second
 number includes the extra residual calls used to approximate a numerical
-Jacobian and therefore makes the comparison explicit.
+Jacobian and therefore makes the comparison explicit. The
+``kinetic_evaluations`` field counts full kinetic calculation passes. With the
+analytic Kamal Jacobian, KinOpt calculates the rate and derivatives together
+and reuses them when SciPy asks for both at the same parameter vector.

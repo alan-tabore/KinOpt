@@ -105,6 +105,7 @@ def test_report_keeps_speed_and_fit_quality_for_each_run():
     assert report["summary"]["successful_runs"] == 0
     assert report["runs"][0]["evaluations"] == 20
     assert report["runs"][0]["residual_evaluations"] == 20
+    assert report["runs"][0]["kinetic_evaluations"] == 20
     assert report["runs"][0]["jacobian_evaluations"] is None
     assert report["runs"][0]["jacobian_source"] is None
     assert report["runs"][0]["message"] == "budget reached"
