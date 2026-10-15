@@ -12,7 +12,7 @@ from kinopt.src.optimization_runner import OptimizationRunConfig
 from kinopt.src.optimization_runner import LOG_SPACE_LEAST_SQUARES
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 _COST_FUNCTIONS = {
     "rss_standard",
@@ -209,6 +209,8 @@ def config_to_dict(config: OptimizationRunConfig) -> Dict[str, Any]:
         "max_iterations": config.max_iterations,
         "experiment_lengths": list(config.experiment_lengths),
         "training_mask": _json_value(config.training_mask),
+        "exploratory_fraction": config.exploratory_fraction,
+        "exploratory_budget_fraction": config.exploratory_budget_fraction,
     }
     # Enforce standard JSON now so invalid NaN or infinite values fail before
     # the payload reaches persistent storage.
@@ -221,7 +223,7 @@ def config_from_dict(payload: Mapping[str, Any]) -> OptimizationRunConfig:
     if not isinstance(payload, Mapping):
         raise ValueError("The optimization configuration must be a JSON object.")
     schema_version = payload.get("schema_version")
-    if schema_version not in {1, SCHEMA_VERSION}:
+    if schema_version not in {1, 2, SCHEMA_VERSION}:
         raise ValueError(
             "Unsupported optimization configuration schema: "
             f"{payload.get('schema_version')!r}"
@@ -328,6 +330,10 @@ def config_from_dict(payload: Mapping[str, Any]) -> OptimizationRunConfig:
                 None
                 if payload.get("training_mask") is None
                 else np.asarray(payload["training_mask"], dtype=bool)
+            ),
+            exploratory_fraction=payload.get("exploratory_fraction"),
+            exploratory_budget_fraction=float(
+                payload.get("exploratory_budget_fraction", 0.25)
             ),
         )
     except KeyError as error:

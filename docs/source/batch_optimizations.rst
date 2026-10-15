@@ -66,6 +66,23 @@ starting points. Differential evolution and SHGO already explore their bounded
 domain without using KinOpt's initial parameter values, so the multi-start
 control refuses those strategies instead of creating duplicate calculations.
 
+Trying representative two-stage fitting
+-----------------------------------------
+
+Choose an **Exploratory data fraction** and click **Add two-stage job** to
+prepare an optional local-solver strategy. Its first stage uses evenly spaced
+points from every fitting experiment and one quarter of the normal evaluation
+budget. Its second stage always starts a regular optimization on the complete
+fitting dataset from the exploratory result. Both stages are included in the
+displayed duration.
+
+This strategy is available only for local solvers. It can shorten a fit when a
+better starting point substantially reduces the full-data refinement, but it
+can also add overhead. The packaged benchmark accepts
+``--exploratory-fraction`` so timing, final parameters, and full-data RMSE can
+be compared on the target machine. KinOpt therefore keeps direct fitting as
+the default.
+
 Reserving an experiment for validation
 ---------------------------------------
 

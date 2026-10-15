@@ -315,21 +315,36 @@ def compute_integral_J(Ea, time_array, temperature_array):
         - T(t) is the temperature at time t during the DSC scan.
         - :math:`t_0` and :math:`t_f` are the initial and final times in the time_array.
     """
-    R = 8.314  # Universal gas constant
+    time_diff, inverse_rt = prepare_integral_J(time_array, temperature_array)
+    return compute_prepared_integral_J(Ea, (time_diff, inverse_rt))
 
-    # Calculate the average temperature between adjacent time points
-    avg_temperatures = (temperature_array[:-1] + temperature_array[1:]) / 2
 
-    # Calculate the differences in time
-    time_diff = np.diff(time_array)
+def prepare_integral_J(time_array, temperature_array):
+    """Cache interval widths and inverse temperatures for repeated Ea trials."""
+    time_values = np.asarray(time_array, dtype=float)
+    temperature_values = np.asarray(temperature_array, dtype=float)
+    if time_values.ndim != 1 or temperature_values.ndim != 1:
+        raise ValueError("Time and temperature data must be one-dimensional.")
+    if time_values.size != temperature_values.size or time_values.size < 2:
+        raise ValueError("Time and temperature need the same two or more points.")
+    time_diff = np.diff(time_values)
+    if np.any(time_diff <= 0):
+        raise ValueError("Time must increase strictly for integral calculation.")
+    average_temperature = (
+        temperature_values[:-1] + temperature_values[1:]
+    ) / 2.0
+    if not np.all(np.isfinite(average_temperature)) or np.any(
+        average_temperature <= 0
+    ):
+        raise ValueError("Temperatures must be finite and positive Kelvin values.")
+    return time_diff, 1.0 / (8.314 * average_temperature)
 
-    # Calculate the contributions using the Arrhenius equation
-    contributions = np.exp(-Ea / (R * avg_temperatures)) * time_diff
 
-    # Compute the integral using the trapezoidal rule
-    integral_value = np.sum(contributions)
-
-    return integral_value
+def compute_prepared_integral_J(Ea, prepared_integral):
+    """Evaluate one cached Vyazovkin integral for an activation energy."""
+    energy = float(np.asarray(Ea, dtype=float).reshape(-1)[0])
+    time_diff, inverse_rt = prepared_integral
+    return float(np.dot(np.exp(-energy * inverse_rt), time_diff))
 
 
 
@@ -364,24 +379,28 @@ def compute_function_to_minimize(Ea, time_arrays, temperature_arrays):
         - N is the number of experiments.
         - :math:`J_i` and :math:`J_k` are the integrals computed using the Vyazovkin formula for experiments i and k.
     """
-    num_experiments = len(time_arrays)
-    
-    # Calculate integrals for all experiments and store them in integrals_J list
-    integrals_J = [compute_integral_J(Ea, time_arrays[i], temperature_arrays[i]) for i in range(num_experiments)]
-    
-    # Create a 2D array to store ratios of integrals
-    ratios = np.zeros((num_experiments, num_experiments))
+    prepared = tuple(
+        prepare_integral_J(time_values, temperature_values)
+        for time_values, temperature_values in zip(time_arrays, temperature_arrays)
+    )
+    return compute_prepared_function_to_minimize(Ea, prepared)
 
-    # Calculate the ratios of integrals using NumPy broadcasting
-    for i in range(num_experiments):
-        for k in range(num_experiments):
-            if i != k:
-                ratios[i, k] = integrals_J[i] / integrals_J[k]
 
-    # Sum all ratios to compute the function to minimize
-    func_sum = np.sum(ratios)
-
-    return func_sum
+def compute_prepared_function_to_minimize(Ea, prepared_integrals):
+    """Evaluate the Vyazovkin objective without rebuilding interval arrays."""
+    integrals = np.asarray(
+        [
+            compute_prepared_integral_J(Ea, prepared)
+            for prepared in prepared_integrals
+        ],
+        dtype=float,
+    )
+    if integrals.size < 2:
+        raise ValueError("At least two experiments are required.")
+    if not np.all(np.isfinite(integrals)) or np.any(integrals <= 0):
+        return np.inf
+    # sum_i sum_{k != i} J_i / J_k, without an NxN temporary matrix.
+    return float(np.sum(integrals) * np.sum(1.0 / integrals) - integrals.size)
 
 
 
@@ -446,9 +465,19 @@ def isoconversional_analysis_vyazovkin_method(conv_lists, time_lists, temperatur
     for i, conv_value in enumerate(tqdm(conv_values, ncols=100)):
         # Extract conversion, time, and temperature required to compute the integrals J
         conv, time_, temperature = get_data_at_conversion(conv_value, conv_lists, time_lists, temperature_lists)
+        prepared_integrals = tuple(
+            prepare_integral_J(time_values, temperature_values)
+            for time_values, temperature_values in zip(time_, temperature)
+        )
 
         # Perform minimization of function described in the article using BFGS method
-        result = scipy.optimize.minimize(compute_function_to_minimize, x0=current_guess, args=(time_, temperature), method='BFGS', options={'gtol': 1e-15})
+        result = scipy.optimize.minimize(
+            compute_prepared_function_to_minimize,
+            x0=current_guess,
+            args=(prepared_integrals,),
+            method='BFGS',
+            options={'gtol': 1e-15},
+        )
 
         # Store the calculated activation energy
         Ea_calculated[i] = result.x.item()
@@ -527,9 +556,18 @@ def isoconversional_analysis_advanced_vyazovkin_method(conv_lists, time_lists, t
         # Get the experimental data for the computation of the function to minimize
         times = [heating_rate[i] for heating_rate in times_intervals]
         temperatures = [heating_rate[i] for heating_rate in temperatures_intervals]
+        prepared_integrals = tuple(
+            prepare_integral_J(time_values, temperature_values)
+            for time_values, temperature_values in zip(times, temperatures)
+        )
         
-        result = scipy.optimize.minimize(compute_function_to_minimize, x0=initial_guess, args=(
-            times, temperatures), method='BFGS', options={'gtol': 1e-15})
+        result = scipy.optimize.minimize(
+            compute_prepared_function_to_minimize,
+            x0=initial_guess,
+            args=(prepared_integrals,),
+            method='BFGS',
+            options={'gtol': 1e-15},
+        )
 
         Ea_calculated.append(result.x.item())
         initial_guess = result.x.item()

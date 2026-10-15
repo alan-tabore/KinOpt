@@ -41,7 +41,10 @@ def _model_description(config):
 
 def _strategy_description(config):
     methods = [config.global_method, config.local_method]
-    return " → ".join(method for method in methods if method) or "—"
+    description = " → ".join(method for method in methods if method) or "—"
+    if config.exploratory_fraction is not None:
+        return f"Two-stage {config.exploratory_fraction:.0%} → {description}"
+    return description
 
 
 def _comparison_rows(jobs):

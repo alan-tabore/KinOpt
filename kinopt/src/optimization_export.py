@@ -42,7 +42,10 @@ def _model_description(config):
 
 def _strategy_description(config):
     names = (config.global_method, config.local_method)
-    return " -> ".join(name for name in names if name)
+    description = " -> ".join(name for name in names if name)
+    if config.exploratory_fraction is not None:
+        return f"two-stage {config.exploratory_fraction:.0%} -> {description}"
+    return description
 
 
 def _comparison_dict(job):

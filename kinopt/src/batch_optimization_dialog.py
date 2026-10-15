@@ -1,5 +1,6 @@
 """Qt interface for the persistent optimization queue."""
 
+from dataclasses import replace
 import os
 from threading import Event
 
@@ -8,6 +9,7 @@ from PyQt5.QtWidgets import (
     QAbstractItemView,
     QDialog,
     QDialogButtonBox,
+    QDoubleSpinBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -29,6 +31,7 @@ from kinopt.src.optimization_multistart import generate_multistart_configs
 from kinopt.src.legacy_result_import import import_legacy_result
 from kinopt.src.optimization_queue import JobStatus
 from kinopt.src.optimization_scheduler import ConcurrentOptimizationScheduler
+from kinopt.src.optimization_strategies import representative_subsample_mask
 from kinopt.src.optimization_validation import with_validation_experiment
 
 
@@ -109,7 +112,10 @@ def _model_description(config):
 
 def _strategy_description(config):
     methods = [config.global_method, config.local_method]
-    return " → ".join(method for method in methods if method) or "—"
+    description = " → ".join(method for method in methods if method) or "—"
+    if config.exploratory_fraction is not None:
+        return f"Two-stage {config.exploratory_fraction:.0%} → {description}"
+    return description
 
 
 class BatchOptimizationDialog(QDialog):
@@ -172,6 +178,7 @@ class BatchOptimizationDialog(QDialog):
         self.add_button = QPushButton("Add current setup")
         self.multistart_button = QPushButton("Add multi-start jobs")
         self.holdout_button = QPushButton("Add holdout validation job")
+        self.two_stage_button = QPushButton("Add two-stage job")
         self.plan_button = QPushButton("Build comparison plan…")
         self.name_edit = QLineEdit()
         self.name_edit.setPlaceholderText(
@@ -195,6 +202,15 @@ class BatchOptimizationDialog(QDialog):
         self.validation_experiment.setToolTip(
             "This experiment is kept in the stored configuration for scoring "
             "but excluded from the solver objective."
+        )
+        self.two_stage_fraction = QDoubleSpinBox()
+        self.two_stage_fraction.setRange(0.05, 0.90)
+        self.two_stage_fraction.setSingleStep(0.05)
+        self.two_stage_fraction.setValue(0.25)
+        self.two_stage_fraction.setDecimals(2)
+        self.two_stage_fraction.setToolTip(
+            "Representative fraction used only for the exploratory stage; "
+            "the final stage always uses all fitting data."
         )
         available_cpus = max(1, os.cpu_count() or 1)
         self.concurrent_jobs = QSpinBox()
@@ -246,6 +262,15 @@ class BatchOptimizationDialog(QDialog):
             "Fit on every other imported experiment, then report predictive RMSE."
         ))
         validation_controls.addStretch(1)
+
+        two_stage_controls = QHBoxLayout()
+        two_stage_controls.addWidget(QLabel("Exploratory data fraction:"))
+        two_stage_controls.addWidget(self.two_stage_fraction)
+        two_stage_controls.addWidget(self.two_stage_button)
+        two_stage_controls.addWidget(QLabel(
+            "Optional local-solver strategy; final refinement uses all data."
+        ))
+        two_stage_controls.addStretch(1)
 
         plan_controls = QHBoxLayout()
         plan_controls.addWidget(self.plan_button)
@@ -299,6 +324,7 @@ class BatchOptimizationDialog(QDialog):
         layout.addLayout(add_controls)
         layout.addLayout(multistart_controls)
         layout.addLayout(validation_controls)
+        layout.addLayout(two_stage_controls)
         layout.addLayout(plan_controls)
         layout.addLayout(resource_controls)
         layout.addLayout(execution_controls)
@@ -310,6 +336,7 @@ class BatchOptimizationDialog(QDialog):
         self.add_button.clicked.connect(self.add_current_setup)
         self.multistart_button.clicked.connect(self.add_multi_start_jobs)
         self.holdout_button.clicked.connect(self.add_holdout_job)
+        self.two_stage_button.clicked.connect(self.add_two_stage_job)
         self.plan_button.clicked.connect(self.build_comparison_plan)
         self.start_button.clicked.connect(self.start_pending_jobs)
         self.pause_button.clicked.connect(self.pause_after_current_job)
@@ -589,6 +616,34 @@ class BatchOptimizationDialog(QDialog):
         )
         self.refresh()
         self._restore_selection(jobs[-1].identifier)
+
+    def add_two_stage_job(self):
+        """Queue a measured subset exploration followed by full refinement."""
+        config = self.config_provider()
+        if config is None:
+            return
+        fraction = self.two_stage_fraction.value()
+        try:
+            if config.global_method:
+                raise ValueError(
+                    "Two-stage fitting currently supports local solvers only."
+                )
+            representative_subsample_mask(config, fraction)
+            configured = replace(config, exploratory_fraction=fraction)
+            base_name = self.name_edit.text().strip() or "Two-stage fit"
+            job = self.queue.add(
+                configured,
+                name=f"{base_name} - {fraction:.0%} exploration",
+            )
+        except (TypeError, ValueError) as error:
+            QMessageBox.critical(self, "Two-stage optimization", str(error))
+            return
+        self.status_label.setText(
+            f"Added {job.name}; its final refinement will use all fitting data."
+        )
+        self.name_edit.clear()
+        self.refresh()
+        self._restore_selection(job.identifier)
 
     def build_comparison_plan(self):
         """Open the assistant using an immutable snapshot of the main form."""

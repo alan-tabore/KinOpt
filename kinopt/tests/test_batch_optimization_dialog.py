@@ -140,6 +140,30 @@ def test_dialog_adds_a_complete_experiment_holdout(
     assert "only be used for validation" in dialog.status_label.text()
 
 
+def test_dialog_adds_a_two_stage_full_refinement_job(
+    batch_dialog,
+    serializable_config,
+):
+    dialog, queue = batch_dialog
+    dialog.config_provider = lambda: replace(
+        serializable_config,
+        experimental_rate=np.tile(serializable_config.experimental_rate, 4),
+        experimental_args_for_rate=(
+            np.tile(serializable_config.experimental_args_for_rate[0], 4),
+            np.tile(serializable_config.experimental_args_for_rate[1], 4),
+        ),
+        experiment_lengths=(12,),
+    )
+    dialog.two_stage_fraction.setValue(0.25)
+
+    dialog.add_two_stage_job()
+
+    job = queue.list_jobs()[0]
+    assert job.config.exploratory_fraction == pytest.approx(0.25)
+    assert "25% exploration" in job.name
+    assert "final refinement" in dialog.status_label.text()
+
+
 def test_dialog_runs_all_pending_jobs_without_blocking(batch_dialog, qt_app):
     dialog, queue = batch_dialog
     dialog.add_current_setup()

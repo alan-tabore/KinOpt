@@ -42,13 +42,26 @@ def _optimization_process_entry(
     """Run one serialized configuration in a spawn-safe child process."""
     try:
         config = deserialize_config(serialized_config)
-        outcome = run_optimization(
-            config,
-            is_cancelled=cancellation_event.is_set,
-            progress_callback=lambda progress: result_connection.send(
-                (identifier, "progress", progress)
-            ),
+        progress_callback = lambda progress: result_connection.send(
+            (identifier, "progress", progress)
         )
+        if config.exploratory_fraction is None:
+            outcome = run_optimization(
+                config,
+                is_cancelled=cancellation_event.is_set,
+                progress_callback=progress_callback,
+            )
+        else:
+            from kinopt.src.optimization_strategies import (
+                run_exploratory_then_full,
+            )
+            outcome = run_exploratory_then_full(
+                config,
+                fraction=config.exploratory_fraction,
+                budget_fraction=config.exploratory_budget_fraction,
+                is_cancelled=cancellation_event.is_set,
+                progress_callback=progress_callback,
+            )
         result_connection.send((identifier, "completed", outcome))
     except OptimizationCancelled:
         result_connection.send(

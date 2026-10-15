@@ -85,6 +85,8 @@ class OptimizationRunConfig:
     max_iterations: int
     experiment_lengths: Tuple[int, ...] = ()
     training_mask: Optional[np.ndarray] = None
+    exploratory_fraction: Optional[float] = None
+    exploratory_budget_fraction: float = 0.25
 
     def __post_init__(self) -> None:
         if not self.global_method and not self.local_method:
@@ -123,6 +125,19 @@ class OptimizationRunConfig:
                     "Omit the training mask when every value is used for fitting."
                 )
             object.__setattr__(self, "training_mask", mask)
+        if self.exploratory_fraction is not None:
+            if self.global_method:
+                raise ValueError(
+                    "Two-stage fitting currently supports local solvers only."
+                )
+            if not 0 < float(self.exploratory_fraction) < 1:
+                raise ValueError(
+                    "The exploratory fraction must be between 0 and 1."
+                )
+        if not 0 < float(self.exploratory_budget_fraction) <= 1:
+            raise ValueError(
+                "The exploratory budget fraction must be above 0 and at most 1."
+            )
 
         fields_to_freeze = (
             "initial_guess",
