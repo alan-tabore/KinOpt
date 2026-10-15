@@ -450,8 +450,8 @@ def jac_for_rate_for_kamal(extent, T, A1, E1, A2, E2, m, n):
 
 
 @dataclass(frozen=True)
-class PreparedKamalData:
-    """Parameter-independent arrays reused by Kamal rate evaluations."""
+class PreparedRateData:
+    """Parameter-independent arrays reused by analytic rate evaluations."""
 
     extent: np.ndarray
     inverse_RT: np.ndarray
@@ -460,17 +460,22 @@ class PreparedKamalData:
     log_remaining_extent: np.ndarray
 
 
-def prepare_kamal_data(extent, T):
-    """Validate and prepare experimental arrays shared by Kamal evaluations."""
+# Kept for callers that adopted the Kamal-specific name before the prepared
+# arrays were shared by the other rate models.
+PreparedKamalData = PreparedRateData
+
+
+def prepare_rate_data(extent, T):
+    """Validate and prepare arrays shared by supported analytic rate models."""
     R = 8.31446261815324  # Ideal gas constant
     extent, T = np.broadcast_arrays(
         np.asarray(extent, dtype=float),
         np.asarray(T, dtype=float),
     )
     if not np.all(np.isfinite(extent)) or np.any((extent < 0) | (extent > 1)):
-        raise ValueError("Kamal conversion must be finite and between 0 and 1.")
+        raise ValueError("Conversion must be finite and between 0 and 1.")
     if not np.all(np.isfinite(T)) or np.any(T <= 0):
-        raise ValueError("Kamal temperature must be finite and strictly positive.")
+        raise ValueError("Temperature must be finite and strictly positive.")
 
     remaining_extent = 1 - extent
     log_extent = np.zeros_like(extent)
@@ -481,12 +486,84 @@ def prepare_kamal_data(extent, T):
     log_remaining_extent[positive_remaining_extent] = np.log(
         remaining_extent[positive_remaining_extent]
     )
-    return PreparedKamalData(
+    return PreparedRateData(
         extent=extent,
         inverse_RT=1 / (R * T),
         remaining_extent=remaining_extent,
         log_extent=log_extent,
         log_remaining_extent=log_remaining_extent,
+    )
+
+
+def prepare_kamal_data(extent, T):
+    """Return prepared rate data for backward-compatible Kamal callers."""
+    return prepare_rate_data(extent, T)
+
+
+def nth_order_rate_and_jacobian_from_prepared(
+    prepared_data,
+    A1,
+    E1,
+    n,
+):
+    """Compute an nth-order rate and its three parameter derivatives."""
+    arrhenius_term = np.exp(-E1 * prepared_data.inverse_RT)
+    remaining_to_n = prepared_data.remaining_extent ** n
+    rate = A1 * arrhenius_term * remaining_to_n
+    jacobian = np.stack(
+        (
+            arrhenius_term * remaining_to_n,
+            -rate * prepared_data.inverse_RT,
+            rate * prepared_data.log_remaining_extent,
+        ),
+        axis=-1,
+    )
+    return rate, jacobian
+
+
+def nth_order_rate_and_jacobian(extent, T, A1, E1, n):
+    """Compute an nth-order rate and Jacobian in one array pass."""
+    return nth_order_rate_and_jacobian_from_prepared(
+        prepare_rate_data(extent, T),
+        A1,
+        E1,
+        n,
+    )
+
+
+def autocatalytic_rate_and_jacobian_from_prepared(
+    prepared_data,
+    A,
+    Ea,
+    m,
+    n,
+):
+    """Compute an autocatalytic rate and its four parameter derivatives."""
+    arrhenius_term = np.exp(-Ea * prepared_data.inverse_RT)
+    extent_to_m = prepared_data.extent ** m
+    remaining_to_n = prepared_data.remaining_extent ** n
+    base_rate = arrhenius_term * extent_to_m * remaining_to_n
+    rate = A * base_rate
+    jacobian = np.stack(
+        (
+            base_rate,
+            -rate * prepared_data.inverse_RT,
+            rate * prepared_data.log_extent,
+            rate * prepared_data.log_remaining_extent,
+        ),
+        axis=-1,
+    )
+    return rate, jacobian
+
+
+def autocatalytic_rate_and_jacobian(extent, T, A, Ea, m, n):
+    """Compute an autocatalytic rate and Jacobian in one array pass."""
+    return autocatalytic_rate_and_jacobian_from_prepared(
+        prepare_rate_data(extent, T),
+        A,
+        Ea,
+        m,
+        n,
     )
 
 
@@ -531,7 +608,7 @@ def kamal_rate_and_jacobian_from_prepared(
 
 def kamal_rate_and_jacobian(extent, T, A1, E1, A2, E2, m, n):
     """Compute a Kamal rate and all six derivatives in one array pass."""
-    prepared_data = prepare_kamal_data(extent, T)
+    prepared_data = prepare_rate_data(extent, T)
     return kamal_rate_and_jacobian_from_prepared(
         prepared_data,
         A1,

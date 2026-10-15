@@ -399,6 +399,21 @@ def least_squares_residual_weights(
     )
 
 
+def least_squares_cost_scale(cost_function, experimental_rate):
+    """Return the factor between a residual norm and the selected cost."""
+    if cost_function in {rss_standard, rss_relative}:
+        return 1.0
+    if cost_function in {
+        rss_mean,
+        rss_increase_of_small_extents_impact,
+        rss_increase_of_small_rates_impact_with_zones,
+    }:
+        return 1.0 / len(experimental_rate)
+    raise ValueError(
+        "Analytic gradients do not support the selected cost function."
+    )
+
+
 def residuals_for_least_squares(
     x,
     cost_function,
@@ -452,6 +467,25 @@ def residuals_for_least_squares(
     return residuals * weights
 
 
+_ANALYTIC_RATE_MODELS = {
+    kinetic_models.rate_for_nth_order: (
+        3,
+        kinetic_models.nth_order_rate_and_jacobian_from_prepared,
+        "analytic-nth-order",
+    ),
+    kinetic_models.rate_for_autocatalytic: (
+        4,
+        kinetic_models.autocatalytic_rate_and_jacobian_from_prepared,
+        "analytic-autocatalytic",
+    ),
+    kinetic_models.rate_for_kamal: (
+        6,
+        kinetic_models.kamal_rate_and_jacobian_from_prepared,
+        "analytic-kamal",
+    ),
+}
+
+
 def has_analytic_jacobian_for_least_squares(
     parameter_count,
     rate_law,
@@ -462,14 +496,64 @@ def has_analytic_jacobian_for_least_squares(
     tg_law,
 ):
     """Return whether the complete selected model has a known Jacobian."""
+    model_specification = _ANALYTIC_RATE_MODELS.get(rate_law)
     return (
-        rate_law is kinetic_models.rate_for_kamal
-        and parameter_count == 6
-        and number_of_parameters_to_optimize_for_rate == 6
+        model_specification is not None
+        and parameter_count == model_specification[0]
+        and number_of_parameters_to_optimize_for_rate == model_specification[0]
         and vitrification_law is None
         and number_of_parameters_to_optimize_for_vitrification == 0
         and coupling_law is None
         and tg_law is None
+    )
+
+
+def prepare_analytic_rate_data(rate_law, experimental_args_for_rate):
+    """Prepare fixed arrays for a supported analytic rate model."""
+    if rate_law not in _ANALYTIC_RATE_MODELS:
+        raise ValueError("The selected rate model has no analytic Jacobian.")
+    return kinetic_models.prepare_rate_data(*experimental_args_for_rate)
+
+
+def analytic_jacobian_source(rate_law):
+    """Return the diagnostic label for a supported analytic rate model."""
+    try:
+        return _ANALYTIC_RATE_MODELS[rate_law][2]
+    except KeyError as error:
+        raise ValueError(
+            "The selected rate model has no analytic Jacobian."
+        ) from error
+
+
+def has_analytic_gradient_for_minimize(
+    cost_function,
+    parameter_count,
+    rate_law,
+    number_of_parameters_to_optimize_for_rate,
+    vitrification_law,
+    number_of_parameters_to_optimize_for_vitrification,
+    coupling_law,
+    tg_law,
+):
+    """Return whether KinOpt can derive the complete scalar-cost gradient."""
+    return (
+        cost_function
+        in {
+            rss_standard,
+            rss_mean,
+            rss_relative,
+            rss_increase_of_small_extents_impact,
+            rss_increase_of_small_rates_impact_with_zones,
+        }
+        and has_analytic_jacobian_for_least_squares(
+            parameter_count,
+            rate_law,
+            number_of_parameters_to_optimize_for_rate,
+            vitrification_law,
+            number_of_parameters_to_optimize_for_vitrification,
+            coupling_law,
+            tg_law,
+        )
     )
 
 
@@ -515,6 +599,65 @@ def analytic_jacobian_for_least_squares(
     return jacobian
 
 
+def analytic_cost_and_gradient_for_minimize(
+    x,
+    cost_function,
+    experimental_rate,
+    rate_law,
+    experimental_args_for_rate,
+    number_of_parameters_to_optimize_for_rate,
+    vitrification_law,
+    experimental_args_for_vitrification,
+    number_of_parameters_to_optimize_for_vitrification,
+    coupling_law,
+    experimental_args_for_coupling,
+    tg_law,
+    experimental_args_for_tg,
+    tg_args,
+    *cost_args,
+    residual_weights=None,
+    prepared_rate_data=None,
+):
+    """Compute a supported scalar cost and its physical-parameter gradient."""
+    if not has_analytic_gradient_for_minimize(
+        cost_function,
+        len(x),
+        rate_law,
+        number_of_parameters_to_optimize_for_rate,
+        vitrification_law,
+        number_of_parameters_to_optimize_for_vitrification,
+        coupling_law,
+        tg_law,
+    ):
+        raise ValueError(
+            "An analytic gradient is not available for this optimization "
+            "setup."
+        )
+    residuals, jacobian = analytic_residuals_and_jacobian_for_least_squares(
+        x,
+        cost_function,
+        experimental_rate,
+        rate_law,
+        experimental_args_for_rate,
+        number_of_parameters_to_optimize_for_rate,
+        vitrification_law,
+        experimental_args_for_vitrification,
+        number_of_parameters_to_optimize_for_vitrification,
+        coupling_law,
+        experimental_args_for_coupling,
+        tg_law,
+        experimental_args_for_tg,
+        tg_args,
+        *cost_args,
+        residual_weights=residual_weights,
+        prepared_rate_data=prepared_rate_data,
+    )
+    scale = least_squares_cost_scale(cost_function, experimental_rate)
+    cost = scale * float(np.dot(residuals, residuals))
+    gradient = 2.0 * scale * np.asarray(jacobian).T @ residuals
+    return cost, gradient
+
+
 def analytic_residuals_and_jacobian_for_least_squares(
     x,
     cost_function,
@@ -549,17 +692,12 @@ def analytic_residuals_and_jacobian_for_least_squares(
             "model setup."
         )
     if prepared_rate_data is None:
-        modeled_rate, jacobian = kinetic_models.kamal_rate_and_jacobian(
-            *experimental_args_for_rate,
-            *x,
+        prepared_rate_data = prepare_analytic_rate_data(
+            rate_law,
+            experimental_args_for_rate,
         )
-    else:
-        modeled_rate, jacobian = (
-            kinetic_models.kamal_rate_and_jacobian_from_prepared(
-                prepared_rate_data,
-                *x,
-            )
-        )
+    evaluator = _ANALYTIC_RATE_MODELS[rate_law][1]
+    modeled_rate, jacobian = evaluator(prepared_rate_data, *x)
     weights = (
         least_squares_residual_weights(
             cost_function,

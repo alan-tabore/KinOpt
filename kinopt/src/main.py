@@ -1546,7 +1546,9 @@ class MainWindow(QMainWindow):
                         if self.selected_local_optimization == LOG_SPACE_LEAST_SQUARES:
                             combobox.addItems(["auto", "2-point", "3-point", "cs"])
                         else:
-                            combobox.addItems(["None", "2-point", "3-point", "cs"])
+                            combobox.addItems(
+                                ["auto", "None", "2-point", "3-point", "cs"]
+                            )
                     else:
                         QMessageBox.critical(self, "Unsupported Key", f"The key '{key}' is not handled by the program.")
                     self.labels_dict_local_optimization[key] = label

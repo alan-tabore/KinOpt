@@ -336,7 +336,9 @@ def test_calculation_profiles_explain_and_fill_selected_methods(
     )
 
 
-def test_profile_converts_none_jacobian_choice_for_scipy(optimization_window):
+def test_gradient_method_offers_auto_and_converts_none_for_scipy(
+    optimization_window,
+):
     _, window, _, errors = optimization_window
     window.ui.comboBox_rate_model.setCurrentText('rate_for_nth_order')
     window.update_rate_formLayout(None)
@@ -346,8 +348,16 @@ def test_profile_converts_none_jacobian_choice_for_scipy(optimization_window):
     window.apply_optimization_profile()
     arguments = window.get_local_optimization_args_dict('BFGS')
 
-    assert arguments['jac'] is None
+    jacobian_choices = window.entries_dict_local_optimization['jac']
+    assert [
+        jacobian_choices.itemText(index)
+        for index in range(jacobian_choices.count())
+    ] == ['auto', 'None', '2-point', '3-point', 'cs']
+    assert arguments['jac'] == 'auto'
     assert arguments['options']['maxiter'] == 1000
+
+    jacobian_choices.setCurrentText('None')
+    assert window.get_local_optimization_args_dict('BFGS')['jac'] is None
     assert errors == []
 
 

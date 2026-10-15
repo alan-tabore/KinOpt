@@ -111,17 +111,17 @@ GUIDANCE_BY_KIND = {
         'CG': SelectionGuidance(
             'Conjugate gradient',
             'A local method for smooth objectives that follows gradient-based directions.',
-            'This KinOpt option is unconstrained and works best with well-scaled parameters.',
+            'This option is unconstrained and works best with well-scaled parameters; keep jac on auto to use analytic derivatives when available.',
         ),
         'BFGS': SelectionGuidance(
             'BFGS',
             'A local method that builds an approximation of objective curvature.',
-            'This KinOpt option is unconstrained and still depends on the initial guess.',
+            'This option is unconstrained and depends on the initial guess; keep jac on auto to use analytic derivatives when available.',
         ),
         'L-BFGS-B': SelectionGuidance(
             'L-BFGS-B',
             'A memory-efficient local method for smooth objectives with parameter bounds.',
-            'It is a strong bounded local choice, but the initial guess can select the final minimum.',
+            'It is a strong bounded local choice; keep jac on auto, and compare solutions from justified starting values.',
         ),
     },
     'cost_function': {

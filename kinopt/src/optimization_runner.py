@@ -9,10 +9,11 @@ import time
 import numpy as np
 from scipy.optimize import OptimizeResult
 
-from kinopt.src import kinetic_models, optimization
+from kinopt.src import optimization
 
 
 LOG_SPACE_LEAST_SQUARES = "least_squares_log"
+GRADIENT_LOCAL_METHODS = frozenset({"CG", "BFGS", "L-BFGS-B"})
 
 
 class OptimizationCancelled(Exception):
@@ -204,7 +205,10 @@ def _run_log_space_least_squares(
         *objective_args[12:],
     )
     prepared_rate_data = (
-        kinetic_models.prepare_kamal_data(*objective_args[2])
+        optimization.prepare_analytic_rate_data(
+            config.rate_law,
+            objective_args[2],
+        )
         if use_analytic_jacobian
         else None
     )
@@ -217,7 +221,7 @@ def _run_log_space_least_squares(
     cached_residuals = [None]
     cached_jacobian = [None]
 
-    def evaluate_analytic_kamal(transformed_parameters):
+    def evaluate_analytic_model(transformed_parameters):
         if (
             cached_transformed_parameters[0] is None
             or not np.array_equal(
@@ -257,7 +261,7 @@ def _run_log_space_least_squares(
             raise OptimizationCancelled()
         residual_evaluations[0] += 1
         if use_analytic_jacobian:
-            physical_parameters, residuals, _ = evaluate_analytic_kamal(
+            physical_parameters, residuals, _ = evaluate_analytic_model(
                 transformed_parameters
             )
         else:
@@ -280,13 +284,15 @@ def _run_log_space_least_squares(
             if cancellation_requested():
                 raise OptimizationCancelled()
             analytic_jacobian_evaluations[0] += 1
-            _, _, jacobian = evaluate_analytic_kamal(
+            _, _, jacobian = evaluate_analytic_model(
                 transformed_parameters
             )
             return jacobian
 
         options["jac"] = jacobian_function
-        jacobian_source = "analytic-kamal"
+        jacobian_source = optimization.analytic_jacobian_source(
+            config.rate_law
+        )
     else:
         options["jac"] = (
             "2-point" if requested_jacobian == "auto" else requested_jacobian
@@ -334,6 +340,86 @@ def run_optimization(
     local_options = _thaw(config.local_options or {})
     objective_args = _objective_arguments(config)
     initial_guess = _thaw(config.initial_guess)
+    minimize_objective = config.cost_function
+    minimize_jacobian_source = None
+    analytic_gradient_evaluations = [0]
+
+    can_use_selected_local_method = config.global_method in {
+        "",
+        "basinhopping",
+        "shgo",
+    }
+    requested_jacobian = local_options.get("jac")
+    if (
+        can_use_selected_local_method
+        and config.local_method in GRADIENT_LOCAL_METHODS
+        and requested_jacobian == "auto"
+    ):
+        use_analytic_gradient = (
+            optimization.has_analytic_gradient_for_minimize(
+                config.cost_function,
+                np.asarray(initial_guess).size,
+                config.rate_law,
+                config.rate_parameter_count,
+                config.vitrification_law,
+                config.vitrification_parameter_count,
+                config.coupling_law,
+                config.tg_law,
+            )
+        )
+        if use_analytic_gradient:
+            residual_weights = optimization.least_squares_residual_weights(
+                config.cost_function,
+                objective_args[0],
+                *objective_args[12:],
+            )
+            prepared_rate_data = optimization.prepare_analytic_rate_data(
+                config.rate_law,
+                objective_args[2],
+            )
+            cached_parameters = [None]
+            cached_cost = [None]
+            cached_gradient = [None]
+
+            def evaluate_cost_and_gradient(parameters):
+                if (
+                    cached_parameters[0] is None
+                    or not np.array_equal(parameters, cached_parameters[0])
+                ):
+                    cost, gradient = (
+                        optimization.analytic_cost_and_gradient_for_minimize(
+                            parameters,
+                            config.cost_function,
+                            *objective_args,
+                            residual_weights=residual_weights,
+                            prepared_rate_data=prepared_rate_data,
+                        )
+                    )
+                    cached_parameters[0] = np.array(parameters, copy=True)
+                    cached_cost[0] = cost
+                    cached_gradient[0] = gradient
+                return cached_cost[0], cached_gradient[0]
+
+            def analytic_objective(parameters, *unused_args):
+                cost, _ = evaluate_cost_and_gradient(parameters)
+                return cost
+
+            def analytic_gradient(parameters, *unused_args):
+                if cancellation_requested():
+                    raise OptimizationCancelled()
+                analytic_gradient_evaluations[0] += 1
+                _, gradient = evaluate_cost_and_gradient(parameters)
+                return gradient
+
+            local_options["jac"] = analytic_gradient
+            minimize_jacobian_source = optimization.analytic_jacobian_source(
+                config.rate_law
+            )
+            if not config.global_method:
+                minimize_objective = analytic_objective
+        else:
+            local_options["jac"] = None
+            minimize_jacobian_source = "2-point"
 
     callback_required = callback is not None or is_cancelled is not None
     if config.global_method and callback_required:
@@ -378,9 +464,15 @@ def run_optimization(
     else:
         local_options["args"] = objective_args
         result = config.local_optimizer(
-            config.cost_function,
+            minimize_objective,
             initial_guess,
             **local_options,
+        )
+
+    if minimize_jacobian_source is not None:
+        result.jacobian_source = minimize_jacobian_source
+        result.analytic_gradient_evaluations = (
+            analytic_gradient_evaluations[0]
         )
 
     elapsed_seconds = clock() - started_at

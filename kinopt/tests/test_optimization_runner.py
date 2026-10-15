@@ -19,6 +19,16 @@ def quadratic(parameters, *args):
     return (parameters[0] - 3.) ** 2
 
 
+def nth_order_without_analytic_jacobian(extent, temperature, A1, E1, n):
+    return kinetic_models.rate_for_nth_order(
+        extent,
+        temperature,
+        A1,
+        E1,
+        n,
+    )
+
+
 def make_config(initial_guess=None, local_options=None):
     return OptimizationRunConfig(
         cost_function=quadratic,
@@ -243,7 +253,7 @@ def test_auto_jacobian_reduces_kamal_residual_evaluations():
     np.testing.assert_allclose(analytic.x, numerical.x, rtol=1e-6)
 
 
-def test_auto_jacobian_falls_back_for_other_models(serializable_config):
+def test_auto_jacobian_uses_nth_order_derivatives(serializable_config):
     config = replace(
         serializable_config,
         local_method=LOG_SPACE_LEAST_SQUARES,
@@ -259,5 +269,198 @@ def test_auto_jacobian_falls_back_for_other_models(serializable_config):
     result = run_optimization(config).result
 
     assert result.success
+    assert result.jacobian_source == 'analytic-nth-order'
+    assert result.analytic_jacobian_evaluations > 0
+    assert result.kinetic_evaluations == result.residual_evaluations
+
+
+def test_auto_jacobian_uses_autocatalytic_derivatives(serializable_config):
+    extent = np.linspace(0.03, 0.95, 80)
+    temperature = 330 + 140 * extent + 10 * np.sin(extent * 9)
+    known_parameters = np.array([1e8, 60_000.0, 0.8, 1.2])
+    config = replace(
+        serializable_config,
+        initial_guess=np.array([8e7, 57_000.0, 0.7, 1.1]),
+        local_method=LOG_SPACE_LEAST_SQUARES,
+        local_optimizer=optimize.least_squares,
+        local_options={
+            'jac': 'auto',
+            'max_nfev': 200,
+            'bounds': (
+                (1e5, 1e10),
+                (1e3, 2e5),
+                (0.1, 5.0),
+                (0.1, 5.0),
+            ),
+        },
+        experimental_rate=kinetic_models.rate_for_autocatalytic(
+            extent,
+            temperature,
+            *known_parameters,
+        ),
+        rate_law=kinetic_models.rate_for_autocatalytic,
+        experimental_args_for_rate=(extent, temperature),
+        rate_parameter_count=4,
+        max_iterations=200,
+    )
+
+    result = run_optimization(config).result
+
+    assert result.success
+    assert result.jacobian_source == 'analytic-autocatalytic'
+    assert result.analytic_jacobian_evaluations > 0
+    np.testing.assert_allclose(result.x, known_parameters, rtol=1e-5)
+
+
+def test_auto_jacobian_falls_back_for_unregistered_models(serializable_config):
+    config = replace(
+        serializable_config,
+        local_method=LOG_SPACE_LEAST_SQUARES,
+        local_optimizer=optimize.least_squares,
+        local_options={
+            'jac': 'auto',
+            'max_nfev': 200,
+            'bounds': ((1e5, 1e10), (1e3, 2e5), (0.1, 5.0)),
+        },
+        rate_law=nth_order_without_analytic_jacobian,
+        max_iterations=200,
+    )
+
+    result = run_optimization(config).result
+
+    assert result.success
     assert result.jacobian_source == '2-point'
     assert result.analytic_jacobian_evaluations == 0
+
+
+def test_auto_gradient_is_shared_by_scalar_objective_and_bfgs(
+    serializable_config,
+    monkeypatch,
+):
+    combined_evaluations = []
+    original_evaluator = optimization.analytic_cost_and_gradient_for_minimize
+
+    def tracked_evaluator(*args, **kwargs):
+        combined_evaluations.append(args[0])
+        return original_evaluator(*args, **kwargs)
+
+    monkeypatch.setattr(
+        optimization,
+        'analytic_cost_and_gradient_for_minimize',
+        tracked_evaluator,
+    )
+
+    def inspect_optimizer(function, initial_guess, args, jac, **kwargs):
+        first_cost = function(initial_guess, *args)
+        gradient = jac(initial_guess, *args)
+        second_cost = function(initial_guess, *args)
+        assert first_cost == second_cost
+        assert np.all(np.isfinite(gradient))
+        return optimize.OptimizeResult(
+            x=initial_guess,
+            fun=first_cost,
+            success=True,
+        )
+
+    config = replace(
+        serializable_config,
+        local_method='BFGS',
+        local_optimizer=inspect_optimizer,
+        local_options={
+            'method': 'BFGS',
+            'jac': 'auto',
+            'options': {'maxiter': 10},
+        },
+    )
+
+    result = run_optimization(config).result
+
+    assert result.jacobian_source == 'analytic-nth-order'
+    assert result.analytic_gradient_evaluations == 1
+    assert len(combined_evaluations) == 1
+
+
+def test_scipy_bfgs_accepts_the_auto_gradient(serializable_config):
+    config = replace(
+        serializable_config,
+        local_method='BFGS',
+        local_optimizer=optimize.minimize,
+        local_options={
+            'method': 'BFGS',
+            'jac': 'auto',
+            'options': {'maxiter': 200, 'gtol': 1e-5},
+        },
+        max_iterations=200,
+    )
+
+    result = run_optimization(config).result
+
+    assert result.success
+    assert result.jacobian_source == 'analytic-nth-order'
+    assert result.analytic_gradient_evaluations > 0
+    assert np.isfinite(result.fun)
+
+
+def test_auto_gradient_falls_back_for_unregistered_scalar_models(
+    serializable_config,
+):
+    def inspect_optimizer(function, initial_guess, args, jac, **kwargs):
+        assert jac is None
+        return optimize.OptimizeResult(
+            x=initial_guess,
+            fun=function(initial_guess, *args),
+            success=True,
+        )
+
+    config = replace(
+        serializable_config,
+        local_method='BFGS',
+        local_optimizer=inspect_optimizer,
+        local_options={
+            'method': 'BFGS',
+            'jac': 'auto',
+            'options': {'maxiter': 10},
+        },
+        rate_law=nth_order_without_analytic_jacobian,
+    )
+
+    result = run_optimization(config).result
+
+    assert result.jacobian_source == '2-point'
+    assert result.analytic_gradient_evaluations == 0
+
+
+def test_basinhopping_local_refinement_receives_the_auto_gradient(
+    serializable_config,
+):
+    def inspect_basinhopping(function, initial_guess, minimizer_kwargs, **kwargs):
+        gradient = minimizer_kwargs['jac'](
+            initial_guess,
+            *minimizer_kwargs['args'],
+        )
+        assert np.all(np.isfinite(gradient))
+        return optimize.OptimizeResult(
+            x=initial_guess,
+            fun=function(initial_guess, *minimizer_kwargs['args']),
+            success=True,
+        )
+
+    config = replace(
+        serializable_config,
+        global_method='basinhopping',
+        global_optimizer=inspect_basinhopping,
+        global_options={'niter': 1},
+        local_method='L-BFGS-B',
+        local_optimizer=optimize.minimize,
+        local_options={
+            'method': 'L-BFGS-B',
+            'jac': 'auto',
+            'bounds': ((1e5, 1e10), (1e3, 2e5), (0.1, 5.0)),
+            'options': {'maxiter': 10},
+        },
+    )
+
+    result = run_optimization(config).result
+
+    assert result.jacobian_source == 'analytic-nth-order'
+    assert result.analytic_gradient_evaluations == 1
