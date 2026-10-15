@@ -384,7 +384,13 @@ class BatchOptimizationDialog(QDialog):
                 f"(seed {seed})"
                 for index in range(1, run_count + 1)
             ]
-            jobs = self.queue.add_many(configs, names)
+            jobs = self.queue.add_many(
+                configs,
+                names,
+                group_name=base_name,
+                group_kind="multi_start",
+                group_seed=seed,
+            )
         except Exception as error:
             QMessageBox.critical(self, "Multi-start optimization", str(error))
             return
@@ -603,7 +609,10 @@ class BatchOptimizationDialog(QDialog):
             self.comparison_dialog.raise_()
             self.comparison_dialog.activateWindow()
             return
-        self.comparison_dialog = BatchComparisonDialog(completed_jobs, self)
+        self.comparison_dialog = BatchComparisonDialog(
+            self.queue.list_jobs(),
+            self,
+        )
         self.comparison_dialog.setAttribute(Qt.WA_DeleteOnClose)
         self.comparison_dialog.destroyed.connect(
             lambda: setattr(self, "comparison_dialog", None)

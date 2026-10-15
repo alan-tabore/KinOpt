@@ -1,8 +1,10 @@
 """Comparable diagnostics for completed kinetic model optimizations."""
 
 from dataclasses import dataclass
+from collections import defaultdict
 import hashlib
 import math
+from typing import Optional
 
 import numpy as np
 
@@ -30,6 +32,25 @@ class FitDiagnostics:
     mean_residual: float
     maximum_absolute_error: float
     sample_count: int
+
+
+@dataclass(frozen=True)
+class MultiStartSummary:
+    """Aggregate stability indicators for one persisted multi-start group."""
+
+    group_identifier: str
+    group_name: str
+    seed: Optional[int]
+    total_count: int
+    completed_count: int
+    comparable_count: int
+    converged_count: int
+    best_job_identifier: Optional[str]
+    best_job_name: Optional[str]
+    best_rmse: Optional[float]
+    median_rmse: Optional[float]
+    maximum_relative_parameter_range: Optional[float]
+    message: str
 
 
 def _experimental_rate(config):
@@ -115,3 +136,105 @@ def compare_fit(config, parameters):
         sample_count=diagnostics.sample_count,
         dataset_fingerprint=dataset_fingerprint(config),
     )
+
+
+def _maximum_relative_parameter_range(completed_jobs):
+    parameter_vectors = [
+        np.asarray(job.result.parameters, dtype=float)
+        for job in completed_jobs
+    ]
+    if len(parameter_vectors) < 2:
+        return None
+    lengths = {values.size for values in parameter_vectors}
+    if len(lengths) != 1 or not all(
+        np.all(np.isfinite(values)) for values in parameter_vectors
+    ):
+        return None
+    matrix = np.vstack(parameter_vectors)
+    scale = np.max(np.abs(matrix), axis=0)
+    ranges = np.ptp(matrix, axis=0)
+    relative_ranges = np.divide(
+        ranges,
+        scale,
+        out=np.zeros_like(ranges),
+        where=scale > 0,
+    )
+    return float(np.max(relative_ranges))
+
+
+def summarize_multistart_groups(jobs):
+    """Summarize convergence, fit quality, and parameter spread by group."""
+    grouped = defaultdict(list)
+    for job in jobs:
+        if job.group_kind == "multi_start" and job.group_identifier:
+            grouped[job.group_identifier].append(job)
+
+    summaries = []
+    ordered_groups = sorted(
+        grouped.values(),
+        key=lambda group: min(job.position for job in group),
+    )
+    for group in ordered_groups:
+        ordered = sorted(group, key=lambda job: job.position)
+        completed = [
+            job
+            for job in ordered
+            if job.status.value == "completed" and job.result is not None
+        ]
+        measurements = []
+        unavailable_count = 0
+        for job in completed:
+            try:
+                measurements.append(
+                    (job, compare_fit(job.config, job.result.parameters))
+                )
+            except (TypeError, ValueError, FloatingPointError):
+                unavailable_count += 1
+
+        fingerprints = {
+            comparison.dataset_fingerprint
+            for _, comparison in measurements
+        }
+        message = ""
+        comparable = measurements
+        if len(fingerprints) > 1:
+            comparable = []
+            message = "The group contains different measured datasets."
+        elif unavailable_count:
+            message = (
+                f"Fit metrics unavailable for {unavailable_count} "
+                "completed run(s)."
+            )
+
+        ranked = sorted(
+            comparable,
+            key=lambda item: (item[1].rmse, item[0].position),
+        )
+        best_job = ranked[0][0] if ranked else None
+        rmse_values = [comparison.rmse for _, comparison in ranked]
+        summaries.append(
+            MultiStartSummary(
+                group_identifier=ordered[0].group_identifier,
+                group_name=ordered[0].group_name or "Multi-start",
+                seed=ordered[0].group_seed,
+                total_count=len(ordered),
+                completed_count=len(completed),
+                comparable_count=len(ranked),
+                converged_count=sum(
+                    job.result.solver_success is True for job in completed
+                ),
+                best_job_identifier=(
+                    None if best_job is None else best_job.identifier
+                ),
+                best_job_name=None if best_job is None else best_job.name,
+                best_rmse=None if not rmse_values else min(rmse_values),
+                median_rmse=(
+                    None if not rmse_values else float(np.median(rmse_values))
+                ),
+                maximum_relative_parameter_range=(
+                    _maximum_relative_parameter_range(completed)
+                ),
+                message=message,
+            )
+        )
+    return tuple(summaries)

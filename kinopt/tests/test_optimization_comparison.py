@@ -4,13 +4,17 @@ from dataclasses import replace
 
 import numpy as np
 import pytest
+from scipy.optimize import OptimizeResult
 
 from kinopt.src import optimization
 from kinopt.src.optimization_comparison import (
     compare_fit,
     dataset_fingerprint,
     diagnose_fit,
+    summarize_multistart_groups,
 )
+from kinopt.src.optimization_queue import JobStatus, OptimizationQueue
+from kinopt.src.optimization_runner import OptimizationRunResult
 
 
 def test_rmse_is_recalculated_from_model_predictions(serializable_config):
@@ -91,3 +95,59 @@ def test_comparison_rejects_a_model_output_with_the_wrong_shape(
 
     with pytest.raises(ValueError, match="same shape"):
         compare_fit(incompatible, [1e8, 60000., 1.5])
+
+
+def test_multistart_summary_reports_fit_and_parameter_stability(
+    tmp_path,
+    serializable_config,
+):
+    queue = OptimizationQueue(tmp_path / 'queue.sqlite3')
+    jobs = queue.add_many(
+        (serializable_config,) * 3,
+        ('Baseline', 'Alternative', 'Pending'),
+        group_name='Nth-order stability',
+        group_kind='multi_start',
+        group_seed=12,
+    )
+    outcomes = (
+        OptimizationRunResult(
+            OptimizeResult(
+                x=np.array([1e8, 60000., 1.5]),
+                fun=0.,
+                success=True,
+                message='done',
+            ),
+            1.,
+        ),
+        OptimizationRunResult(
+            OptimizeResult(
+                x=np.array([8e7, 55000., 1.4]),
+                fun=1.,
+                success=False,
+                message='budget reached',
+            ),
+            2.,
+        ),
+    )
+    for job, outcome in zip(jobs, outcomes):
+        queue.set_status(job.identifier, JobStatus.RUNNING)
+        queue.complete(job.identifier, outcome)
+
+    summaries = summarize_multistart_groups(queue.list_jobs())
+
+    assert len(summaries) == 1
+    summary = summaries[0]
+    assert summary.group_name == 'Nth-order stability'
+    assert summary.seed == 12
+    assert summary.total_count == 3
+    assert summary.completed_count == 2
+    assert summary.comparable_count == 2
+    assert summary.converged_count == 1
+    assert summary.best_job_name == 'Baseline'
+    assert summary.best_rmse == pytest.approx(0.)
+    alternative_rmse = compare_fit(
+        serializable_config,
+        outcomes[1].result.x,
+    ).rmse
+    assert summary.median_rmse == pytest.approx(alternative_rmse / 2.)
+    assert summary.maximum_relative_parameter_range == pytest.approx(0.2)

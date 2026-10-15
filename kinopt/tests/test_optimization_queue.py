@@ -64,6 +64,27 @@ def test_queue_adds_a_named_configuration_group_atomically(
     )
 
 
+def test_queue_persists_multi_start_group_metadata(
+    tmp_path,
+    serializable_config,
+):
+    queue = OptimizationQueue(tmp_path / 'queue.sqlite3')
+
+    added = queue.add_many(
+        (serializable_config, serializable_config),
+        ('Start 1', 'Start 2'),
+        group_name='Kamal starts',
+        group_kind='multi_start',
+        group_seed=42,
+    )
+
+    assert added[0].group_identifier
+    assert added[1].group_identifier == added[0].group_identifier
+    assert all(job.group_name == 'Kamal starts' for job in added)
+    assert all(job.group_kind == 'multi_start' for job in added)
+    assert all(job.group_seed == 42 for job in added)
+
+
 def test_queue_rejects_an_invalid_group_without_partial_jobs(
     tmp_path,
     serializable_config,
@@ -219,8 +240,57 @@ def test_version_one_database_is_migrated(tmp_path):
                 'PRAGMA table_info(optimization_jobs)'
             ).fetchall()
         }
-    assert version == 2
-    assert {'started_at', 'finished_at', 'result_json'} <= columns
+    assert version == 3
+    assert {
+        'started_at',
+        'finished_at',
+        'result_json',
+        'group_identifier',
+        'group_name',
+        'group_kind',
+        'group_seed',
+    } <= columns
+
+
+def test_version_two_database_is_migrated(tmp_path):
+    database = tmp_path / 'queue.sqlite3'
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            """
+            CREATE TABLE optimization_jobs (
+                identifier TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                config_json TEXT NOT NULL,
+                status TEXT NOT NULL,
+                position INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                message TEXT,
+                started_at TEXT,
+                finished_at TEXT,
+                result_json TEXT
+            )
+            """
+        )
+        connection.execute('PRAGMA user_version = 2')
+
+    OptimizationQueue(database)
+
+    with sqlite3.connect(database) as connection:
+        version = connection.execute('PRAGMA user_version').fetchone()[0]
+        columns = {
+            row[1]
+            for row in connection.execute(
+                'PRAGMA table_info(optimization_jobs)'
+            ).fetchall()
+        }
+    assert version == 3
+    assert {
+        'group_identifier',
+        'group_name',
+        'group_kind',
+        'group_seed',
+    } <= columns
 
 
 def test_pending_job_can_only_be_claimed_once(tmp_path, serializable_config):

@@ -19,7 +19,7 @@ from kinopt.src.optimization_serialization import (
 )
 
 
-DATABASE_SCHEMA_VERSION = 2
+DATABASE_SCHEMA_VERSION = 3
 RESULT_SCHEMA_VERSION = 1
 
 
@@ -64,6 +64,10 @@ class OptimizationJob:
     started_at: Optional[str]
     finished_at: Optional[str]
     result: Optional["StoredOptimizationResult"]
+    group_identifier: Optional[str]
+    group_name: Optional[str]
+    group_kind: Optional[str]
+    group_seed: Optional[int]
 
 
 @dataclass(frozen=True)
@@ -169,11 +173,15 @@ class OptimizationQueue:
                         message TEXT,
                         started_at TEXT,
                         finished_at TEXT,
-                        result_json TEXT
+                        result_json TEXT,
+                        group_identifier TEXT,
+                        group_name TEXT,
+                        group_kind TEXT,
+                        group_seed INTEGER
                     )
                     """
                 )
-            elif version == 1:
+            if version == 1:
                 connection.execute(
                     "ALTER TABLE optimization_jobs ADD COLUMN started_at TEXT"
                 )
@@ -182,6 +190,20 @@ class OptimizationQueue:
                 )
                 connection.execute(
                     "ALTER TABLE optimization_jobs ADD COLUMN result_json TEXT"
+                )
+            if 0 < version < 3:
+                connection.execute(
+                    "ALTER TABLE optimization_jobs "
+                    "ADD COLUMN group_identifier TEXT"
+                )
+                connection.execute(
+                    "ALTER TABLE optimization_jobs ADD COLUMN group_name TEXT"
+                )
+                connection.execute(
+                    "ALTER TABLE optimization_jobs ADD COLUMN group_kind TEXT"
+                )
+                connection.execute(
+                    "ALTER TABLE optimization_jobs ADD COLUMN group_seed INTEGER"
                 )
             connection.execute(
                 """
@@ -208,13 +230,27 @@ class OptimizationQueue:
             started_at=row["started_at"],
             finished_at=row["finished_at"],
             result=_deserialize_result(row["result_json"]),
+            group_identifier=row["group_identifier"],
+            group_name=row["group_name"],
+            group_kind=row["group_kind"],
+            group_seed=(
+                None if row["group_seed"] is None else int(row["group_seed"])
+            ),
         )
 
     def add(self, config, name=None):
         """Append an immutable configuration to the queue."""
         return self.add_many((config,), (name,))[0]
 
-    def add_many(self, configs, names=None):
+    def add_many(
+        self,
+        configs,
+        names=None,
+        *,
+        group_name=None,
+        group_kind=None,
+        group_seed=None,
+    ):
         """Atomically append several immutable configurations to the queue."""
         configs = tuple(configs)
         if not configs:
@@ -225,6 +261,26 @@ class OptimizationQueue:
             names = tuple(names)
         if len(names) != len(configs):
             raise ValueError("Provide one name for each optimization configuration.")
+
+        group_values = (group_name, group_kind, group_seed)
+        if any(value is not None for value in group_values):
+            normalized_group_kind = str(group_kind or "").strip()
+            if not normalized_group_kind:
+                raise ValueError("A grouped batch requires a group kind.")
+            normalized_group_name = str(group_name or "").strip()
+            if not normalized_group_name:
+                normalized_group_name = "Optimization group"
+            if isinstance(group_seed, bool) or (
+                group_seed is not None and not isinstance(group_seed, int)
+            ):
+                raise TypeError("A group seed must be an integer or None.")
+            if group_seed is not None and group_seed < 0:
+                raise ValueError("A group seed must be zero or positive.")
+            group_identifier = str(uuid4())
+        else:
+            normalized_group_name = None
+            normalized_group_kind = None
+            group_identifier = None
 
         serialized_configs = tuple(serialize_config(config) for config in configs)
         identifiers = tuple(str(uuid4()) for _ in configs)
@@ -246,8 +302,9 @@ class OptimizationQueue:
                     """
                     INSERT INTO optimization_jobs (
                         identifier, name, config_json, status, position,
-                        created_at, updated_at, message
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
+                        created_at, updated_at, message, group_identifier,
+                        group_name, group_kind, group_seed
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?)
                     """,
                     (
                         identifier,
@@ -257,6 +314,10 @@ class OptimizationQueue:
                         position,
                         timestamp,
                         timestamp,
+                        group_identifier,
+                        normalized_group_name,
+                        normalized_group_kind,
+                        group_seed,
                     ),
                 )
         return [self.get(identifier) for identifier in identifiers]
