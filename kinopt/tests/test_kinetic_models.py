@@ -91,6 +91,30 @@ def test_kamal_jacobian_matches_finite_differences_for_vector_data():
     np.testing.assert_allclose(analytic, numerical, rtol=2e-8, atol=1e-12)
 
 
+def test_combined_kamal_evaluation_reuses_prepared_experimental_data():
+    extent = np.array([0.05, 0.2, 0.55, 0.9])
+    temperature = np.array([330.0, 360.0, 410.0, 470.0])
+    parameters = (1.3e7, 52_000.0, 4.1e9, 76_000.0, 0.8, 1.4)
+
+    direct_rate, direct_jacobian = km.kamal_rate_and_jacobian(
+        extent,
+        temperature,
+        *parameters,
+    )
+    prepared = km.prepare_kamal_data(extent, temperature)
+    prepared_rate, prepared_jacobian = (
+        km.kamal_rate_and_jacobian_from_prepared(prepared, *parameters)
+    )
+
+    np.testing.assert_allclose(
+        direct_rate,
+        km.rate_for_kamal(extent, temperature, *parameters),
+        rtol=2e-15,
+    )
+    np.testing.assert_array_equal(prepared_rate, direct_rate)
+    np.testing.assert_array_equal(prepared_jacobian, direct_jacobian)
+
+
 def test_kamal_jacobian_is_finite_at_conversion_endpoints():
     jacobian = km.jac_for_rate_for_kamal(
         np.array([0.0, 1.0]),

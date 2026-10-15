@@ -183,6 +183,13 @@ def _run_record(
         "residual_evaluations": int(
             getattr(result, "residual_evaluations", result.nfev)
         ),
+        "kinetic_evaluations": int(
+            getattr(
+                result,
+                "kinetic_evaluations",
+                getattr(result, "residual_evaluations", result.nfev),
+            )
+        ),
         "jacobian_evaluations": (
             None if jacobian_evaluations is None else int(jacobian_evaluations)
         ),

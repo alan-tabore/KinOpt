@@ -352,7 +352,7 @@ def rss_increase_of_small_rates_impact_with_zones(x, experimental_rate, rate_law
     return np.dot(modified_dif, modified_dif)/len(modified_dif)
 
 
-def _least_squares_residual_weights(
+def least_squares_residual_weights(
     cost_function,
     experimental_rate,
     *cost_args,
@@ -415,6 +415,7 @@ def residuals_for_least_squares(
     experimental_args_for_tg,
     tg_args,
     *cost_args,
+    residual_weights=None,
 ):
     """Return a residual vector equivalent to a supported KinOpt cost.
 
@@ -439,10 +440,14 @@ def residuals_for_least_squares(
         tg_args,
     )
     residuals = np.asarray(modeled_rate) - experimental_rate
-    weights = _least_squares_residual_weights(
-        cost_function,
-        experimental_rate,
-        *cost_args,
+    weights = (
+        least_squares_residual_weights(
+            cost_function,
+            experimental_rate,
+            *cost_args,
+        )
+        if residual_weights is None
+        else np.asarray(residual_weights)
     )
     return residuals * weights
 
@@ -484,8 +489,52 @@ def analytic_jacobian_for_least_squares(
     experimental_args_for_tg,
     tg_args,
     *cost_args,
+    residual_weights=None,
+    prepared_rate_data=None,
 ):
     """Return the physical-parameter Jacobian for a supported model setup."""
+    _, jacobian = analytic_residuals_and_jacobian_for_least_squares(
+        x,
+        cost_function,
+        experimental_rate,
+        rate_law,
+        experimental_args_for_rate,
+        number_of_parameters_to_optimize_for_rate,
+        vitrification_law,
+        experimental_args_for_vitrification,
+        number_of_parameters_to_optimize_for_vitrification,
+        coupling_law,
+        experimental_args_for_coupling,
+        tg_law,
+        experimental_args_for_tg,
+        tg_args,
+        *cost_args,
+        residual_weights=residual_weights,
+        prepared_rate_data=prepared_rate_data,
+    )
+    return jacobian
+
+
+def analytic_residuals_and_jacobian_for_least_squares(
+    x,
+    cost_function,
+    experimental_rate,
+    rate_law,
+    experimental_args_for_rate,
+    number_of_parameters_to_optimize_for_rate,
+    vitrification_law,
+    experimental_args_for_vitrification,
+    number_of_parameters_to_optimize_for_vitrification,
+    coupling_law,
+    experimental_args_for_coupling,
+    tg_law,
+    experimental_args_for_tg,
+    tg_args,
+    *cost_args,
+    residual_weights=None,
+    prepared_rate_data=None,
+):
+    """Compute supported residuals and their Jacobian in one model pass."""
     if not has_analytic_jacobian_for_least_squares(
         len(x),
         rate_law,
@@ -499,16 +548,30 @@ def analytic_jacobian_for_least_squares(
             "An analytic least-squares Jacobian is not available for this "
             "model setup."
         )
-    jacobian = kinetic_models.jac_for_rate_for_kamal(
-        *experimental_args_for_rate,
-        *x,
+    if prepared_rate_data is None:
+        modeled_rate, jacobian = kinetic_models.kamal_rate_and_jacobian(
+            *experimental_args_for_rate,
+            *x,
+        )
+    else:
+        modeled_rate, jacobian = (
+            kinetic_models.kamal_rate_and_jacobian_from_prepared(
+                prepared_rate_data,
+                *x,
+            )
+        )
+    weights = (
+        least_squares_residual_weights(
+            cost_function,
+            experimental_rate,
+            *cost_args,
+        )
+        if residual_weights is None
+        else np.asarray(residual_weights)
     )
-    weights = _least_squares_residual_weights(
-        cost_function,
-        experimental_rate,
-        *cost_args,
-    )
-    return np.asarray(jacobian) * np.asarray(weights)[..., np.newaxis]
+    residuals = (np.asarray(modeled_rate) - experimental_rate) * weights
+    weighted_jacobian = np.asarray(jacobian) * weights[..., np.newaxis]
+    return residuals, weighted_jacobian
 
 
 
