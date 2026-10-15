@@ -9,7 +9,7 @@ import time
 import numpy as np
 from scipy.optimize import OptimizeResult
 
-from kinopt.src import kinetic_models, optimization
+from kinopt.src import optimization
 
 
 LOG_SPACE_LEAST_SQUARES = "least_squares_log"
@@ -204,7 +204,10 @@ def _run_log_space_least_squares(
         *objective_args[12:],
     )
     prepared_rate_data = (
-        kinetic_models.prepare_kamal_data(*objective_args[2])
+        optimization.prepare_analytic_rate_data(
+            config.rate_law,
+            objective_args[2],
+        )
         if use_analytic_jacobian
         else None
     )
@@ -217,7 +220,7 @@ def _run_log_space_least_squares(
     cached_residuals = [None]
     cached_jacobian = [None]
 
-    def evaluate_analytic_kamal(transformed_parameters):
+    def evaluate_analytic_model(transformed_parameters):
         if (
             cached_transformed_parameters[0] is None
             or not np.array_equal(
@@ -257,7 +260,7 @@ def _run_log_space_least_squares(
             raise OptimizationCancelled()
         residual_evaluations[0] += 1
         if use_analytic_jacobian:
-            physical_parameters, residuals, _ = evaluate_analytic_kamal(
+            physical_parameters, residuals, _ = evaluate_analytic_model(
                 transformed_parameters
             )
         else:
@@ -280,13 +283,15 @@ def _run_log_space_least_squares(
             if cancellation_requested():
                 raise OptimizationCancelled()
             analytic_jacobian_evaluations[0] += 1
-            _, _, jacobian = evaluate_analytic_kamal(
+            _, _, jacobian = evaluate_analytic_model(
                 transformed_parameters
             )
             return jacobian
 
         options["jac"] = jacobian_function
-        jacobian_source = "analytic-kamal"
+        jacobian_source = optimization.analytic_jacobian_source(
+            config.rate_law
+        )
     else:
         options["jac"] = (
             "2-point" if requested_jacobian == "auto" else requested_jacobian

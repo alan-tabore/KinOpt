@@ -19,6 +19,16 @@ def quadratic(parameters, *args):
     return (parameters[0] - 3.) ** 2
 
 
+def nth_order_without_analytic_jacobian(extent, temperature, A1, E1, n):
+    return kinetic_models.rate_for_nth_order(
+        extent,
+        temperature,
+        A1,
+        E1,
+        n,
+    )
+
+
 def make_config(initial_guess=None, local_options=None):
     return OptimizationRunConfig(
         cost_function=quadratic,
@@ -243,7 +253,7 @@ def test_auto_jacobian_reduces_kamal_residual_evaluations():
     np.testing.assert_allclose(analytic.x, numerical.x, rtol=1e-6)
 
 
-def test_auto_jacobian_falls_back_for_other_models(serializable_config):
+def test_auto_jacobian_uses_nth_order_derivatives(serializable_config):
     config = replace(
         serializable_config,
         local_method=LOG_SPACE_LEAST_SQUARES,
@@ -253,6 +263,66 @@ def test_auto_jacobian_falls_back_for_other_models(serializable_config):
             'max_nfev': 200,
             'bounds': ((1e5, 1e10), (1e3, 2e5), (0.1, 5.0)),
         },
+        max_iterations=200,
+    )
+
+    result = run_optimization(config).result
+
+    assert result.success
+    assert result.jacobian_source == 'analytic-nth-order'
+    assert result.analytic_jacobian_evaluations > 0
+    assert result.kinetic_evaluations == result.residual_evaluations
+
+
+def test_auto_jacobian_uses_autocatalytic_derivatives(serializable_config):
+    extent = np.linspace(0.03, 0.95, 80)
+    temperature = 330 + 140 * extent + 10 * np.sin(extent * 9)
+    known_parameters = np.array([1e8, 60_000.0, 0.8, 1.2])
+    config = replace(
+        serializable_config,
+        initial_guess=np.array([8e7, 57_000.0, 0.7, 1.1]),
+        local_method=LOG_SPACE_LEAST_SQUARES,
+        local_optimizer=optimize.least_squares,
+        local_options={
+            'jac': 'auto',
+            'max_nfev': 200,
+            'bounds': (
+                (1e5, 1e10),
+                (1e3, 2e5),
+                (0.1, 5.0),
+                (0.1, 5.0),
+            ),
+        },
+        experimental_rate=kinetic_models.rate_for_autocatalytic(
+            extent,
+            temperature,
+            *known_parameters,
+        ),
+        rate_law=kinetic_models.rate_for_autocatalytic,
+        experimental_args_for_rate=(extent, temperature),
+        rate_parameter_count=4,
+        max_iterations=200,
+    )
+
+    result = run_optimization(config).result
+
+    assert result.success
+    assert result.jacobian_source == 'analytic-autocatalytic'
+    assert result.analytic_jacobian_evaluations > 0
+    np.testing.assert_allclose(result.x, known_parameters, rtol=1e-5)
+
+
+def test_auto_jacobian_falls_back_for_unregistered_models(serializable_config):
+    config = replace(
+        serializable_config,
+        local_method=LOG_SPACE_LEAST_SQUARES,
+        local_optimizer=optimize.least_squares,
+        local_options={
+            'jac': 'auto',
+            'max_nfev': 200,
+            'bounds': ((1e5, 1e10), (1e3, 2e5), (0.1, 5.0)),
+        },
+        rate_law=nth_order_without_analytic_jacobian,
         max_iterations=200,
     )
 

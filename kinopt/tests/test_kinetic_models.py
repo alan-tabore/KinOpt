@@ -115,6 +115,85 @@ def test_combined_kamal_evaluation_reuses_prepared_experimental_data():
     np.testing.assert_array_equal(prepared_jacobian, direct_jacobian)
 
 
+@pytest.mark.parametrize(
+    "combined_function,rate_function,parameters",
+    [
+        (
+            km.nth_order_rate_and_jacobian,
+            km.rate_for_nth_order,
+            np.array([1.3e7, 52_000.0, 1.4]),
+        ),
+        (
+            km.autocatalytic_rate_and_jacobian,
+            km.rate_for_autocatalytic,
+            np.array([1.3e7, 52_000.0, 0.8, 1.4]),
+        ),
+    ],
+)
+def test_additional_rate_jacobians_match_finite_differences(
+    combined_function,
+    rate_function,
+    parameters,
+):
+    extent = np.array([0.05, 0.2, 0.55, 0.9])
+    temperature = np.array([330.0, 360.0, 410.0, 470.0])
+
+    combined_rate, analytic = combined_function(
+        extent,
+        temperature,
+        *parameters,
+    )
+    numerical_columns = []
+    for parameter_index, parameter in enumerate(parameters):
+        step = max(abs(parameter) * 1e-5, 1e-7)
+        lower = parameters.copy()
+        upper = parameters.copy()
+        lower[parameter_index] -= step
+        upper[parameter_index] += step
+        numerical_columns.append(
+            (
+                rate_function(extent, temperature, *upper)
+                - rate_function(extent, temperature, *lower)
+            )
+            / (2 * step)
+        )
+
+    np.testing.assert_allclose(
+        combined_rate,
+        rate_function(extent, temperature, *parameters),
+        rtol=2e-15,
+    )
+    np.testing.assert_allclose(
+        analytic,
+        np.column_stack(numerical_columns),
+        rtol=2e-8,
+        atol=1e-12,
+    )
+
+
+@pytest.mark.parametrize(
+    "combined_function,parameters",
+    [
+        (km.nth_order_rate_and_jacobian, (1e8, 60_000.0, 1.2)),
+        (
+            km.autocatalytic_rate_and_jacobian,
+            (1e8, 60_000.0, 0.8, 1.2),
+        ),
+    ],
+)
+def test_additional_rate_jacobians_are_finite_at_conversion_endpoints(
+    combined_function,
+    parameters,
+):
+    _, jacobian = combined_function(
+        np.array([0.0, 1.0]),
+        np.array([350.0, 450.0]),
+        *parameters,
+    )
+
+    assert np.all(np.isfinite(jacobian))
+
+
 def test_kamal_jacobian_is_finite_at_conversion_endpoints():
     jacobian = km.jac_for_rate_for_kamal(
         np.array([0.0, 1.0]),

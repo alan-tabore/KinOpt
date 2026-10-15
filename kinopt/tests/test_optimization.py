@@ -347,12 +347,50 @@ def test_kamal_least_squares_jacobian_matches_weighted_residuals(
 
 
 def test_analytic_least_squares_jacobian_rejects_an_unsupported_model():
+    def unsupported_rate(extent, temperature, A1, E1, n):
+        return kinetic_models.rate_for_nth_order(
+            extent,
+            temperature,
+            A1,
+            E1,
+            n,
+        )
+
     assert not opt.has_analytic_jacobian_for_least_squares(
         3,
-        kinetic_models.rate_for_nth_order,
+        unsupported_rate,
         3,
         None,
         0,
         None,
         None,
     )
+
+
+@pytest.mark.parametrize(
+    "rate_law,parameter_count,source",
+    [
+        (kinetic_models.rate_for_nth_order, 3, "analytic-nth-order"),
+        (
+            kinetic_models.rate_for_autocatalytic,
+            4,
+            "analytic-autocatalytic",
+        ),
+        (kinetic_models.rate_for_kamal, 6, "analytic-kamal"),
+    ],
+)
+def test_supported_rate_models_publish_their_analytic_source(
+    rate_law,
+    parameter_count,
+    source,
+):
+    assert opt.has_analytic_jacobian_for_least_squares(
+        parameter_count,
+        rate_law,
+        parameter_count,
+        None,
+        0,
+        None,
+        None,
+    )
+    assert opt.analytic_jacobian_source(rate_law) == source
