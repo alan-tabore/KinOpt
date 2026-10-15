@@ -25,11 +25,12 @@ For development checks and merging changes, see the [validation guide (French)](
 ### Prerequisites
 
 #### Kinetic data
-The first step is to obtain experimental kinetic data (e.g. from FTIR, DSC or rheological experiments). These data should be stored as text or csv files containing four columns arranged in the following order: 
-1. Time (in seconds)
-2. Temperature (in Kelvin)
-3. Reaction speed (in s-1)
-4. Extent of reaction (no unit)
+The first step is to obtain experimental kinetic data (e.g. from FTIR, DSC or
+rheological experiments). Text or CSV files need columns for time, temperature,
+reaction rate, and extent of reaction. The graphical import assistant previews
+the files, maps those columns in any order, ignores unrelated columns, and
+converts seconds/minutes, Kelvin/Celsius, rates per second/per minute, and
+fractional/percentage extent into KinOpt's standard units.
 
 #### Python
 This project uses Python, so please make sure you installed it and that the version is superior or equal to 3.9.

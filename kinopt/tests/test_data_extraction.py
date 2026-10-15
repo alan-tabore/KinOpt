@@ -97,3 +97,57 @@ def test_data_are_trimmed_after_completion(tmp_path):
                      [2, 350, .1, 1], [3, 350, -.1, 1]])
     np.savetxt(path, data, delimiter=',')
     np.testing.assert_allclose(np.column_stack(extraction.extract_dsc_data_single_file(path)), data[:3])
+
+
+def test_configured_import_maps_columns_and_converts_units(tmp_path, valid_data):
+    path = tmp_path / "mapped.csv"
+    source = np.column_stack(
+        [
+            np.arange(3),
+            valid_data[:, 2] * 60,
+            valid_data[:, 0] / 60,
+            valid_data[:, 3] * 100,
+            valid_data[:, 1] - 273.15,
+        ]
+    )
+    np.savetxt(
+        path,
+        source,
+        delimiter=";",
+        header="id;reaction_rate;time;conversion;temperature",
+        comments="",
+    )
+    settings = extraction.DataImportSettings(
+        delimiter=";",
+        has_header=True,
+        columns=(2, 4, 1, 3),
+        time_unit="minutes",
+        temperature_unit="celsius",
+        rate_unit="per_minute",
+        extent_unit="percent",
+    )
+
+    actual = extraction.extract_configured_data_single_file(path, settings)
+
+    np.testing.assert_allclose(np.column_stack(actual), valid_data)
+
+
+def test_import_settings_require_four_distinct_columns():
+    with pytest.raises(ValueError, match="distinct"):
+        extraction.DataImportSettings(columns=(0, 1, 1, 3))
+
+
+def test_preview_keeps_header_and_selected_delimiter(tmp_path):
+    path = tmp_path / "preview.csv"
+    path.write_text("notes\ntime;temperature;rate;extent\n0;350;.1;.1\n")
+
+    rows = extraction.preview_delimited_file(
+        path,
+        delimiter=";",
+        skip_lines=1,
+    )
+
+    assert rows == (
+        ("time", "temperature", "rate", "extent"),
+        ("0", "350", ".1", ".1"),
+    )

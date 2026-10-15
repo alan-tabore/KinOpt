@@ -46,6 +46,7 @@ from kinopt.src import isoconversional_methods as icm
 from kinopt.src import kinetic_models as km
 from kinopt.src import optimization as opt
 from kinopt.src.batch_optimization_dialog import BatchOptimizationDialog
+from kinopt.src.data_import_dialog import DataImportDialog
 from kinopt.src.model_metadata import (
     kinetic_model_metadata,
     kinetic_model_names,
@@ -98,6 +99,7 @@ class MainWindow(QMainWindow):
         self.batch_dialog = None
         self.active_optimization_config = None
         self.active_optimization_history_identifier = None
+        self.data_import_settings = None
 
         # Connect data extraction elements
         self.pushButton_load_example = QPushButton(
@@ -111,17 +113,41 @@ class MainWindow(QMainWindow):
             "Load and extract the four included heating-rate datasets, then "
             "prepare a Kamal model with a quick optimization profile."
         )
+        self.pushButton_import_assistant = QPushButton(
+            "Review data import…",
+            self.ui.widget_button_files,
+        )
+        self.pushButton_import_assistant.setToolTip(
+            "Preview columns, choose units, validate every selected file, and "
+            "extract standardized kinetic data."
+        )
         add_files_index = self.ui.verticalLayout_11.indexOf(
             self.ui.pushButton_add_files
         )
         self.ui.verticalLayout_11.insertWidget(
             add_files_index + 1,
+            self.pushButton_import_assistant,
+        )
+        self.ui.verticalLayout_11.insertWidget(
+            add_files_index + 2,
             self.pushButton_load_example,
         )
         self.ui.pushButton_add_files.clicked.connect(self.browse_files)
+        self.pushButton_import_assistant.clicked.connect(
+            self.open_data_import_assistant
+        )
         self.pushButton_load_example.clicked.connect(self.load_kamal_example)
         self.ui.pushButton_clear_all_files.clicked.connect(self.clear_files)
         self.ui.pushButton_extract_data.clicked.connect(self.extract_data)
+        self.ui.lineEdit_delimiter.textEdited.connect(
+            lambda *_: setattr(self, "data_import_settings", None)
+        )
+        self.ui.lineEdit_number_of_lines_to_skip.textEdited.connect(
+            lambda *_: setattr(self, "data_import_settings", None)
+        )
+        self.ui.checkBox_file_has_headers.toggled.connect(
+            lambda *_: setattr(self, "data_import_settings", None)
+        )
         
         # Connect isoconversional analysis elements
         self.selected_isoconversional_method = ''
@@ -666,6 +692,7 @@ class MainWindow(QMainWindow):
             )
             if file_paths:
                 self._select_data_files(file_paths)
+                self.open_data_import_assistant()
         except Exception as e:
             # Handle other exceptions with a generic error message
             QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
@@ -684,6 +711,33 @@ class MainWindow(QMainWindow):
         self.selected_shortened_file_paths = shortened_paths
         self.selected_full_file_paths = paths
         self.successful_extraction = False
+        self.data_import_settings = None
+
+    def open_data_import_assistant(self):
+        """Preview and validate selected experimental files before extraction."""
+        paths = getattr(self, "selected_full_file_paths", None)
+        if not paths:
+            QMessageBox.information(
+                self,
+                "Import kinetic data",
+                "Select one or more data files first.",
+            )
+            return
+        dialog = DataImportDialog(paths, self)
+        if dialog.exec_() != QDialog.Accepted:
+            return
+
+        settings = dialog.settings
+        delimiter_text = "tab" if settings.delimiter == "\t" else settings.delimiter
+        self.ui.lineEdit_delimiter.setText(delimiter_text)
+        self.ui.lineEdit_number_of_lines_to_skip.setText(str(settings.skip_lines))
+        self.ui.checkBox_file_has_headers.setChecked(settings.has_header)
+        self.data_import_settings = settings
+        self._apply_extracted_datasets(
+            dialog.datasets,
+            dialog.warning_messages,
+            show_success_message=True,
+        )
 
     def load_kamal_example(self):
         """Prepare the packaged Kamal data and a short guided setup."""
@@ -754,6 +808,7 @@ class MainWindow(QMainWindow):
         self.selected_full_file_paths = None
         # Empty the shortened file paths list
         self.selected_shortened_file_paths = None
+        self.data_import_settings = None
         # Reset the bool to indicate successful extraction
         self.successful_extraction = None
         
@@ -770,123 +825,37 @@ class MainWindow(QMainWindow):
         """Extract selected data with optional success guidance."""
         self.successful_extraction = False
         try:
-            # Get the selected file paths
             file_paths_list = self.selected_full_file_paths
-
-            # Check if no files have been selected
             if not file_paths_list:
-                # Show a warning message using PySide2
                 QMessageBox.warning(
                     self, "No File Selected", "Please select a file before extracting.")
                 return
-    
-            # Get the delimiter entry from the line edit field
-            delimiter_entry = self.ui.lineEdit_delimiter.text()
-            if delimiter_entry == "":
-                delimiter_entry = ","
-            elif delimiter_entry.lower() == "tab" or delimiter_entry == "\\t":
-                delimiter_entry = "\t"
-    
-            # Get the value of the file_has_header_var (Int variable indicating if files have headers)
-            has_header_entry = self.ui.checkBox_file_has_headers.isChecked()
-            
-            # Get the number of lines to skip from the line edit field and convert to integer
-            number_of_lines_to_skip = int(self.ui.lineEdit_number_of_lines_to_skip.text())
-                
-            # Launch the extraction process with provided parameters
-            self.successful_extraction, message, time_array, temp_array, rate_array, extent_array = launch_extraction(
-                file_paths_list,
-                delimiter=delimiter_entry,
-                has_header=has_header_entry,
-                skip_lines=number_of_lines_to_skip
-            )
-            
-            self.ax_data_extraction_rate.clear()
-            self.ax_data_extraction_extent.clear()
-            self.ax_data_extraction_temperature.clear()
-            
-            
-            # Check if the extraction was successful
-            if self.successful_extraction:
-                # Update experimental data arrays in the class instance
-                self.experimental_time = time_array
-                self.experimental_temperature = temp_array
-                self.experimental_rate = rate_array
-                self.experimental_extent = extent_array
-    
-                # Update listView background in green to indicate a successful extraction
-                self.ui.listView_files.viewport().setStyleSheet("background-color: #C8FFC8")
-                
-                if show_success_message:
-                    QMessageBox.information(
-                        self,
-                        "Extraction Successful",
-                        f"Successful extraction! \n {message}",
+            settings = self.data_import_settings
+            if settings is None:
+                settings = data_extraction.DataImportSettings(
+                    delimiter=data_extraction.normalize_delimiter(
+                        self.ui.lineEdit_delimiter.text()
+                    ),
+                    has_header=self.ui.checkBox_file_has_headers.isChecked(),
+                    skip_lines=int(
+                        self.ui.lineEdit_number_of_lines_to_skip.text()
+                    ),
+                )
+            datasets = []
+            with warnings.catch_warnings(record=True) as captured:
+                warnings.simplefilter("always", UserWarning)
+                for path in file_paths_list:
+                    datasets.append(
+                        data_extraction.extract_configured_data_single_file(
+                            path,
+                            settings,
+                        )
                     )
-    
-               
-                self.ax_optimization.clear()
-                # Create lists with data separated by files
-                self.experimental_times = []
-                self.experimental_temperatures = []
-                self.experimental_rates = []
-                self.experimental_extents = []
-                # launch_extraction already captured and reported warnings.
-                # Avoid emitting the same warnings again while rebuilding the
-                # per-file arrays used by the plots.
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore", UserWarning)
-                    for index, filepath in enumerate(
-                        self.selected_full_file_paths
-                    ):
-                        time, temperature, rate, extent = (
-                            data_extraction.extract_dsc_data_single_file(
-                                filepath,
-                                delimiter=delimiter_entry,
-                                has_header=has_header_entry,
-                                skip_lines=number_of_lines_to_skip,
-                            )
-                        )
-                        self.experimental_times.append(time)
-                        self.experimental_temperatures.append(temperature)
-                        self.experimental_rates.append(rate)
-                        self.experimental_extents.append(extent)
-
-                        label = self.selected_shortened_file_paths[index]
-                        self.ax_data_extraction_rate.plot(
-                            time, rate, label=label
-                        )
-                        self.ax_data_extraction_extent.plot(
-                            time, extent, label=label
-                        )
-                        self.ax_data_extraction_temperature.plot(
-                            time, temperature, label=label
-                        )
-                    
-                self.ax_data_extraction_rate.legend()
-                self.ax_data_extraction_extent.legend()
-                self.ax_data_extraction_temperature.legend()
-                
-                self.ax_data_extraction_rate.set_ylabel("Rate (s-1)")
-                self.ax_data_extraction_rate.set_xlabel("Time (s)")
-                self.ax_data_extraction_extent.set_ylabel("Extent")
-                self.ax_data_extraction_extent.set_xlabel("Time (s)")
-                self.ax_data_extraction_temperature.set_ylabel("Temperature (K)")
-                self.ax_data_extraction_temperature.set_xlabel("Time (s)")
-                
-                self.canvas_data_extraction_rate.draw_idle()
-                self.canvas_data_extraction_extent.draw_idle()
-                self.canvas_data_extraction_temperature.draw_idle()
-                
-                self.ui.tabWidget_visualization.setCurrentIndex(0)
-                
-
-            else:
-                # Update listView background in green to indicate a failed extraction
-                self.ui.listView_files.viewport().setStyleSheet("background-color: #FFC8C8")
-
-                QMessageBox.critical(self, "Extraction Failed", f"Extraction failed! \n {message}")
-                
+            self._apply_extracted_datasets(
+                tuple(datasets),
+                tuple(str(item.message) for item in captured),
+                show_success_message,
+            )
         except AttributeError as e:
             if str(e) == "'MainWindow' object has no attribute 'selected_full_file_paths'":
                 # Handle the specific AttributeError and display a customized error message
@@ -898,9 +867,76 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Error", f"An AttributeError occurred: {str(e)}")
         except Exception as e:
             # Handle other exceptions with a generic error message
+            self.ui.listView_files.viewport().setStyleSheet(
+                "background-color: #FFC8C8"
+            )
             QMessageBox.critical(
                 self, "Error", f"An error occurred: {str(e)}")
             traceback.print_exc()
+
+    def _apply_extracted_datasets(
+        self,
+        datasets,
+        warning_messages=(),
+        show_success_message=True,
+    ):
+        """Commit validated standard-unit datasets to the window and plots."""
+        if not datasets:
+            raise ValueError("Please select at least one data file.")
+        self.experimental_times = [dataset[0] for dataset in datasets]
+        self.experimental_temperatures = [dataset[1] for dataset in datasets]
+        self.experimental_rates = [dataset[2] for dataset in datasets]
+        self.experimental_extents = [dataset[3] for dataset in datasets]
+        self.experimental_time = np.concatenate(self.experimental_times)
+        self.experimental_temperature = np.concatenate(
+            self.experimental_temperatures
+        )
+        self.experimental_rate = np.concatenate(self.experimental_rates)
+        self.experimental_extent = np.concatenate(self.experimental_extents)
+        self.successful_extraction = True
+
+        self.ui.listView_files.viewport().setStyleSheet(
+            "background-color: #C8FFC8"
+        )
+        if show_success_message:
+            details = "\n".join(warning_messages)
+            summary = (
+                f"Imported {len(datasets)} file(s) and "
+                f"{sum(len(dataset[0]) for dataset in datasets)} data rows."
+            )
+            QMessageBox.information(
+                self,
+                "Extraction Successful",
+                summary + (f"\n\n{details}" if details else ""),
+            )
+
+        self.ax_data_extraction_rate.clear()
+        self.ax_data_extraction_extent.clear()
+        self.ax_data_extraction_temperature.clear()
+        self.ax_optimization.clear()
+        for index, dataset in enumerate(datasets):
+            time, temperature, rate, extent = dataset
+            label = self.selected_shortened_file_paths[index]
+            self.ax_data_extraction_rate.plot(time, rate, label=label)
+            self.ax_data_extraction_extent.plot(time, extent, label=label)
+            self.ax_data_extraction_temperature.plot(
+                time,
+                temperature,
+                label=label,
+            )
+        self.ax_data_extraction_rate.legend()
+        self.ax_data_extraction_extent.legend()
+        self.ax_data_extraction_temperature.legend()
+        self.ax_data_extraction_rate.set_ylabel("Rate (s-1)")
+        self.ax_data_extraction_rate.set_xlabel("Time (s)")
+        self.ax_data_extraction_extent.set_ylabel("Extent")
+        self.ax_data_extraction_extent.set_xlabel("Time (s)")
+        self.ax_data_extraction_temperature.set_ylabel("Temperature (K)")
+        self.ax_data_extraction_temperature.set_xlabel("Time (s)")
+        self.canvas_data_extraction_rate.draw_idle()
+        self.canvas_data_extraction_extent.draw_idle()
+        self.canvas_data_extraction_temperature.draw_idle()
+        self.ui.tabWidget_visualization.setCurrentIndex(0)
             
     def clear_data_extraction_plots(self):
         self.ax_data_extraction_rate.clear()
