@@ -190,3 +190,46 @@ def test_dialog_compares_completed_jobs_by_common_rmse(batch_dialog, qt_app):
         comparison.table.item(row, 2).text()
         for row in range(comparison.table.rowCount())
     } == {"Exact fit", "Less accurate", "Direct optimization"}
+
+
+def test_dialog_opens_residual_diagnostics_for_a_completed_job(
+    batch_dialog,
+    qt_app,
+):
+    dialog, queue = batch_dialog
+    dialog.name_edit.setText("Result to inspect")
+    dialog.add_current_setup()
+    job = queue.list_jobs()[0]
+    queue.set_status(job.identifier, JobStatus.RUNNING)
+    queue.complete(
+        job.identifier,
+        OptimizationRunResult(
+            OptimizeResult(
+                x=np.array([1e8, 60000., 1.5]),
+                fun=0.,
+                success=False,
+                message="Iteration budget reached",
+                nfev=10,
+            ),
+            0.25,
+        ),
+    )
+    dialog.refresh()
+
+    dialog.table.clearSelection()
+    qt_app.processEvents()
+    assert not dialog.inspect_button.isEnabled()
+    dialog.table.selectRow(0)
+    assert dialog.inspect_button.isEnabled()
+    dialog.inspect_button.click()
+    qt_app.processEvents()
+
+    diagnostics_dialog = dialog.diagnostics_dialog
+    assert diagnostics_dialog is not None
+    assert diagnostics_dialog.job.name == "Result to inspect"
+    assert diagnostics_dialog.diagnostics.sample_count == 3
+    assert len(diagnostics_dialog.figure.axes) == 2
+    summary = diagnostics_dialog.summary.text()
+    assert "RMSE" in summary
+    assert "convergence was not reported" in summary
+    assert "Iteration budget reached" in summary

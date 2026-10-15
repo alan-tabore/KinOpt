@@ -19,6 +19,9 @@ from PyQt5.QtWidgets import (
 )
 
 from kinopt.src.batch_comparison_dialog import BatchComparisonDialog
+from kinopt.src.optimization_diagnostics_dialog import (
+    OptimizationDiagnosticsDialog,
+)
 from kinopt.src.optimization_queue import JobStatus
 from kinopt.src.optimization_scheduler import SequentialOptimizationScheduler
 
@@ -98,6 +101,7 @@ class BatchOptimizationDialog(QDialog):
         self.execution_allowed = execution_allowed or (lambda: True)
         self.worker = None
         self.comparison_dialog = None
+        self.diagnostics_dialog = None
 
         self.setWindowTitle("Batch optimizations")
         self.resize(1050, 480)
@@ -137,6 +141,7 @@ class BatchOptimizationDialog(QDialog):
         self.move_up_button = QPushButton("Move pending job up")
         self.move_down_button = QPushButton("Move pending job down")
         self.delete_button = QPushButton("Delete selected")
+        self.inspect_button = QPushButton("Inspect result")
         self.compare_button = QPushButton("Compare completed jobs")
 
         add_controls = QHBoxLayout()
@@ -161,9 +166,13 @@ class BatchOptimizationDialog(QDialog):
             self.move_up_button,
             self.move_down_button,
             self.delete_button,
-            self.compare_button,
         ):
             management_controls.addWidget(button)
+
+        result_controls = QHBoxLayout()
+        result_controls.addWidget(self.inspect_button)
+        result_controls.addWidget(self.compare_button)
+        result_controls.addStretch(1)
 
         self.status_label = QLabel("Ready.")
         close_buttons = QDialogButtonBox(QDialogButtonBox.Close)
@@ -174,6 +183,7 @@ class BatchOptimizationDialog(QDialog):
         layout.addLayout(add_controls)
         layout.addLayout(execution_controls)
         layout.addLayout(management_controls)
+        layout.addLayout(result_controls)
         layout.addWidget(self.status_label)
         layout.addWidget(close_buttons)
 
@@ -192,6 +202,7 @@ class BatchOptimizationDialog(QDialog):
             lambda: self.move_selected_pending_job(1)
         )
         self.delete_button.clicked.connect(self.delete_selected_job)
+        self.inspect_button.clicked.connect(self.show_selected_diagnostics)
         self.compare_button.clicked.connect(self.show_completed_comparison)
         self.table.itemSelectionChanged.connect(self._update_action_buttons)
         close_buttons.rejected.connect(self.close)
@@ -233,6 +244,11 @@ class BatchOptimizationDialog(QDialog):
         self.duplicate_button.setEnabled(job is not None)
         self.delete_button.setEnabled(
             job is not None and job.status is not JobStatus.RUNNING
+        )
+        self.inspect_button.setEnabled(
+            job is not None
+            and job.status is JobStatus.COMPLETED
+            and job.result is not None
         )
 
         pending_jobs = [
@@ -535,6 +551,39 @@ class BatchOptimizationDialog(QDialog):
             lambda: setattr(self, "comparison_dialog", None)
         )
         self.comparison_dialog.show()
+
+    def show_selected_diagnostics(self):
+        """Open measured, fitted, and residual plots for a completed job."""
+        job = self._selected_job()
+        if (
+            job is None
+            or job.status is not JobStatus.COMPLETED
+            or job.result is None
+        ):
+            self.status_label.setText(
+                "Select a completed optimization to inspect its result."
+            )
+            return
+        try:
+            if self.diagnostics_dialog is None:
+                self.diagnostics_dialog = OptimizationDiagnosticsDialog(
+                    job,
+                    self,
+                )
+                self.diagnostics_dialog.setAttribute(Qt.WA_DeleteOnClose)
+                self.diagnostics_dialog.destroyed.connect(
+                    lambda: setattr(self, "diagnostics_dialog", None)
+                )
+            else:
+                self.diagnostics_dialog.set_job(job)
+        except (TypeError, ValueError, FloatingPointError) as error:
+            self.status_label.setText(
+                f"Result diagnostics are unavailable: {error}"
+            )
+            return
+        self.diagnostics_dialog.show()
+        self.diagnostics_dialog.raise_()
+        self.diagnostics_dialog.activateWindow()
 
     def closeEvent(self, event):
         if self.has_running_worker():

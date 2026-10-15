@@ -56,6 +56,9 @@ Queue controls
   next. Jobs that have already started cannot be reordered.
 * **Delete selected** removes an inactive job after confirmation. Deleting a
   completed job also deletes its stored result from the batch table.
+* **Inspect result** opens measured and fitted rate curves for the selected
+  completed job, together with its residuals, RMSE, mean absolute error, mean
+  residual, largest residual, convergence status, and solver message.
 * **Compare completed jobs** opens a table ranked by an unweighted RMSE
   recalculated from the model predictions and measured rates. This common score
   remains comparable when jobs use different solver cost functions. Lower is
@@ -74,6 +77,14 @@ The RMSE has the same unit as the experimental reaction rate. It measures fit
 error on the data used by the optimization; it does not by itself show whether
 the fitted parameters are physically meaningful or whether the model predicts
 an experiment that was not included in the fit.
+
+Use **Inspect result** to look beyond the ranking. A residual is the model rate
+minus the measured rate, so a positive value means overprediction. Residuals
+should generally fluctuate around zero. Long sequences on the same side or a
+few much larger errors deserve closer examination; they can come from model
+limitations, experimental issues, or a particular region of the data. Solver
+convergence and a visually convincing fit are separate checks, and neither one
+alone proves that fitted parameters are physically meaningful.
 
 The regular **Start optimization** button and the batch runner cannot calculate
 at the same time in one KinOpt window. Detailed text result files are created by
