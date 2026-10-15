@@ -54,10 +54,10 @@ with Nelder-Mead reaches a quality comparable to Quick log-space least squares:
 ```
 
 Log-space least squares uses ``--jacobian auto`` through every calculation
-profile. For the uncoupled Kamal model, this selects KinOpt's analytic
-derivatives; for other supported model combinations, it falls back to SciPy's
-``2-point`` numerical derivative. To measure the Kamal finite-difference
-baseline explicitly on the same machine:
+profile. Standalone nth-order, autocatalytic, and Kamal rate models use
+KinOpt's analytic derivatives. Vitrification, coupled, and custom model
+combinations fall back to SciPy's ``2-point`` numerical derivative. To measure
+the Kamal finite-difference baseline explicitly on the same machine:
 
 ```bash
 .venv/bin/python -m benchmarks.kamal_baseline \
@@ -71,6 +71,6 @@ Each run records both SciPy's ``evaluations`` value and the actual number of
 calls to KinOpt's residual function in ``residual_evaluations``. This second
 number includes the extra residual calls used to approximate a numerical
 Jacobian and therefore makes the comparison explicit. The
-``kinetic_evaluations`` field counts full kinetic calculation passes. With the
-analytic Kamal Jacobian, KinOpt calculates the rate and derivatives together
-and reuses them when SciPy asks for both at the same parameter vector.
+``kinetic_evaluations`` field counts full kinetic calculation passes. With an
+analytic Jacobian, KinOpt calculates the rate and derivatives together and
+reuses them when SciPy asks for both at the same parameter vector.
