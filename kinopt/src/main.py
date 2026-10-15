@@ -55,6 +55,7 @@ from kinopt.src.optimization_review_dialog import OptimizationReviewDialog
 from kinopt.src.optimization_runner import (
     OptimizationCancelled,
     OptimizationRunConfig,
+    OptimizationRunResult,
     run_optimization,
 )
 from kinopt.src.parameter_examples import (
@@ -88,6 +89,8 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         self.optimization_thread = None
         self.batch_dialog = None
+        self.active_optimization_config = None
+        self.active_optimization_history_identifier = None
 
         # Connect data extraction elements
         self.ui.pushButton_add_files.clicked.connect(self.browse_files)
@@ -2104,6 +2107,7 @@ class MainWindow(QMainWindow):
         if not self._optimization_start_is_available():
             return
         self.active_optimization_config = config
+        self.active_optimization_history_identifier = None
         try:
             self.results = None
             self.total_time_for_optimization = None
@@ -2292,6 +2296,16 @@ class MainWindow(QMainWindow):
             # Update output textEdit widget with
             summary_info = self.get_summary_info()
             self.ui.textEdit_output_of_optimization.insertPlainText(summary_info)
+
+            recorded_job = self._record_direct_optimization_result(
+                results,
+                total_optimization_time,
+            )
+            if recorded_job is not None:
+                self.ui.textEdit_output_of_optimization.append(
+                    "\nAdded to optimization comparisons as: "
+                    f"{recorded_job.name}"
+                )
             
             current_date = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
             filename = f"{current_date}_results_of_optimization.txt"
@@ -2330,6 +2344,36 @@ class MainWindow(QMainWindow):
         except Exception as e:
             # Handle other exceptions with a generic error message
             QMessageBox.critical(self,"Error", f"An error occurred: {str(e)}")
+
+    def _record_direct_optimization_result(self, results, elapsed_seconds):
+        """Add one successful direct run to the shared comparison history."""
+        if self.active_optimization_history_identifier is not None:
+            return None
+        if self.active_optimization_config is None:
+            return None
+
+        completed_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            recorded_job = OptimizationQueue(
+                self.queue_database
+            ).record_completed(
+                self.active_optimization_config,
+                OptimizationRunResult(results, elapsed_seconds),
+                name=f"Direct optimization - {completed_at}",
+            )
+        except Exception as error:
+            message = (
+                "The optimization completed, but its result could not be "
+                f"added to comparisons:\n{error}"
+            )
+            self.ui.textEdit_output_of_optimization.append(f"\n{message}")
+            QMessageBox.warning(self, "Optimization history", message)
+            return None
+
+        self.active_optimization_history_identifier = recorded_job.identifier
+        if self.batch_dialog is not None:
+            self.batch_dialog.refresh()
+        return recorded_job
             
     def display_error_in_optimization_thread(self,error_message):
         """

@@ -63,6 +63,8 @@ uses the reviewed frozen snapshot even if a form value changes afterwards.
 At the end of optimization, a result file is saved in ``KinOpt/results`` inside
 your desktop's Documents folder, or in the directory selected with
 ``kinopt --results-dir DIRECTORY``. Its full path appears in the output panel.
+The completed run is also added automatically to **Batch optimizations...**,
+where it can be compared with another direct or batch result.
 
 .. note::
     * The GUI will frequently be updated with the current state of optimization.

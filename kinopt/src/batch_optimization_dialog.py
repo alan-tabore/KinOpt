@@ -104,7 +104,9 @@ class BatchOptimizationDialog(QDialog):
 
         explanation = QLabel(
             "Save several configurations, then run them one at a time. "
-            "Changing the main form later does not modify queued jobs."
+            "Changing the main form later does not modify queued jobs. "
+            "Successful optimizations started from the main window are also "
+            "added here automatically."
         )
         explanation.setWordWrap(True)
 

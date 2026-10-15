@@ -567,7 +567,7 @@ def test_relative_cost_rejects_zero_measurements(optimization_window):
 
 
 def test_worker_failure_restores_start_button(optimization_window):
-    _, window, started, errors = optimization_window
+    main, window, started, errors = optimization_window
     configure_optimization(window, with_vitrification=False)
     window.launch_optimization()
     worker = started[0]
@@ -579,6 +579,7 @@ def test_worker_failure_restores_start_button(optimization_window):
     worker.finished.emit()
     assert len(errors) == 1
     assert 'synthetic solver failure' in errors[0]
+    assert main.OptimizationQueue(window.queue_database).list_jobs() == []
     assert window.ui.pushButton_launch_optimization.text() == "Start optimization"
     assert window.ui.toolBox_models_and_optimization_parameters.isEnabled()
     window.ui.pushButton_launch_optimization.click()
@@ -586,10 +587,11 @@ def test_worker_failure_restores_start_button(optimization_window):
 
 
 def test_actual_short_fit_saves_and_allows_another_run(optimization_window, tmp_path):
-    _, window, started, errors = optimization_window
+    main, window, started, errors = optimization_window
     configure_optimization(window, with_vitrification=False)
     window.entries_dict_local_optimization['maxiter'].setText('2')
     window.entries_dict_local_optimization['disp'].setCurrentText('No')
+    window.show_batch_optimizations()
     window.launch_optimization()
     worker = started[0]
     worker.run()
@@ -597,6 +599,46 @@ def test_actual_short_fit_saves_and_allows_another_run(optimization_window, tmp_
     assert errors == []
     assert np.isfinite(window.results.fun)
     assert 'Results' in next((tmp_path / 'results').glob('*.txt')).read_text()
+    history = main.OptimizationQueue(window.queue_database).list_jobs()
+    assert len(history) == 1
+    assert history[0].status.value == 'completed'
+    assert history[0].name.startswith('Direct optimization - ')
+    assert history[0].result.parameters == pytest.approx(window.results.x)
+    assert window.batch_dialog.table.rowCount() == 1
+    assert window.batch_dialog.table.item(0, 3).text() == 'Completed'
+    assert 'Added to optimization comparisons' in (
+        window.ui.textEdit_output_of_optimization.toPlainText()
+    )
+
+    window._record_direct_optimization_result(
+        window.results,
+        window.total_time_for_optimization,
+    )
+    assert len(main.OptimizationQueue(window.queue_database).list_jobs()) == 1
+
+    queue = main.OptimizationQueue(window.queue_database)
+    reference = queue.add(history[0].config, name='Batch reference')
+    queue.set_status(reference.identifier, 'running')
+    queue.complete(
+        reference.identifier,
+        main.OptimizationRunResult(
+            window.results,
+            window.total_time_for_optimization,
+        ),
+    )
+    window.batch_dialog.refresh()
+    assert window.batch_dialog.compare_button.isEnabled()
+    window.batch_dialog.show_completed_comparison()
+    main.QApplication.processEvents()
+    comparison_names = {
+        window.batch_dialog.comparison_dialog.table.item(row, 2).text()
+        for row in range(
+            window.batch_dialog.comparison_dialog.table.rowCount()
+        )
+    }
+    assert history[0].name in comparison_names
+    assert 'Batch reference' in comparison_names
+
     assert window.ui.pushButton_launch_optimization.text() == "Start optimization"
     assert 'args' not in window.local_optimization_args_dict
     window.ui.pushButton_launch_optimization.click()
