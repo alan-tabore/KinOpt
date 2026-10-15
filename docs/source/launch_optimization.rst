@@ -62,6 +62,12 @@ variants. Its *max_nfev* field limits model evaluations. As with every local
 method, compare the final residuals and fitted parameters rather than relying
 only on the solver's success flag.
 
+Keep the *jac* field on ``auto`` for normal use. With a standalone Kamal rate
+model, KinOpt then uses its analytic derivatives to avoid the extra model calls
+needed by finite differences. Other model combinations automatically use the
+``2-point`` numerical derivative. The explicit ``2-point``, ``3-point``, and
+``cs`` choices remain available for comparison and diagnosis.
+
 The *Review setup…* window summarizes the exact configuration that would be
 sent to the optimizer: input files, number of measured points, selected models,
 free and fixed parameters, starting values, bounds, methods, cost function, and

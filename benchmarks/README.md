@@ -52,3 +52,22 @@ with Nelder-Mead reaches a quality comparable to Quick log-space least squares:
   --repeats 3 \
   --output /tmp/kinopt-kamal-nelder-thorough.json
 ```
+
+Log-space least squares uses ``--jacobian auto`` through every calculation
+profile. For the uncoupled Kamal model, this selects KinOpt's analytic
+derivatives; for other supported model combinations, it falls back to SciPy's
+``2-point`` numerical derivative. To measure the Kamal finite-difference
+baseline explicitly on the same machine:
+
+```bash
+.venv/bin/python -m benchmarks.kamal_baseline \
+  --solver log-space-least-squares \
+  --jacobian 2-point \
+  --repeats 3 \
+  --output /tmp/kinopt-kamal-numerical-jacobian.json
+```
+
+Each run records both SciPy's ``evaluations`` value and the actual number of
+calls to KinOpt's residual function in ``residual_evaluations``. This second
+number includes the extra residual calls used to approximate a numerical
+Jacobian and therefore makes the comparison explicit.
