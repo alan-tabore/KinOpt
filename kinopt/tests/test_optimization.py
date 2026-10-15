@@ -346,6 +346,79 @@ def test_kamal_least_squares_jacobian_matches_weighted_residuals(
     )
 
 
+@pytest.mark.parametrize(
+    "cost_function,cost_args",
+    [
+        (opt.rss_standard, ()),
+        (opt.rss_mean, ()),
+        (opt.rss_relative, ()),
+        (
+            opt.rss_increase_of_small_extents_impact,
+            (np.array([0.05, 0.2, 0.55, 0.9]), 0.3, 2.5),
+        ),
+        (opt.rss_increase_of_small_rates_impact_with_zones, (4.0, 2.5)),
+    ],
+)
+def test_analytic_scalar_cost_gradient_matches_finite_differences(
+    cost_function,
+    cost_args,
+):
+    extent = np.array([0.05, 0.2, 0.55, 0.9])
+    temperature = np.array([330.0, 360.0, 410.0, 470.0])
+    parameters = np.array([1.3e7, 52_000.0, 1.4])
+    experimental_rate = kinetic_models.rate_for_nth_order(
+        extent,
+        temperature,
+        1e7,
+        50_000.0,
+        1.2,
+    )
+    objective_args = (
+        experimental_rate,
+        kinetic_models.rate_for_nth_order,
+        (extent, temperature),
+        3,
+        None,
+        (),
+        0,
+        None,
+        (),
+        None,
+        (),
+        None,
+        *cost_args,
+    )
+
+    cost, analytic = opt.analytic_cost_and_gradient_for_minimize(
+        parameters,
+        cost_function,
+        *objective_args,
+    )
+    assert cost == pytest.approx(cost_function(parameters, *objective_args))
+
+    numerical = []
+    for parameter_index, parameter in enumerate(parameters):
+        step = max(abs(parameter) * 1e-5, 1e-7)
+        lower = parameters.copy()
+        upper = parameters.copy()
+        lower[parameter_index] -= step
+        upper[parameter_index] += step
+        numerical.append(
+            (
+                cost_function(upper, *objective_args)
+                - cost_function(lower, *objective_args)
+            )
+            / (2 * step)
+        )
+
+    np.testing.assert_allclose(
+        analytic,
+        numerical,
+        rtol=2e-8,
+        atol=1e-12,
+    )
+
+
 def test_analytic_least_squares_jacobian_rejects_an_unsupported_model():
     def unsupported_rate(extent, temperature, A1, E1, n):
         return kinetic_models.rate_for_nth_order(

@@ -66,3 +66,10 @@ def test_default_profile_is_the_recommended_balanced_profile():
         BALANCED_PROFILE_NAME,
         THOROUGH_PROFILE_NAME,
     )
+
+
+def test_gradient_profiles_request_automatic_derivatives():
+    for profile_name in optimization_profile_names():
+        profile = optimization_profile(profile_name)
+        for method in ('CG', 'BFGS', 'L-BFGS-B'):
+            assert profile.values_for(method)['jac'] == 'auto'

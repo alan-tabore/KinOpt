@@ -331,3 +331,136 @@ def test_auto_jacobian_falls_back_for_unregistered_models(serializable_config):
     assert result.success
     assert result.jacobian_source == '2-point'
     assert result.analytic_jacobian_evaluations == 0
+
+
+def test_auto_gradient_is_shared_by_scalar_objective_and_bfgs(
+    serializable_config,
+    monkeypatch,
+):
+    combined_evaluations = []
+    original_evaluator = optimization.analytic_cost_and_gradient_for_minimize
+
+    def tracked_evaluator(*args, **kwargs):
+        combined_evaluations.append(args[0])
+        return original_evaluator(*args, **kwargs)
+
+    monkeypatch.setattr(
+        optimization,
+        'analytic_cost_and_gradient_for_minimize',
+        tracked_evaluator,
+    )
+
+    def inspect_optimizer(function, initial_guess, args, jac, **kwargs):
+        first_cost = function(initial_guess, *args)
+        gradient = jac(initial_guess, *args)
+        second_cost = function(initial_guess, *args)
+        assert first_cost == second_cost
+        assert np.all(np.isfinite(gradient))
+        return optimize.OptimizeResult(
+            x=initial_guess,
+            fun=first_cost,
+            success=True,
+        )
+
+    config = replace(
+        serializable_config,
+        local_method='BFGS',
+        local_optimizer=inspect_optimizer,
+        local_options={
+            'method': 'BFGS',
+            'jac': 'auto',
+            'options': {'maxiter': 10},
+        },
+    )
+
+    result = run_optimization(config).result
+
+    assert result.jacobian_source == 'analytic-nth-order'
+    assert result.analytic_gradient_evaluations == 1
+    assert len(combined_evaluations) == 1
+
+
+def test_scipy_bfgs_accepts_the_auto_gradient(serializable_config):
+    config = replace(
+        serializable_config,
+        local_method='BFGS',
+        local_optimizer=optimize.minimize,
+        local_options={
+            'method': 'BFGS',
+            'jac': 'auto',
+            'options': {'maxiter': 200, 'gtol': 1e-5},
+        },
+        max_iterations=200,
+    )
+
+    result = run_optimization(config).result
+
+    assert result.success
+    assert result.jacobian_source == 'analytic-nth-order'
+    assert result.analytic_gradient_evaluations > 0
+    assert np.isfinite(result.fun)
+
+
+def test_auto_gradient_falls_back_for_unregistered_scalar_models(
+    serializable_config,
+):
+    def inspect_optimizer(function, initial_guess, args, jac, **kwargs):
+        assert jac is None
+        return optimize.OptimizeResult(
+            x=initial_guess,
+            fun=function(initial_guess, *args),
+            success=True,
+        )
+
+    config = replace(
+        serializable_config,
+        local_method='BFGS',
+        local_optimizer=inspect_optimizer,
+        local_options={
+            'method': 'BFGS',
+            'jac': 'auto',
+            'options': {'maxiter': 10},
+        },
+        rate_law=nth_order_without_analytic_jacobian,
+    )
+
+    result = run_optimization(config).result
+
+    assert result.jacobian_source == '2-point'
+    assert result.analytic_gradient_evaluations == 0
+
+
+def test_basinhopping_local_refinement_receives_the_auto_gradient(
+    serializable_config,
+):
+    def inspect_basinhopping(function, initial_guess, minimizer_kwargs, **kwargs):
+        gradient = minimizer_kwargs['jac'](
+            initial_guess,
+            *minimizer_kwargs['args'],
+        )
+        assert np.all(np.isfinite(gradient))
+        return optimize.OptimizeResult(
+            x=initial_guess,
+            fun=function(initial_guess, *minimizer_kwargs['args']),
+            success=True,
+        )
+
+    config = replace(
+        serializable_config,
+        global_method='basinhopping',
+        global_optimizer=inspect_basinhopping,
+        global_options={'niter': 1},
+        local_method='L-BFGS-B',
+        local_optimizer=optimize.minimize,
+        local_options={
+            'method': 'L-BFGS-B',
+            'jac': 'auto',
+            'bounds': ((1e5, 1e10), (1e3, 2e5), (0.1, 5.0)),
+            'options': {'maxiter': 10},
+        },
+    )
+
+    result = run_optimization(config).result
+
+    assert result.jacobian_source == 'analytic-nth-order'
+    assert result.analytic_gradient_evaluations == 1

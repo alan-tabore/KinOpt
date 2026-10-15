@@ -399,6 +399,21 @@ def least_squares_residual_weights(
     )
 
 
+def least_squares_cost_scale(cost_function, experimental_rate):
+    """Return the factor between a residual norm and the selected cost."""
+    if cost_function in {rss_standard, rss_relative}:
+        return 1.0
+    if cost_function in {
+        rss_mean,
+        rss_increase_of_small_extents_impact,
+        rss_increase_of_small_rates_impact_with_zones,
+    }:
+        return 1.0 / len(experimental_rate)
+    raise ValueError(
+        "Analytic gradients do not support the selected cost function."
+    )
+
+
 def residuals_for_least_squares(
     x,
     cost_function,
@@ -510,6 +525,38 @@ def analytic_jacobian_source(rate_law):
         ) from error
 
 
+def has_analytic_gradient_for_minimize(
+    cost_function,
+    parameter_count,
+    rate_law,
+    number_of_parameters_to_optimize_for_rate,
+    vitrification_law,
+    number_of_parameters_to_optimize_for_vitrification,
+    coupling_law,
+    tg_law,
+):
+    """Return whether KinOpt can derive the complete scalar-cost gradient."""
+    return (
+        cost_function
+        in {
+            rss_standard,
+            rss_mean,
+            rss_relative,
+            rss_increase_of_small_extents_impact,
+            rss_increase_of_small_rates_impact_with_zones,
+        }
+        and has_analytic_jacobian_for_least_squares(
+            parameter_count,
+            rate_law,
+            number_of_parameters_to_optimize_for_rate,
+            vitrification_law,
+            number_of_parameters_to_optimize_for_vitrification,
+            coupling_law,
+            tg_law,
+        )
+    )
+
+
 def analytic_jacobian_for_least_squares(
     x,
     cost_function,
@@ -550,6 +597,65 @@ def analytic_jacobian_for_least_squares(
         prepared_rate_data=prepared_rate_data,
     )
     return jacobian
+
+
+def analytic_cost_and_gradient_for_minimize(
+    x,
+    cost_function,
+    experimental_rate,
+    rate_law,
+    experimental_args_for_rate,
+    number_of_parameters_to_optimize_for_rate,
+    vitrification_law,
+    experimental_args_for_vitrification,
+    number_of_parameters_to_optimize_for_vitrification,
+    coupling_law,
+    experimental_args_for_coupling,
+    tg_law,
+    experimental_args_for_tg,
+    tg_args,
+    *cost_args,
+    residual_weights=None,
+    prepared_rate_data=None,
+):
+    """Compute a supported scalar cost and its physical-parameter gradient."""
+    if not has_analytic_gradient_for_minimize(
+        cost_function,
+        len(x),
+        rate_law,
+        number_of_parameters_to_optimize_for_rate,
+        vitrification_law,
+        number_of_parameters_to_optimize_for_vitrification,
+        coupling_law,
+        tg_law,
+    ):
+        raise ValueError(
+            "An analytic gradient is not available for this optimization "
+            "setup."
+        )
+    residuals, jacobian = analytic_residuals_and_jacobian_for_least_squares(
+        x,
+        cost_function,
+        experimental_rate,
+        rate_law,
+        experimental_args_for_rate,
+        number_of_parameters_to_optimize_for_rate,
+        vitrification_law,
+        experimental_args_for_vitrification,
+        number_of_parameters_to_optimize_for_vitrification,
+        coupling_law,
+        experimental_args_for_coupling,
+        tg_law,
+        experimental_args_for_tg,
+        tg_args,
+        *cost_args,
+        residual_weights=residual_weights,
+        prepared_rate_data=prepared_rate_data,
+    )
+    scale = least_squares_cost_scale(cost_function, experimental_rate)
+    cost = scale * float(np.dot(residuals, residuals))
+    gradient = 2.0 * scale * np.asarray(jacobian).T @ residuals
+    return cost, gradient
 
 
 def analytic_residuals_and_jacobian_for_least_squares(
