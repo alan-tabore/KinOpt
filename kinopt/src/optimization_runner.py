@@ -185,11 +185,27 @@ def _run_log_space_least_squares(
     transformed_initial_guess = np.log10(initial_guess)
     options.setdefault("x_scale", "jac")
     options.setdefault("method", "trf")
+    requested_jacobian = options.pop("jac", "2-point")
+    use_analytic_jacobian = (
+        requested_jacobian == "auto"
+        and optimization.has_analytic_jacobian_for_least_squares(
+            initial_guess.size,
+            config.rate_law,
+            config.rate_parameter_count,
+            config.vitrification_law,
+            config.vitrification_parameter_count,
+            config.coupling_law,
+            config.tg_law,
+        )
+    )
+    residual_evaluations = [0]
+    analytic_jacobian_evaluations = [0]
     best_squared_norm = [np.inf]
 
     def residual_function(transformed_parameters):
         if cancellation_requested():
             raise OptimizationCancelled()
+        residual_evaluations[0] += 1
         physical_parameters = np.power(10.0, transformed_parameters)
         residuals = optimization.residuals_for_least_squares(
             physical_parameters,
@@ -202,6 +218,30 @@ def _run_log_space_least_squares(
             callback(physical_parameters)
         return residuals
 
+    if use_analytic_jacobian:
+        def jacobian_function(transformed_parameters):
+            if cancellation_requested():
+                raise OptimizationCancelled()
+            analytic_jacobian_evaluations[0] += 1
+            physical_parameters = np.power(10.0, transformed_parameters)
+            physical_jacobian = optimization.analytic_jacobian_for_least_squares(
+                physical_parameters,
+                config.cost_function,
+                *objective_args,
+            )
+            log_space_derivative = np.log(10.0) * physical_parameters
+            return physical_jacobian * log_space_derivative[np.newaxis, :]
+
+        options["jac"] = jacobian_function
+        jacobian_source = "analytic-kamal"
+    else:
+        options["jac"] = (
+            "2-point" if requested_jacobian == "auto" else requested_jacobian
+        )
+        jacobian_source = (
+            options["jac"] if isinstance(options["jac"], str) else "custom"
+        )
+
     result = config.local_optimizer(
         residual_function,
         transformed_initial_guess,
@@ -212,6 +252,9 @@ def _run_log_space_least_squares(
     result.x = np.power(10.0, result.x)
     result.residuals = residual_vector
     result.fun = float(config.cost_function(result.x, *objective_args))
+    result.residual_evaluations = residual_evaluations[0]
+    result.analytic_jacobian_evaluations = analytic_jacobian_evaluations[0]
+    result.jacobian_source = jacobian_source
     return result
 
 

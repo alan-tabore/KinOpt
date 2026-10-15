@@ -7,6 +7,8 @@ Author: alan.tabore
 
 import numpy as np
 
+from kinopt.src import kinetic_models
+
 
 def model(x, rate_law, experimental_args_for_rate, number_of_parameters_to_optimize_for_rate, vitrification_law, experimental_args_for_vitrification, number_of_parameters_to_optimize_for_vitrification, coupling_law, experimental_args_for_coupling, tg_law, experimental_args_for_tg, tg_args):
     """
@@ -350,6 +352,53 @@ def rss_increase_of_small_rates_impact_with_zones(x, experimental_rate, rate_law
     return np.dot(modified_dif, modified_dif)/len(modified_dif)
 
 
+def _least_squares_residual_weights(
+    cost_function,
+    experimental_rate,
+    *cost_args,
+):
+    """Return per-point multipliers for a supported least-squares cost."""
+    experimental_rate = np.asarray(experimental_rate, dtype=float)
+    if cost_function in {rss_standard, rss_mean}:
+        if cost_args:
+            raise ValueError("The selected cost does not accept extra arguments.")
+        return np.ones_like(experimental_rate)
+    if cost_function is rss_relative:
+        if cost_args:
+            raise ValueError("Relative RSS does not accept extra arguments.")
+        if np.any(experimental_rate == 0):
+            raise ValueError("Relative RSS requires nonzero experimental rates.")
+        return 1 / experimental_rate
+    if cost_function is rss_increase_of_small_extents_impact:
+        if len(cost_args) != 3:
+            raise ValueError(
+                "Early-conversion weighting requires extent, extent limit, "
+                "and amplification factor."
+            )
+        extent, extent_limit, amplification_factor = cost_args
+        return np.where(
+            np.asarray(extent) < extent_limit,
+            amplification_factor,
+            1.0,
+        )
+    if cost_function is rss_increase_of_small_rates_impact_with_zones:
+        if len(cost_args) != 2:
+            raise ValueError(
+                "Small-rate weighting requires a rate fraction and "
+                "amplification factor."
+            )
+        fraction_to_amplify, amplification_factor = cost_args
+        threshold = np.max(experimental_rate) / fraction_to_amplify
+        return np.where(
+            experimental_rate < threshold,
+            amplification_factor,
+            1.0,
+        )
+    raise ValueError(
+        "Log-space least squares does not support the selected cost function."
+    )
+
+
 def residuals_for_least_squares(
     x,
     cost_function,
@@ -390,45 +439,76 @@ def residuals_for_least_squares(
         tg_args,
     )
     residuals = np.asarray(modeled_rate) - experimental_rate
-
-    if cost_function in {rss_standard, rss_mean}:
-        if cost_args:
-            raise ValueError("The selected cost does not accept extra arguments.")
-        return residuals
-    if cost_function is rss_relative:
-        if cost_args:
-            raise ValueError("Relative RSS does not accept extra arguments.")
-        if np.any(experimental_rate == 0):
-            raise ValueError("Relative RSS requires nonzero experimental rates.")
-        return residuals / experimental_rate
-    if cost_function is rss_increase_of_small_extents_impact:
-        if len(cost_args) != 3:
-            raise ValueError(
-                "Early-conversion weighting requires extent, extent limit, "
-                "and amplification factor."
-            )
-        extent, extent_limit, amplification_factor = cost_args
-        return np.where(
-            np.asarray(extent) < extent_limit,
-            residuals * amplification_factor,
-            residuals,
-        )
-    if cost_function is rss_increase_of_small_rates_impact_with_zones:
-        if len(cost_args) != 2:
-            raise ValueError(
-                "Small-rate weighting requires a rate fraction and "
-                "amplification factor."
-            )
-        fraction_to_amplify, amplification_factor = cost_args
-        threshold = np.max(experimental_rate) / fraction_to_amplify
-        return np.where(
-            experimental_rate < threshold,
-            residuals * amplification_factor,
-            residuals,
-        )
-    raise ValueError(
-        "Log-space least squares does not support the selected cost function."
+    weights = _least_squares_residual_weights(
+        cost_function,
+        experimental_rate,
+        *cost_args,
     )
+    return residuals * weights
+
+
+def has_analytic_jacobian_for_least_squares(
+    parameter_count,
+    rate_law,
+    number_of_parameters_to_optimize_for_rate,
+    vitrification_law,
+    number_of_parameters_to_optimize_for_vitrification,
+    coupling_law,
+    tg_law,
+):
+    """Return whether the complete selected model has a known Jacobian."""
+    return (
+        rate_law is kinetic_models.rate_for_kamal
+        and parameter_count == 6
+        and number_of_parameters_to_optimize_for_rate == 6
+        and vitrification_law is None
+        and number_of_parameters_to_optimize_for_vitrification == 0
+        and coupling_law is None
+        and tg_law is None
+    )
+
+
+def analytic_jacobian_for_least_squares(
+    x,
+    cost_function,
+    experimental_rate,
+    rate_law,
+    experimental_args_for_rate,
+    number_of_parameters_to_optimize_for_rate,
+    vitrification_law,
+    experimental_args_for_vitrification,
+    number_of_parameters_to_optimize_for_vitrification,
+    coupling_law,
+    experimental_args_for_coupling,
+    tg_law,
+    experimental_args_for_tg,
+    tg_args,
+    *cost_args,
+):
+    """Return the physical-parameter Jacobian for a supported model setup."""
+    if not has_analytic_jacobian_for_least_squares(
+        len(x),
+        rate_law,
+        number_of_parameters_to_optimize_for_rate,
+        vitrification_law,
+        number_of_parameters_to_optimize_for_vitrification,
+        coupling_law,
+        tg_law,
+    ):
+        raise ValueError(
+            "An analytic least-squares Jacobian is not available for this "
+            "model setup."
+        )
+    jacobian = kinetic_models.jac_for_rate_for_kamal(
+        *experimental_args_for_rate,
+        *x,
+    )
+    weights = _least_squares_residual_weights(
+        cost_function,
+        experimental_rate,
+        *cost_args,
+    )
+    return np.asarray(jacobian) * np.asarray(weights)[..., np.newaxis]
 
 
 

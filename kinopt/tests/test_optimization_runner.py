@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from scipy import optimize
 
+from kinopt.src import kinetic_models, optimization
 from kinopt.src.optimization_runner import (
     LOG_SPACE_LEAST_SQUARES,
     OptimizationCancelled,
@@ -171,3 +172,86 @@ def test_log_space_least_squares_cannot_be_nested_in_a_global_method(
             local_method=LOG_SPACE_LEAST_SQUARES,
             local_optimizer=optimize.least_squares,
         )
+
+
+def make_kamal_least_squares_config(jacobian):
+    extent = np.linspace(0.03, 0.95, 80)
+    temperature = 330 + 140 * extent + 10 * np.sin(extent * 9)
+    known_parameters = np.array([1e8, 60_000.0, 1e10, 80_000.0, 0.8, 1.2])
+    experimental_rate = kinetic_models.rate_for_kamal(
+        extent,
+        temperature,
+        *known_parameters,
+    )
+    return OptimizationRunConfig(
+        cost_function=optimization.rss_mean,
+        initial_guess=np.array([8e7, 57_000.0, 7e9, 76_000.0, 0.7, 1.1]),
+        global_method='',
+        global_optimizer=None,
+        global_options=None,
+        local_method=LOG_SPACE_LEAST_SQUARES,
+        local_optimizer=optimize.least_squares,
+        local_options={
+            'jac': jacobian,
+            'max_nfev': 200,
+            'ftol': 1e-11,
+            'xtol': 1e-11,
+            'gtol': 1e-11,
+            'bounds': (
+                (1e6, 1e10),
+                (30_000.0, 100_000.0),
+                (1e8, 1e12),
+                (40_000.0, 120_000.0),
+                (0.1, 3.0),
+                (0.1, 3.0),
+            ),
+        },
+        experimental_rate=experimental_rate,
+        rate_law=kinetic_models.rate_for_kamal,
+        experimental_args_for_rate=(extent, temperature),
+        rate_parameter_count=6,
+        vitrification_law=None,
+        experimental_args_for_vitrification=(),
+        vitrification_parameter_count=0,
+        coupling_law=None,
+        experimental_args_for_coupling=(),
+        tg_law=None,
+        experimental_args_for_tg=(),
+        tg_args=None,
+        cost_function_args=(),
+        experimental_args_for_cost_function=(),
+        max_iterations=200,
+    )
+
+
+def test_auto_jacobian_reduces_kamal_residual_evaluations():
+    analytic = run_optimization(make_kamal_least_squares_config('auto')).result
+    numerical = run_optimization(make_kamal_least_squares_config('2-point')).result
+
+    assert analytic.success
+    assert numerical.success
+    assert analytic.jacobian_source == 'analytic-kamal'
+    assert numerical.jacobian_source == '2-point'
+    assert analytic.analytic_jacobian_evaluations > 0
+    assert analytic.residual_evaluations < numerical.residual_evaluations
+    np.testing.assert_allclose(analytic.x, numerical.x, rtol=1e-6)
+
+
+def test_auto_jacobian_falls_back_for_other_models(serializable_config):
+    config = replace(
+        serializable_config,
+        local_method=LOG_SPACE_LEAST_SQUARES,
+        local_optimizer=optimize.least_squares,
+        local_options={
+            'jac': 'auto',
+            'max_nfev': 200,
+            'bounds': ((1e5, 1e10), (1e3, 2e5), (0.1, 5.0)),
+        },
+        max_iterations=200,
+    )
+
+    result = run_optimization(config).result
+
+    assert result.success
+    assert result.jacobian_source == '2-point'
+    assert result.analytic_jacobian_evaluations == 0

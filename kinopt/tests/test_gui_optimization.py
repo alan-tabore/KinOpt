@@ -370,10 +370,10 @@ def test_log_space_least_squares_builds_a_bounded_solver_config(
     assert [
         jacobian_choices.itemText(index)
         for index in range(jacobian_choices.count())
-    ] == ['2-point', '3-point', 'cs']
+    ] == ['auto', '2-point', '3-point', 'cs']
     assert config.local_method == 'least_squares_log'
     assert config.local_optimizer is main.scipy.optimize.least_squares
-    assert config.local_options['jac'] == '2-point'
+    assert config.local_options['jac'] == 'auto'
     assert config.local_options['max_nfev'] == 100
     assert config.local_options['bounds'] == (
         (1.0, 1e20),

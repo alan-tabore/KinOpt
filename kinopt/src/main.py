@@ -1544,7 +1544,7 @@ class MainWindow(QMainWindow):
                     combobox = QComboBox()
                     if key == "jac":
                         if self.selected_local_optimization == LOG_SPACE_LEAST_SQUARES:
-                            combobox.addItems(["2-point", "3-point", "cs"])
+                            combobox.addItems(["auto", "2-point", "3-point", "cs"])
                         else:
                             combobox.addItems(["None", "2-point", "3-point", "cs"])
                     else:
