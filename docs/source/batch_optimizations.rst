@@ -24,6 +24,22 @@ Preparing the queue
 Each queued job is an independent snapshot. Later changes in the main window do
 not alter jobs that have already been added.
 
+Building a comparison plan
+--------------------------
+
+Click **Build comparison plan...** to prepare a model, method, and calculation
+profile comparison from the current setup. Check one or more choices in each
+list; KinOpt displays the resulting number of jobs before adding their complete
+cross-product to the queue. A plan is limited to 50 jobs.
+
+Every generated job uses the currently loaded measurements, cost function, and
+optional vitrification and coupling setup. The currently selected rate model
+keeps the starting values entered in the main form. Other rate models use the
+illustrative starts and finite bounds documented in KinOpt's model catalogue.
+These are starting assumptions for comparison rather than material constants.
+The default selection compares all three rate models with log-space least
+squares and L-BFGS-B under the balanced calculation profile.
+
 Generating several starting points
 -----------------------------------
 
