@@ -4,16 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kinopt"
-version = "1.0"
+version = "1.1.0"
 dependencies = [
-  "matplotlib",
-  "numpy",
-  "PyQt5",
-  "PyQt5-Qt5",
-  "PyQt5-sip",
-  "QtPy",
-  "scipy",
-  "tqdm",
+  "matplotlib>=3.8",
+  "numpy>=1.26",
+  "PyQt5>=5.15.10",
+  "scipy>=1.12",
+  "tqdm>=4.66",
 ]
 requires-python = ">= 3.9"
 authors = [{name = "Alan Tabore", email = "alan.tabore@gmail.com"}]
@@ -35,6 +32,7 @@ packages = ["kinopt"]
 
 [project.optional-dependencies]
 test = ["pytest>=7", "pytest-cov>=4"]
+docs = ["sphinx>=7.2", "pydata-sphinx-theme>=0.15", "myst-parser>=2"]
 
 [tool.pytest.ini_options]
 testpaths = ["kinopt/tests"]

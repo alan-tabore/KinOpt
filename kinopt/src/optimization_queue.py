@@ -1,6 +1,7 @@
 """Persistent local storage for sequential optimization jobs."""
 
 from dataclasses import dataclass
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 import json
@@ -207,10 +208,19 @@ class OptimizationQueue:
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
         self._initialize_database()
 
+    @contextmanager
     def _connect(self):
         connection = sqlite3.connect(self.database_path)
         connection.row_factory = sqlite3.Row
-        return connection
+        connection.execute("PRAGMA busy_timeout = 5000")
+        try:
+            yield connection
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
 
     def _initialize_database(self):
         with self._connect() as connection:

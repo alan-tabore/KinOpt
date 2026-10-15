@@ -193,3 +193,20 @@ def extract_dsc_data_multiple_files(file_paths, delimiter=',', has_header=False,
     if not datasets:
         raise ValueError("Please select at least one data file.")
     return tuple(np.concatenate(columns) for columns in zip(*datasets))
+
+
+def launch_extraction(file_paths, delimiter=",", has_header=False, skip_lines=0):
+    """Return the historical success/message/arrays extraction response."""
+    try:
+        with warnings.catch_warnings(record=True) as messages:
+            warnings.simplefilter("always", UserWarning)
+            arrays = extract_dsc_data_multiple_files(
+                file_paths,
+                delimiter,
+                has_header,
+                skip_lines,
+            )
+        return True, "\n".join(str(item.message) for item in messages), *arrays
+    except (OSError, ValueError) as error:
+        empty = tuple(np.array([], dtype=float) for _ in range(4))
+        return False, str(error), *empty

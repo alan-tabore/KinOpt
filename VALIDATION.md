@@ -15,6 +15,7 @@ scientifique de chaque ajustement réalisé avec le logiciel.
 | Interface d'optimisation | Paramètres transmis, saisies incorrectes, échec, annulation et possibilité de relancer | Utiliser les mauvais paramètres de Tg ou laisser le bouton dans un état bloqué |
 | Méthodes d'optimisation | Petit problème dont le minimum est connu, pour Nelder-Mead, basinhopping, differential_evolution et shgo | Mal transmettre les arguments à SciPy ou remplacer le résultat du solveur par un essai rejeté |
 | Résultats | Sauvegarde puis relecture de deux expériences de longueurs différentes, échec d'écriture | Simuler avec les lignes de remplissage ou la conversion initiale d'une autre expérience |
+| Lots et comparaisons | Processus isolés, concurrence limitée, annulation ciblée, reprise, progression, validation réservée et imports historiques | Saturer la machine, perdre la file ou comparer des métriques incompatibles |
 
 Dans beaucoup de tests de l'interface, le démarrage du calcul est remplacé par
 un enregistrement des paramètres : on teste la préparation du calcul sans
@@ -97,6 +98,10 @@ machines hébergées de GitHub. Elle ne certifie pas tous les postes Windows
 3. Vérifier l'annulation puis la possibilité de relancer une optimisation.
 4. Sauvegarder puis relire le résultat ; comparer les expériences affichées aux
    données d'origine, notamment si leurs longueurs diffèrent.
+5. Préparer au moins deux travaux, choisir deux calculs simultanés, puis vérifier
+   leur progression, l'annulation d'un seul travail et la comparaison finale.
+6. Importer un fichier avec colonnes réordonnées ou unités non standard dans
+   l'assistant, puis vérifier les valeurs converties et les courbes.
 
 Un résultat fini peut provenir d'un calcul arrêté par son budget d'itérations.
 Il faut lire le statut SciPy : un fichier sauvegardé ne signifie pas que la
@@ -131,14 +136,16 @@ et la [protection des branches](https://docs.github.com/en/repositories/configur
 
 ## Limites et prochaines validations
 
-- Les jacobiennes et hessiennes analytiques du modèle de Kamal, les nombreuses
-  variantes de simulation et toutes les options des solveurs restent à couvrir.
+- Les hessiennes analytiques et les nombreuses variantes de simulation restent
+  à couvrir. Les jacobiennes et gradients analytiques des lois de vitesse
+  fournies sont vérifiés sur les solveurs locaux compatibles.
 - Les tests isoconversionnels utilisent un cas isotherme synthétique idéal.
   Ajouter des références non isothermes et des données bruitées sera nécessaire
   pour une validation scientifique plus large.
 - Les essais courts des solveurs ne prouvent pas leur convergence sur des modèles
-  complexes. Le calcul multiprocessus et les performances sur de gros fichiers
-  ne sont pas validés ici.
+  complexes. Les processus concurrents sont testés avec des calculs courts ; la
+  consommation mémoire et les performances de longues campagnes restent à
+  mesurer sur la machine cible.
 - L'annulation intervient au prochain point de contrôle du solveur : une
   évaluation longue peut retarder l'arrêt. Le thread n'est pas tué brutalement.
 - La compatibilité visuelle avec les différents bureaux Linux et postes Windows
