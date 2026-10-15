@@ -9,6 +9,7 @@ from scipy import optimize as scipy_optimize
 from kinopt.src import kinetic_models
 from kinopt.src import optimization
 from kinopt.src.optimization_runner import OptimizationRunConfig
+from kinopt.src.optimization_runner import LOG_SPACE_LEAST_SQUARES
 
 
 SCHEMA_VERSION = 1
@@ -32,7 +33,13 @@ _VITRIFICATION_LAWS = {
 _COUPLING_LAWS = {"coupling_harmonic_mean", "coupling_product"}
 _TG_LAWS = {"tg_diBennedetto"}
 _GLOBAL_METHODS = {"basinhopping", "differential_evolution", "shgo"}
-_LOCAL_METHODS = {"Nelder-Mead", "CG", "BFGS", "L-BFGS-B"}
+_LOCAL_METHODS = {
+    LOG_SPACE_LEAST_SQUARES,
+    "Nelder-Mead",
+    "CG",
+    "BFGS",
+    "L-BFGS-B",
+}
 
 
 def _registered_name(
@@ -122,8 +129,15 @@ def config_to_dict(config: OptimizationRunConfig) -> Dict[str, Any]:
     if local_method is not None:
         if local_method not in _LOCAL_METHODS:
             raise ValueError(f"Cannot serialize local method: {local_method!r}")
-        if config.local_optimizer is not scipy_optimize.minimize:
-            raise ValueError("Local methods must use scipy.optimize.minimize.")
+        expected_optimizer = (
+            scipy_optimize.least_squares
+            if local_method == LOG_SPACE_LEAST_SQUARES
+            else scipy_optimize.minimize
+        )
+        if config.local_optimizer is not expected_optimizer:
+            raise ValueError(
+                "The local optimizer does not match its method name."
+            )
     elif config.local_optimizer is not None:
         raise ValueError("A local optimizer requires a local method name.")
 
@@ -260,7 +274,11 @@ def config_from_dict(payload: Mapping[str, Any]) -> OptimizationRunConfig:
             ),
             global_options=payload["global_options"],
             local_method=local_method,
-            local_optimizer=scipy_optimize.minimize if local_method else None,
+            local_optimizer=(
+                scipy_optimize.least_squares
+                if local_method == LOG_SPACE_LEAST_SQUARES
+                else scipy_optimize.minimize if local_method else None
+            ),
             local_options=payload["local_options"],
             experimental_rate=np.asarray(
                 payload["experimental_rate"], dtype=float

@@ -98,6 +98,11 @@ GUIDANCE_BY_KIND = {
         ),
     },
     'local_optimization': {
+        'least_squares_log': SelectionGuidance(
+            'Log-space least squares',
+            'Fits the rate residuals directly while scaling every positive parameter logarithmically.',
+            'Recommended for positive kinetic parameters with justified bounds; it cannot be combined with a global method.',
+        ),
         'Nelder-Mead': SelectionGuidance(
             'Nelder-Mead',
             'A derivative-free local search that moves a simplex through parameter space.',

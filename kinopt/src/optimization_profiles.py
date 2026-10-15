@@ -18,6 +18,9 @@ class OptimizationProfile:
 
 
 _COMMON_METHOD_VALUES = {
+    'least_squares_log': {
+        'jac': '2-point',
+    },
     'Nelder-Mead': {
         'disp': 'No',
         'maxfev': None,
@@ -98,6 +101,12 @@ OPTIMIZATION_PROFILES = {
             'bounds. Treat the result as a preliminary fit.'
         ),
         method_values=_method_values({
+            'least_squares_log': {
+                'max_nfev': '100',
+                'ftol': '1e-6',
+                'xtol': '1e-6',
+                'gtol': '1e-6',
+            },
             'Nelder-Mead': {
                 'maxiter': '200',
                 'xatol': '1e-3',
@@ -132,6 +141,12 @@ OPTIMIZATION_PROFILES = {
             'Check convergence and residuals before interpreting parameters.'
         ),
         method_values=_method_values({
+            'least_squares_log': {
+                'max_nfev': '500',
+                'ftol': '1e-8',
+                'xtol': '1e-8',
+                'gtol': '1e-8',
+            },
             'Nelder-Mead': {
                 'maxiter': '1000',
                 'xatol': '1e-4',
@@ -165,6 +180,12 @@ OPTIMIZATION_PROFILES = {
             'result with the balanced fit before accepting the extra cost.'
         ),
         method_values=_method_values({
+            'least_squares_log': {
+                'max_nfev': '2000',
+                'ftol': '1e-10',
+                'xtol': '1e-10',
+                'gtol': '1e-10',
+            },
             'Nelder-Mead': {
                 'maxiter': '3000',
                 'xatol': '1e-6',

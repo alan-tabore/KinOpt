@@ -42,6 +42,7 @@ def test_profile_budgets_increase_with_requested_effort():
     thorough = optimization_profile(THOROUGH_PROFILE_NAME)
 
     budget_parameters = {
+        'least_squares_log': 'max_nfev',
         'Nelder-Mead': 'maxiter',
         'CG': 'maxiter',
         'BFGS': 'maxiter',
