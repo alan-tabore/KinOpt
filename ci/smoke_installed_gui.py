@@ -9,6 +9,7 @@ import sysconfig
 import tempfile
 
 from kinopt.src import main as gui
+from kinopt.examples import included_example_files
 
 
 def check_launcher(mode):
@@ -21,6 +22,9 @@ def check_launcher(mode):
     assert mode in commands, f'Unknown launcher: {mode}'
     source_package = Path(__file__).resolve().parents[1] / 'kinopt'
     assert Path(gui.__file__).resolve().parent.parent != source_package, 'Test the installed package'
+    example_files = included_example_files()
+    assert len(example_files) == 4
+    assert all(path.is_file() for path in example_files)
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
         output = root / 'trial results'
