@@ -119,21 +119,17 @@ The full-path command and desktop shortcut do not require this optional step.
 
 In the **Data extraction** panel:
 
-1. Click **Add file(s)** and navigate to ``kinopt\data`` in your project.
-2. Select the four ``data_kamal_heating_rate_...txt`` files.
-3. Check **File has headers**, set **Delimiter** to ``,``, and leave
-   **Number of lines to skip** at ``0``.
-4. Click **Extract data**, then **OK**. The file list should become green.
-5. Use **Rate**, **Extent** and **Temperature** to inspect the imported curves.
+1. Click **Try Kamal example**, then **OK** after extraction. The four included
+   files are loaded and the file list becomes green.
+2. Use **Rate**, **Extent** and **Temperature** to inspect the imported curves.
 
 For a short optimization trial:
 
-1. In **Models and parameters**, select ``rate_for_kamal`` and click **Autofill**.
-   Leave the vitrification, coupling and Tg models unselected for this example.
-2. In **Optimization method and parameters**, select the local method
-   ``Nelder-Mead`` and the cost function ``rss_mean``; leave the global method
-   unselected. Click **Autofill**, then change ``maxiter`` to ``200``.
-3. Click **Start optimization**. Inspect the curves and solver message when it
+1. Check the prepared ``rate_for_kamal`` model and its illustrative starting
+   values. Vitrification, coupling and Tg remain unselected.
+2. Check the prepared local method ``Nelder-Mead``, cost function ``rss_mean``,
+   and **Quick check** calculation profile.
+3. Click **Review setup…**, then start the optimization. Inspect the curves and solver message when it
    finishes. You can also test **Cancel optimization**, then start another run.
 
 This short trial checks the application workflow. Reaching the iteration limit
