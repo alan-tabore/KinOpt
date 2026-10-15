@@ -10,6 +10,7 @@ from typing import List, Optional
 from uuid import uuid4
 
 from kinopt.src.optimization_runner import (
+    OptimizationProgress,
     OptimizationRunConfig,
     OptimizationRunResult,
 )
@@ -19,7 +20,7 @@ from kinopt.src.optimization_serialization import (
 )
 
 
-DATABASE_SCHEMA_VERSION = 3
+DATABASE_SCHEMA_VERSION = 4
 RESULT_SCHEMA_VERSION = 1
 
 
@@ -68,6 +69,7 @@ class OptimizationJob:
     group_name: Optional[str]
     group_kind: Optional[str]
     group_seed: Optional[int]
+    progress_history: tuple
 
 
 @dataclass(frozen=True)
@@ -81,6 +83,65 @@ class StoredOptimizationResult:
     solver_message: str
     iterations: Optional[int]
     evaluations: Optional[int]
+
+
+@dataclass(frozen=True)
+class StoredOptimizationProgress:
+    """One persisted progress sample for a running or interrupted job."""
+
+    evaluations: int
+    best_cost: float
+    elapsed_seconds: float
+    estimated_remaining_seconds: Optional[float]
+    best_parameters: tuple
+
+
+def _serialize_progress_history(history):
+    return json.dumps(
+        [
+            {
+                "evaluations": int(point.evaluations),
+                "best_cost": float(point.best_cost),
+                "elapsed_seconds": float(point.elapsed_seconds),
+                "estimated_remaining_seconds": (
+                    None
+                    if point.estimated_remaining_seconds is None
+                    else float(point.estimated_remaining_seconds)
+                ),
+                "best_parameters": [
+                    float(value) for value in point.best_parameters
+                ],
+            }
+            for point in history
+        ],
+        allow_nan=False,
+        separators=(",", ":"),
+    )
+
+
+def _deserialize_progress_history(serialized):
+    if not serialized:
+        return ()
+    try:
+        payload = json.loads(serialized)
+        return tuple(
+            StoredOptimizationProgress(
+                evaluations=int(item["evaluations"]),
+                best_cost=float(item["best_cost"]),
+                elapsed_seconds=float(item["elapsed_seconds"]),
+                estimated_remaining_seconds=(
+                    None
+                    if item["estimated_remaining_seconds"] is None
+                    else float(item["estimated_remaining_seconds"])
+                ),
+                best_parameters=tuple(
+                    float(value) for value in item["best_parameters"]
+                ),
+            )
+            for item in payload
+        )
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+        raise ValueError(f"Invalid stored optimization progress: {error}") from error
 
 
 def _utc_now() -> str:
@@ -177,7 +238,8 @@ class OptimizationQueue:
                         group_identifier TEXT,
                         group_name TEXT,
                         group_kind TEXT,
-                        group_seed INTEGER
+                        group_seed INTEGER,
+                        progress_json TEXT
                     )
                     """
                 )
@@ -204,6 +266,10 @@ class OptimizationQueue:
                 )
                 connection.execute(
                     "ALTER TABLE optimization_jobs ADD COLUMN group_seed INTEGER"
+                )
+            if 0 < version < 4:
+                connection.execute(
+                    "ALTER TABLE optimization_jobs ADD COLUMN progress_json TEXT"
                 )
             connection.execute(
                 """
@@ -236,6 +302,7 @@ class OptimizationQueue:
             group_seed=(
                 None if row["group_seed"] is None else int(row["group_seed"])
             ),
+            progress_history=_deserialize_progress_history(row["progress_json"]),
         )
 
     def add(self, config, name=None):
@@ -489,7 +556,7 @@ class OptimizationQueue:
         with self._connect() as connection:
             row = connection.execute(
                 """
-                SELECT status, started_at, finished_at, result_json
+                SELECT status, started_at, finished_at, result_json, progress_json
                 FROM optimization_jobs WHERE identifier = ?
                 """,
                 (identifier,),
@@ -506,9 +573,11 @@ class OptimizationQueue:
             started_at = row["started_at"]
             finished_at = row["finished_at"]
             result_json = row["result_json"]
+            progress_json = row["progress_json"]
             if requested_status is JobStatus.RUNNING:
                 started_at = timestamp
                 finished_at = None
+                progress_json = None
             elif requested_status in {
                 JobStatus.FAILED,
                 JobStatus.CANCELLED,
@@ -519,11 +588,13 @@ class OptimizationQueue:
                 started_at = None
                 finished_at = None
                 result_json = None
+                progress_json = None
             cursor = connection.execute(
                 """
                 UPDATE optimization_jobs
                 SET status = ?, updated_at = ?, message = ?,
-                    started_at = ?, finished_at = ?, result_json = ?
+                    started_at = ?, finished_at = ?, result_json = ?,
+                    progress_json = ?
                 WHERE identifier = ? AND status = ?
                 """,
                 (
@@ -533,6 +604,7 @@ class OptimizationQueue:
                     started_at,
                     finished_at,
                     result_json,
+                    progress_json,
                     identifier,
                     current_status.value,
                 ),
@@ -588,7 +660,8 @@ class OptimizationQueue:
                 """
                 UPDATE optimization_jobs
                 SET status = ?, updated_at = ?, started_at = ?,
-                    finished_at = NULL, message = NULL, result_json = NULL
+                    finished_at = NULL, message = NULL, result_json = NULL,
+                    progress_json = NULL
                 WHERE identifier = ? AND status = ?
                 """,
                 (
@@ -603,6 +676,56 @@ class OptimizationQueue:
                 raise RuntimeError(
                     f"Optimization job {identifier} was claimed concurrently."
                 )
+        return self.get(identifier)
+
+    def update_progress(self, identifier, progress):
+        """Append a finite progress point while a job is running."""
+        if not isinstance(progress, OptimizationProgress):
+            raise TypeError("progress must be OptimizationProgress.")
+        point = StoredOptimizationProgress(
+            evaluations=int(progress.evaluations),
+            best_cost=float(progress.best_cost),
+            elapsed_seconds=float(progress.elapsed_seconds),
+            estimated_remaining_seconds=(
+                None
+                if progress.estimated_remaining_seconds is None
+                else float(progress.estimated_remaining_seconds)
+            ),
+            best_parameters=tuple(progress.best_parameters),
+        )
+        serialized_point = _serialize_progress_history((point,))
+        # Validate all values before entering the write transaction.
+        json.loads(serialized_point)
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT status, progress_json FROM optimization_jobs "
+                "WHERE identifier = ?",
+                (identifier,),
+            ).fetchone()
+            if row is None:
+                raise KeyError(f"Unknown optimization job: {identifier}")
+            if JobStatus(row["status"]) is not JobStatus.RUNNING:
+                return self.get(identifier)
+            history = list(_deserialize_progress_history(row["progress_json"]))
+            if not history or (
+                history[-1].evaluations != point.evaluations
+                or history[-1].best_cost != point.best_cost
+            ):
+                history.append(point)
+            else:
+                history[-1] = point
+            history = history[-200:]
+            connection.execute(
+                "UPDATE optimization_jobs SET progress_json = ?, updated_at = ? "
+                "WHERE identifier = ? AND status = ?",
+                (
+                    _serialize_progress_history(history),
+                    _utc_now(),
+                    identifier,
+                    JobStatus.RUNNING.value,
+                ),
+            )
         return self.get(identifier)
 
     def complete(self, identifier, outcome):

@@ -108,6 +108,9 @@ def build_batch_export(jobs):
             "strategy": _strategy_description(job.config),
             "configuration": config_to_dict(job.config),
             "result": _result_dict(job.result),
+            "progress_history": [
+                asdict(point) for point in job.progress_history
+            ],
             "comparison": comparison,
             "comparison_error": comparison_error,
         })
@@ -164,6 +167,7 @@ def _csv_rows(jobs):
         comparison, comparison_error = _comparison_dict(job)
         result = job.result
         summary = summary_by_group.get(job.group_identifier)
+        progress = job.progress_history[-1] if job.progress_history else None
         row = {
             "identifier": job.identifier,
             "name": job.name,
@@ -193,6 +197,12 @@ def _csv_rows(jobs):
             "elapsed_seconds": "" if result is None else result.elapsed_seconds,
             "iterations": "" if result is None else result.iterations,
             "evaluations": "" if result is None else result.evaluations,
+            "last_progress_evaluations": (
+                "" if progress is None else progress.evaluations
+            ),
+            "last_progress_best_cost": (
+                "" if progress is None else progress.best_cost
+            ),
             "group_completed": "" if summary is None else summary.completed_count,
             "group_total": "" if summary is None else summary.total_count,
             "group_converged": "" if summary is None else summary.converged_count,

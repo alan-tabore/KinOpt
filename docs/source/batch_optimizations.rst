@@ -100,8 +100,12 @@ and completed result summaries. A process that stops unexpectedly fails only
 its own job; the remaining jobs continue.
 
 The table displays the selected model and strategy, queue state, solver
-convergence, cost, duration, starting or fitted parameters, and the solver's
-final message.
+convergence, best cost, duration, evaluation count, starting/best/fitted
+parameters, and the solver's final message. Running jobs periodically persist
+their improving cost and parameter history in the queue database. **Rough ETA**
+extrapolates the consumed evaluation budget only while that estimate is
+meaningful; it is not a prediction of the distance to the optimum and can
+change substantially between solver phases.
 The queue state and solver result are separate: **Completed / Not converged**
 means the calculation finished and produced a finite result, but the solver
 stopped without reporting convergence, for example after using its iteration
@@ -132,6 +136,11 @@ Queue controls
   recalculated from the model predictions and measured rates. This common score
   remains comparable when jobs use different solver cost functions. Lower is
   better. Jobs are grouped separately when their measured rate series differ.
+* **Import legacy results...** reads complete text results written by older
+  KinOpt versions and adds their model, measurements, fitted parameters, cost,
+  duration, and available solver counters to the structured comparison history.
+  The original file is left unchanged. Incomplete or unsupported files are
+  rejected with a specific message.
 
 Comparing completed results
 ---------------------------

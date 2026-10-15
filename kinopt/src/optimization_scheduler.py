@@ -45,6 +45,9 @@ def _optimization_process_entry(
         outcome = run_optimization(
             config,
             is_cancelled=cancellation_event.is_set,
+            progress_callback=lambda progress: result_connection.send(
+                (identifier, "progress", progress)
+            ),
         )
         result_connection.send((identifier, "completed", outcome))
     except OptimizationCancelled:
@@ -250,17 +253,29 @@ class ConcurrentOptimizationScheduler:
             str(payload),
         )
 
-    def _collect_finished(self):
+    def _collect_finished(self, progress_callback=None):
         finished = []
         for identifier, active in tuple(self._active.items()):
             message = None
-            if active.result_connection.poll():
-                message = active.result_connection.recv()
-            elif not active.process.is_alive():
+            while active.result_connection.poll():
+                candidate = active.result_connection.recv()
+                if candidate[1] == "progress":
+                    if progress_callback is not None:
+                        progress_callback(active.job, candidate[2])
+                    continue
+                message = candidate
+                break
+            if message is None and not active.process.is_alive():
                 active.process.join()
-                if active.result_connection.poll():
-                    message = active.result_connection.recv()
-                else:
+                while active.result_connection.poll():
+                    candidate = active.result_connection.recv()
+                    if candidate[1] == "progress":
+                        if progress_callback is not None:
+                            progress_callback(active.job, candidate[2])
+                    else:
+                        message = candidate
+                        break
+                if message is None:
                     message = (
                         identifier,
                         "failed",
@@ -285,6 +300,7 @@ class ConcurrentOptimizationScheduler:
         should_continue: Optional[Callable[[], bool]] = None,
         job_finished: Optional[Callable[[OptimizationJob], None]] = None,
         active_jobs_changed: Optional[Callable[[tuple], None]] = None,
+        progress_callback: Optional[Callable] = None,
     ) -> List[OptimizationJob]:
         """Process pending jobs until drained or new claims are paused."""
         completed_jobs = []
@@ -306,7 +322,7 @@ class ConcurrentOptimizationScheduler:
                     if cancellation_requested(active.job):
                         active.cancellation_event.set()
 
-            finished = self._collect_finished()
+            finished = self._collect_finished(progress_callback)
             completed_jobs.extend(finished)
             if finished and active_jobs_changed is not None:
                 active_jobs_changed(self.active_job_identifiers)

@@ -150,6 +150,63 @@ class OptimizationRunResult:
     elapsed_seconds: float
 
 
+@dataclass(frozen=True)
+class OptimizationProgress:
+    """Portable progress sample emitted while an objective is evaluated."""
+
+    evaluations: int
+    best_cost: float
+    elapsed_seconds: float
+    estimated_remaining_seconds: Optional[float]
+    best_parameters: Tuple[float, ...]
+
+
+class _ProgressReporter:
+    def __init__(self, callback, clock, started_at, budget):
+        self.callback = callback
+        self.clock = clock
+        self.started_at = started_at
+        self.budget = budget
+        self.evaluations = 0
+        self.best_cost = np.inf
+        self.best_parameters = ()
+        self.last_emitted_at = -np.inf
+
+    def observe(self, cost, parameters, evaluations=None, force=False):
+        if evaluations is None:
+            self.evaluations += 1
+        else:
+            self.evaluations = max(self.evaluations, int(evaluations))
+        numeric_cost = float(cost)
+        improved = np.isfinite(numeric_cost) and numeric_cost < self.best_cost
+        if improved:
+            self.best_cost = numeric_cost
+            self.best_parameters = tuple(
+                float(value) for value in np.asarray(parameters, dtype=float)
+            )
+        if self.callback is None or not np.isfinite(self.best_cost):
+            return
+        now = self.clock()
+        if not force and self.evaluations > 1 and now - self.last_emitted_at < 0.25:
+            return
+        elapsed = max(0.0, now - self.started_at)
+        remaining = None
+        if 1 < self.evaluations < self.budget:
+            remaining = elapsed * (
+                self.budget - self.evaluations
+            ) / self.evaluations
+        self.callback(
+            OptimizationProgress(
+                evaluations=self.evaluations,
+                best_cost=self.best_cost,
+                elapsed_seconds=elapsed,
+                estimated_remaining_seconds=remaining,
+                best_parameters=self.best_parameters,
+            )
+        )
+        self.last_emitted_at = now
+
+
 def _objective_arguments(config: OptimizationRunConfig) -> Tuple[Any, ...]:
     training_mask = config.training_mask
 
@@ -246,6 +303,7 @@ def _run_log_space_least_squares(
     local_options: Mapping[str, Any],
     callback: Optional[Callable[..., Any]],
     cancellation_requested: Callable[[], bool],
+    progress_reporter: _ProgressReporter,
 ) -> OptimizeResult:
     """Fit positive physical parameters in a numerically balanced log space."""
     options = dict(local_options)
@@ -343,6 +401,11 @@ def _run_log_space_least_squares(
                 residual_weights=residual_weights,
             )
         squared_norm = float(np.dot(residuals, residuals))
+        progress_reporter.observe(
+            squared_norm,
+            physical_parameters,
+            evaluations=residual_evaluations[0],
+        )
         if callback is not None and squared_norm < best_squared_norm[0]:
             best_squared_norm[0] = squared_norm
             callback(physical_parameters)
@@ -391,6 +454,7 @@ def run_optimization(
     config: OptimizationRunConfig,
     callback: Optional[Callable[..., Any]] = None,
     is_cancelled: Optional[Callable[[], bool]] = None,
+    progress_callback: Optional[Callable[[OptimizationProgress], Any]] = None,
     clock: Callable[[], float] = time.perf_counter,
 ) -> OptimizationRunResult:
     """Execute one configured SciPy optimization and return its result."""
@@ -409,7 +473,20 @@ def run_optimization(
     local_options = _thaw(config.local_options or {})
     objective_args = _objective_arguments(config)
     initial_guess = _thaw(config.initial_guess)
-    minimize_objective = config.cost_function
+    started_at = clock()
+    progress_reporter = _ProgressReporter(
+        progress_callback,
+        clock,
+        started_at,
+        config.max_iterations,
+    )
+
+    def tracked_objective(parameters, *args):
+        value = config.cost_function(parameters, *args)
+        progress_reporter.observe(value, parameters)
+        return value
+
+    minimize_objective = tracked_objective
     minimize_jacobian_source = None
     analytic_gradient_evaluations = [0]
 
@@ -467,6 +544,7 @@ def run_optimization(
                     cached_parameters[0] = np.array(parameters, copy=True)
                     cached_cost[0] = cost
                     cached_gradient[0] = gradient
+                    progress_reporter.observe(cost, parameters)
                 return cached_cost[0], cached_gradient[0]
 
             def analytic_objective(parameters, *unused_args):
@@ -496,12 +574,11 @@ def run_optimization(
     elif callback_required and config.local_method != LOG_SPACE_LEAST_SQUARES:
         local_options["callback"] = solver_callback
 
-    started_at = clock()
     if config.global_method == "basinhopping":
         local_options["args"] = objective_args
         global_options["minimizer_kwargs"] = local_options
         result = config.global_optimizer(
-            config.cost_function,
+            tracked_objective,
             initial_guess,
             **global_options,
         )
@@ -516,7 +593,7 @@ def run_optimization(
         if config.global_method == "shgo":
             global_options["minimizer_kwargs"] = local_options
         result = config.global_optimizer(
-            config.cost_function,
+            tracked_objective,
             bounds,
             **global_options,
         )
@@ -529,6 +606,7 @@ def run_optimization(
             local_options,
             callback,
             cancellation_requested,
+            progress_reporter,
         )
     else:
         local_options["args"] = objective_args
@@ -545,6 +623,12 @@ def run_optimization(
         )
 
     elapsed_seconds = clock() - started_at
+    progress_reporter.observe(
+        result.fun,
+        result.x,
+        evaluations=getattr(result, "nfev", None),
+        force=True,
+    )
     if cancellation_requested():
         raise OptimizationCancelled()
     if not np.all(np.isfinite(result.x)) or not np.all(np.isfinite(result.fun)):

@@ -492,3 +492,18 @@ def test_holdout_values_are_excluded_from_solver_objective(serializable_config):
         serializable_config.experimental_rate[1:],
     )
     np.testing.assert_array_equal(observed['extent'], [0.3, 0.6])
+
+
+def test_runner_reports_best_cost_and_evaluation_progress(serializable_config):
+    progress = []
+
+    outcome = run_optimization(
+        serializable_config,
+        progress_callback=progress.append,
+    )
+
+    assert progress
+    assert progress[-1].evaluations >= 1
+    assert progress[-1].best_cost == pytest.approx(outcome.result.fun)
+    assert progress[-1].elapsed_seconds >= 0
+    assert len(progress[-1].best_parameters) == 3

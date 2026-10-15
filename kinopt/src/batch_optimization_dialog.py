@@ -26,6 +26,7 @@ from kinopt.src.optimization_diagnostics_dialog import (
     OptimizationDiagnosticsDialog,
 )
 from kinopt.src.optimization_multistart import generate_multistart_configs
+from kinopt.src.legacy_result_import import import_legacy_result
 from kinopt.src.optimization_queue import JobStatus
 from kinopt.src.optimization_scheduler import ConcurrentOptimizationScheduler
 from kinopt.src.optimization_validation import with_validation_experiment
@@ -83,6 +84,12 @@ class BatchOptimizationThread(QThread):
                 ),
                 should_continue=lambda: not self._pause_requested.is_set(),
                 job_finished=self.job_finished.emit,
+                progress_callback=(
+                    lambda job, progress: self.queue.update_progress(
+                        job.identifier,
+                        progress,
+                    )
+                ),
             )
         except Exception as error:
             self.execution_error.emit(f"{type(error).__name__}: {error}")
@@ -121,6 +128,8 @@ class BatchOptimizationDialog(QDialog):
         "Duration",
         "Parameters",
         "Message",
+        "Evaluations",
+        "Rough ETA",
     )
 
     def __init__(self, queue, config_provider, execution_allowed=None, parent=None):
@@ -154,8 +163,10 @@ class BatchOptimizationDialog(QDialog):
         self.table.verticalHeader().setVisible(False)
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Interactive)
-        header.setSectionResizeMode(len(self.HEADERS) - 1, QHeaderView.Stretch)
-        for column, width in enumerate((140, 145, 105, 80, 90, 80, 80, 185)):
+        header.setSectionResizeMode(8, QHeaderView.Stretch)
+        for column, width in enumerate(
+            (140, 145, 105, 80, 90, 80, 80, 185, 220, 90, 90)
+        ):
             self.table.setColumnWidth(column, width)
 
         self.add_button = QPushButton("Add current setup")
@@ -212,6 +223,7 @@ class BatchOptimizationDialog(QDialog):
         self.delete_button = QPushButton("Delete selected")
         self.inspect_button = QPushButton("Inspect result")
         self.compare_button = QPushButton("Compare completed jobs")
+        self.import_legacy_button = QPushButton("Import legacy results…")
 
         add_controls = QHBoxLayout()
         add_controls.addWidget(QLabel("New job name:"))
@@ -273,6 +285,7 @@ class BatchOptimizationDialog(QDialog):
             management_controls.addWidget(button)
 
         result_controls = QHBoxLayout()
+        result_controls.addWidget(self.import_legacy_button)
         result_controls.addWidget(self.inspect_button)
         result_controls.addWidget(self.compare_button)
         result_controls.addStretch(1)
@@ -314,6 +327,7 @@ class BatchOptimizationDialog(QDialog):
         self.delete_button.clicked.connect(self.delete_selected_job)
         self.inspect_button.clicked.connect(self.show_selected_diagnostics)
         self.compare_button.clicked.connect(self.show_completed_comparison)
+        self.import_legacy_button.clicked.connect(self.import_legacy_results)
         self.table.itemSelectionChanged.connect(self._update_action_buttons)
         close_buttons.rejected.connect(self.close)
 
@@ -390,8 +404,12 @@ class BatchOptimizationDialog(QDialog):
     @staticmethod
     def _parameters(job):
         if job.result is None:
-            values = job.config.initial_guess
-            prefix = "Start: "
+            if job.progress_history:
+                values = job.progress_history[-1].best_parameters
+                prefix = "Best: "
+            else:
+                values = job.config.initial_guess
+                prefix = "Start: "
         else:
             values = job.result.parameters
             prefix = "Result: "
@@ -403,18 +421,47 @@ class BatchOptimizationDialog(QDialog):
         jobs = self.queue.list_jobs()
         self.table.setRowCount(len(jobs))
         for row, job in enumerate(jobs):
+            progress = job.progress_history[-1] if job.progress_history else None
+            current_cost = (
+                job.result.cost
+                if job.result is not None
+                else None if progress is None else progress.best_cost
+            )
+            current_duration = (
+                job.result.elapsed_seconds
+                if job.result is not None
+                else None if progress is None else progress.elapsed_seconds
+            )
+            current_evaluations = (
+                job.result.evaluations
+                if job.result is not None
+                else None if progress is None else progress.evaluations
+            )
             values = (
                 job.name,
                 _model_description(job.config),
                 _strategy_description(job.config),
                 job.status.value.capitalize(),
                 self._solver_state(job),
-                self._result_value(job, "cost", ".6g"),
-                self._result_value(job, "elapsed_seconds", ".2f") + (
-                    " s" if job.result is not None else ""
+                "—" if current_cost is None else format(current_cost, ".6g"),
+                (
+                    "—"
+                    if current_duration is None
+                    else f"{current_duration:.2f} s"
                 ),
                 self._parameters(job),
                 job.message or "",
+                (
+                    "—"
+                    if current_evaluations is None
+                    else str(current_evaluations)
+                ),
+                (
+                    "—"
+                    if progress is None
+                    or progress.estimated_remaining_seconds is None
+                    else f"~{progress.estimated_remaining_seconds:.0f} s"
+                ),
             )
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
@@ -513,6 +560,35 @@ class BatchOptimizationDialog(QDialog):
         self.name_edit.clear()
         self.refresh()
         self._restore_selection(job.identifier)
+
+    def import_legacy_results(self):
+        """Migrate historical text results into the structured queue."""
+        paths, _ = QFileDialog.getOpenFileNames(
+            self,
+            "Import legacy KinOpt results",
+            "",
+            "Text files (*.txt);;All files (*)",
+        )
+        if not paths:
+            return
+        try:
+            imported_results = [import_legacy_result(path) for path in paths]
+            jobs = [
+                self.queue.record_completed(
+                    imported.config,
+                    imported.outcome,
+                    imported.name,
+                )
+                for imported in imported_results
+            ]
+        except (OSError, TypeError, ValueError) as error:
+            QMessageBox.critical(self, "Import legacy results", str(error))
+            return
+        self.status_label.setText(
+            f"Imported {len(jobs)} legacy result(s) into comparisons."
+        )
+        self.refresh()
+        self._restore_selection(jobs[-1].identifier)
 
     def build_comparison_plan(self):
         """Open the assistant using an immutable snapshot of the main form."""
