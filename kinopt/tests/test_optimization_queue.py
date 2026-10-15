@@ -1,6 +1,7 @@
 """Exercise durable optimization jobs and their lifecycle."""
 
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 import sqlite3
 from threading import Barrier
 
@@ -37,6 +38,65 @@ def test_queue_preserves_order_names_and_configurations(
         reopened_jobs[0].config.initial_guess,
         serializable_config.initial_guess,
     )
+
+
+def test_queue_adds_a_named_configuration_group_atomically(
+    tmp_path,
+    serializable_config,
+):
+    queue = OptimizationQueue(tmp_path / 'queue.sqlite3')
+    queue.add(serializable_config, 'Existing')
+    configs = (
+        serializable_config,
+        replace(
+            serializable_config,
+            initial_guess=np.array([7e7, 50_000.0, 1.1]),
+        ),
+    )
+
+    added = queue.add_many(configs, ('Start 1', 'Start 2'))
+
+    assert [job.name for job in added] == ['Start 1', 'Start 2']
+    assert [job.position for job in added] == [2, 3]
+    np.testing.assert_array_equal(
+        queue.get(added[1].identifier).config.initial_guess,
+        [7e7, 50_000.0, 1.1],
+    )
+
+
+def test_queue_rejects_an_invalid_group_without_partial_jobs(
+    tmp_path,
+    serializable_config,
+):
+    queue = OptimizationQueue(tmp_path / 'queue.sqlite3')
+    invalid = replace(serializable_config, cost_function=lambda *args: 0.0)
+
+    with pytest.raises(ValueError, match='cost function'):
+        queue.add_many(
+            (serializable_config, invalid, serializable_config),
+            ('First', 'Invalid', 'Third'),
+        )
+
+    assert queue.list_jobs() == []
+
+
+def test_queue_validates_group_size_and_assigns_default_names(
+    tmp_path,
+    serializable_config,
+):
+    queue = OptimizationQueue(tmp_path / 'queue.sqlite3')
+
+    with pytest.raises(ValueError, match='At least one'):
+        queue.add_many(())
+    with pytest.raises(ValueError, match='one name for each'):
+        queue.add_many((serializable_config,), ('First', 'Extra'))
+
+    jobs = queue.add_many((serializable_config, serializable_config))
+
+    assert [job.name for job in jobs] == [
+        'Optimization 001',
+        'Optimization 002',
+    ]
 
 
 def test_completed_external_run_is_recorded_atomically(

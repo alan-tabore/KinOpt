@@ -24,6 +24,32 @@ Preparing the queue
 Each queued job is an independent snapshot. Later changes in the main window do
 not alter jobs that have already been added.
 
+Generating several starting points
+-----------------------------------
+
+Local optimizers can reach different solutions from different initial
+parameter values. To prepare a reproducible multi-start comparison:
+
+1. Select a local method with a finite lower and upper bound for every fitted
+   parameter. *Log-space least squares* and bounded *L-BFGS-B* are suitable
+   choices.
+2. Enter an optional group name in **New job name**.
+3. Choose the total number of runs and an integer seed.
+4. Click **Add multi-start jobs**.
+
+The first job keeps the initial values currently entered in the main window.
+KinOpt distributes the other starts across the parameter bounds. Strictly
+positive ranges are sampled logarithmically so that several orders of
+magnitude are represented; ranges containing zero or negative values are
+sampled linearly. The generated jobs show their initial values in the
+**Parameters** column with a ``Start:`` prefix. Their names record the seed,
+and the complete starting vector is stored in each immutable job configuration.
+
+Using the same configuration, bounds, run count, and seed reproduces the same
+starting points. Differential evolution and SHGO already explore their bounded
+domain without using KinOpt's initial parameter values, so the multi-start
+control refuses those strategies instead of creating duplicate calculations.
+
 Running and monitoring jobs
 ---------------------------
 
@@ -33,7 +59,8 @@ for the same processor and memory. Closing and reopening KinOpt preserves the
 queue and completed result summaries.
 
 The table displays the selected model and strategy, queue state, solver
-convergence, cost, duration, fitted parameters, and the solver's final message.
+convergence, cost, duration, starting or fitted parameters, and the solver's
+final message.
 The queue state and solver result are separate: **Completed / Not converged**
 means the calculation finished and produced a finite result, but the solver
 stopped without reporting convergence, for example after using its iteration

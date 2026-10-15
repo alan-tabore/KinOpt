@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QSpinBox,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -22,6 +23,7 @@ from kinopt.src.batch_comparison_dialog import BatchComparisonDialog
 from kinopt.src.optimization_diagnostics_dialog import (
     OptimizationDiagnosticsDialog,
 )
+from kinopt.src.optimization_multistart import generate_multistart_configs
 from kinopt.src.optimization_queue import JobStatus
 from kinopt.src.optimization_scheduler import SequentialOptimizationScheduler
 
@@ -108,6 +110,8 @@ class BatchOptimizationDialog(QDialog):
 
         explanation = QLabel(
             "Save several configurations, then run them one at a time. "
+            "A multi-start group tests one bounded setup from several initial "
+            "parameter values. "
             "Changing the main form later does not modify queued jobs. "
             "Completed optimizations started from the main window are also "
             "added here automatically."
@@ -123,13 +127,26 @@ class BatchOptimizationDialog(QDialog):
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Interactive)
         header.setSectionResizeMode(len(self.HEADERS) - 1, QHeaderView.Stretch)
-        for column, width in enumerate((150, 160, 110, 85, 105, 95, 80, 180)):
+        for column, width in enumerate((140, 145, 105, 80, 90, 80, 80, 185)):
             self.table.setColumnWidth(column, width)
 
         self.add_button = QPushButton("Add current setup")
+        self.multistart_button = QPushButton("Add multi-start jobs")
         self.name_edit = QLineEdit()
         self.name_edit.setPlaceholderText(
             "Optional name, for example: Kamal - wide bounds"
+        )
+        self.multistart_count = QSpinBox()
+        self.multistart_count.setRange(2, 50)
+        self.multistart_count.setValue(5)
+        self.multistart_count.setToolTip(
+            "Total jobs, including the current starting values."
+        )
+        self.multistart_seed = QSpinBox()
+        self.multistart_seed.setRange(0, 2_147_483_647)
+        self.multistart_seed.setValue(42)
+        self.multistart_seed.setToolTip(
+            "Use the same seed and bounds to reproduce the generated starts."
         )
         self.start_button = QPushButton("Start pending jobs")
         self.pause_button = QPushButton("Pause after current job")
@@ -148,6 +165,14 @@ class BatchOptimizationDialog(QDialog):
         add_controls.addWidget(QLabel("New job name:"))
         add_controls.addWidget(self.name_edit, 1)
         add_controls.addWidget(self.add_button)
+
+        multistart_controls = QHBoxLayout()
+        multistart_controls.addWidget(QLabel("Multi-start runs:"))
+        multistart_controls.addWidget(self.multistart_count)
+        multistart_controls.addWidget(QLabel("Seed:"))
+        multistart_controls.addWidget(self.multistart_seed)
+        multistart_controls.addWidget(self.multistart_button)
+        multistart_controls.addStretch(1)
 
         execution_controls = QHBoxLayout()
         for button in (
@@ -181,6 +206,7 @@ class BatchOptimizationDialog(QDialog):
         layout.addWidget(explanation)
         layout.addWidget(self.table)
         layout.addLayout(add_controls)
+        layout.addLayout(multistart_controls)
         layout.addLayout(execution_controls)
         layout.addLayout(management_controls)
         layout.addLayout(result_controls)
@@ -188,6 +214,7 @@ class BatchOptimizationDialog(QDialog):
         layout.addWidget(close_buttons)
 
         self.add_button.clicked.connect(self.add_current_setup)
+        self.multistart_button.clicked.connect(self.add_multi_start_jobs)
         self.start_button.clicked.connect(self.start_pending_jobs)
         self.pause_button.clicked.connect(self.pause_after_current_job)
         self.cancel_button.clicked.connect(self.cancel_selected_or_current_job)
@@ -280,8 +307,12 @@ class BatchOptimizationDialog(QDialog):
     @staticmethod
     def _parameters(job):
         if job.result is None:
-            return "—"
-        return ", ".join(format(value, ".6g") for value in job.result.parameters)
+            values = job.config.initial_guess
+            prefix = "Start: "
+        else:
+            values = job.result.parameters
+            prefix = "Result: "
+        return prefix + ", ".join(format(value, ".6g") for value in values)
 
     def refresh(self):
         """Reload the table from SQLite while preserving its selection."""
@@ -337,6 +368,33 @@ class BatchOptimizationDialog(QDialog):
         self.name_edit.clear()
         self.refresh()
         self._restore_selection(job.identifier)
+
+    def add_multi_start_jobs(self):
+        """Generate reproducible bounded starts from the current form."""
+        config = self.config_provider()
+        if config is None:
+            return
+        run_count = self.multistart_count.value()
+        seed = self.multistart_seed.value()
+        base_name = self.name_edit.text().strip() or "Multi-start"
+        try:
+            configs = generate_multistart_configs(config, run_count, seed)
+            names = [
+                f"{base_name} - start {index:02d}/{run_count:02d} "
+                f"(seed {seed})"
+                for index in range(1, run_count + 1)
+            ]
+            jobs = self.queue.add_many(configs, names)
+        except Exception as error:
+            QMessageBox.critical(self, "Multi-start optimization", str(error))
+            return
+        self.status_label.setText(
+            f"Added {run_count} multi-start jobs with seed {seed}. "
+            "The first keeps the current starting values."
+        )
+        self.name_edit.clear()
+        self.refresh()
+        self._restore_selection(jobs[0].identifier)
 
     def start_pending_jobs(self):
         """Start one background worker for all currently pending jobs."""

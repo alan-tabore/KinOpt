@@ -212,35 +212,54 @@ class OptimizationQueue:
 
     def add(self, config, name=None):
         """Append an immutable configuration to the queue."""
-        serialized = serialize_config(config)
-        identifier = str(uuid4())
+        return self.add_many((config,), (name,))[0]
+
+    def add_many(self, configs, names=None):
+        """Atomically append several immutable configurations to the queue."""
+        configs = tuple(configs)
+        if not configs:
+            raise ValueError("At least one optimization configuration is required.")
+        if names is None:
+            names = (None,) * len(configs)
+        else:
+            names = tuple(names)
+        if len(names) != len(configs):
+            raise ValueError("Provide one name for each optimization configuration.")
+
+        serialized_configs = tuple(serialize_config(config) for config in configs)
+        identifiers = tuple(str(uuid4()) for _ in configs)
         timestamp = _utc_now()
         with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
             row = connection.execute(
                 "SELECT COALESCE(MAX(position), 0) + 1 FROM optimization_jobs"
             ).fetchone()
-            position = int(row[0])
-            job_name = str(name).strip() if name is not None else ""
-            if not job_name:
-                job_name = f"Optimization {position:03d}"
-            connection.execute(
-                """
-                INSERT INTO optimization_jobs (
-                    identifier, name, config_json, status, position,
-                    created_at, updated_at, message
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
-                """,
-                (
-                    identifier,
-                    job_name,
-                    serialized,
-                    JobStatus.PENDING.value,
-                    position,
-                    timestamp,
-                    timestamp,
-                ),
-            )
-        return self.get(identifier)
+            first_position = int(row[0])
+            for offset, (identifier, name, serialized) in enumerate(
+                zip(identifiers, names, serialized_configs)
+            ):
+                position = first_position + offset
+                job_name = str(name).strip() if name is not None else ""
+                if not job_name:
+                    job_name = f"Optimization {position:03d}"
+                connection.execute(
+                    """
+                    INSERT INTO optimization_jobs (
+                        identifier, name, config_json, status, position,
+                        created_at, updated_at, message
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
+                    """,
+                    (
+                        identifier,
+                        job_name,
+                        serialized,
+                        JobStatus.PENDING.value,
+                        position,
+                        timestamp,
+                        timestamp,
+                    ),
+                )
+        return [self.get(identifier) for identifier in identifiers]
 
     def record_completed(self, config, outcome, name=None):
         """Atomically add an optimization that already finished elsewhere."""

@@ -1,5 +1,6 @@
 """Exercise the first graphical controls for persistent batch runs."""
 
+from dataclasses import replace
 import os
 import time
 
@@ -50,6 +51,68 @@ def test_dialog_adds_current_setup_and_describes_it(batch_dialog):
     assert dialog.table.item(0, 1).text() == "rate_for_nth_order"
     assert dialog.table.item(0, 2).text() == "Nelder-Mead"
     assert dialog.table.item(0, 3).text() == "Pending"
+
+
+def test_dialog_adds_a_reproducible_multi_start_group(
+    batch_dialog,
+    serializable_config,
+):
+    dialog, queue = batch_dialog
+    bounds = ((1e5, 1e10), (1e3, 2e5), (0.1, 5.0))
+    dialog.config_provider = lambda: replace(
+        serializable_config,
+        local_options={
+            **serializable_config.local_options,
+            'bounds': bounds,
+        },
+    )
+    dialog.name_edit.setText('Nth-order starts')
+    dialog.multistart_count.setValue(4)
+    dialog.multistart_seed.setValue(17)
+
+    dialog.add_multi_start_jobs()
+
+    jobs = queue.list_jobs()
+    assert len(jobs) == 4
+    assert [job.name for job in jobs] == [
+        f'Nth-order starts - start {index:02d}/04 (seed 17)'
+        for index in range(1, 5)
+    ]
+    np.testing.assert_array_equal(
+        jobs[0].config.initial_guess,
+        serializable_config.initial_guess,
+    )
+    assert all(
+        np.all(job.config.initial_guess >= np.asarray(bounds)[:, 0])
+        and np.all(job.config.initial_guess <= np.asarray(bounds)[:, 1])
+        for job in jobs
+    )
+    assert 'Added 4 multi-start jobs with seed 17' in dialog.status_label.text()
+    assert dialog.table.rowCount() == 4
+    assert all(
+        dialog.table.item(row, 7).text().startswith('Start: ')
+        for row in range(4)
+    )
+
+
+def test_dialog_explains_when_multistart_has_no_bounds(
+    batch_dialog,
+    monkeypatch,
+):
+    dialog, queue = batch_dialog
+    errors = []
+    monkeypatch.setattr(
+        QMessageBox,
+        'critical',
+        lambda parent, title, message: errors.append((title, message)),
+    )
+
+    dialog.add_multi_start_jobs()
+
+    assert queue.list_jobs() == []
+    assert errors
+    assert errors[0][0] == 'Multi-start optimization'
+    assert 'requires finite parameter bounds' in errors[0][1]
 
 
 def test_dialog_runs_all_pending_jobs_without_blocking(batch_dialog, qt_app):
