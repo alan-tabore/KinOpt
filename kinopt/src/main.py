@@ -2221,6 +2221,9 @@ class MainWindow(QMainWindow):
                     self.experimental_args_for_cost_function or ()
                 ),
                 max_iterations=int(self.max_iter),
+                experiment_lengths=tuple(
+                    len(values) for values in self.experimental_times
+                ),
             )
         except Exception as e:
             traceback.print_exc()

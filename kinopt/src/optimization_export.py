@@ -54,8 +54,13 @@ def _comparison_dict(job):
         return None, str(error)
     return {
         "rmse": comparison.rmse,
+        "overall_rmse": comparison.overall_rmse,
+        "validation_rmse": comparison.validation_rmse,
         "sample_count": comparison.sample_count,
         "dataset_fingerprint": comparison.dataset_fingerprint,
+        "experiments": [
+            asdict(experiment) for experiment in comparison.experiment_fits
+        ],
     }, ""
 
 
@@ -171,6 +176,16 @@ def _csv_rows(jobs):
             "model": _model_description(job.config),
             "strategy": _strategy_description(job.config),
             "rmse": "" if comparison is None else comparison["rmse"],
+            "validation_rmse": (
+                ""
+                if comparison is None
+                else comparison["validation_rmse"]
+                if comparison["validation_rmse"] is not None
+                else ""
+            ),
+            "overall_rmse": (
+                "" if comparison is None else comparison["overall_rmse"]
+            ),
             "comparison_error": comparison_error,
             "solver_cost": "" if result is None else result.cost,
             "solver_success": "" if result is None else result.solver_success,

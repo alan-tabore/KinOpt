@@ -23,7 +23,7 @@ def test_configuration_round_trip_preserves_run(serializable_config):
     restored = deserialize_config(serialized)
 
     payload = json.loads(serialized)
-    assert payload['schema_version'] == 1
+    assert payload['schema_version'] == 2
     assert payload['cost_function'] == 'rss_mean'
     assert payload['rate_law'] == 'rate_for_nth_order'
     assert restored.cost_function is serializable_config.cost_function
@@ -41,6 +41,22 @@ def test_configuration_round_trip_preserves_run(serializable_config):
         original_outcome.result.x,
     )
     assert restored_outcome.result.fun == original_outcome.result.fun
+
+
+def test_holdout_metadata_round_trip(serializable_config):
+    config = replace(
+        serializable_config,
+        experiment_lengths=(1, 2),
+        training_mask=np.array([False, True, True]),
+    )
+
+    restored = deserialize_config(serialize_config(config))
+
+    assert restored.experiment_lengths == (1, 2)
+    np.testing.assert_array_equal(
+        restored.training_mask,
+        [False, True, True],
+    )
 
 
 def test_log_space_least_squares_configuration_round_trip(

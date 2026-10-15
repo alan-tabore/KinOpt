@@ -120,6 +120,26 @@ def test_dialog_explains_when_multistart_has_no_bounds(
     assert 'requires finite parameter bounds' in errors[0][1]
 
 
+def test_dialog_adds_a_complete_experiment_holdout(
+    batch_dialog,
+    serializable_config,
+):
+    dialog, queue = batch_dialog
+    dialog.config_provider = lambda: replace(
+        serializable_config,
+        experiment_lengths=(1, 2),
+    )
+    dialog.name_edit.setText("Predict second experiment")
+    dialog.validation_experiment.setValue(2)
+
+    dialog.add_holdout_job()
+
+    job = queue.list_jobs()[0]
+    assert job.name == "Predict second experiment - experiment 2"
+    np.testing.assert_array_equal(job.config.training_mask, [True, False, False])
+    assert "only be used for validation" in dialog.status_label.text()
+
+
 def test_dialog_runs_all_pending_jobs_without_blocking(batch_dialog, qt_app):
     dialog, queue = batch_dialog
     dialog.add_current_setup()

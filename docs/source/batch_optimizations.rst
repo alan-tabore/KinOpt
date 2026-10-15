@@ -66,6 +66,22 @@ starting points. Differential evolution and SHGO already explore their bounded
 domain without using KinOpt's initial parameter values, so the multi-start
 control refuses those strategies instead of creating duplicate calculations.
 
+Reserving an experiment for validation
+---------------------------------------
+
+When at least two experimental files were imported, choose a **Validation
+experiment** number and click **Add holdout validation job**. The queued job
+keeps the complete dataset, but the solver objective excludes every point from
+that experiment. The fitted parameters are then evaluated on the reserved
+experiment without refitting them.
+
+The result reports a fit RMSE on the experiments used by the solver, a
+validation RMSE on the reserved experiment, an overall RMSE, and one RMSE per
+experiment. A much larger validation error can reveal weak prediction outside
+the fitting data even when the fitted curves look convincing. Experiments with
+different reserved files are placed in separate ranking groups because their
+validation scores do not measure the same points.
+
 Running and monitoring jobs
 ---------------------------
 
@@ -109,8 +125,9 @@ Queue controls
 * **Delete selected** removes an inactive job after confirmation. Deleting a
   completed job also deletes its stored result from the batch table.
 * **Inspect result** opens measured and fitted rate curves for the selected
-  completed job, together with its residuals, RMSE, mean absolute error, mean
-  residual, largest residual, convergence status, and solver message.
+  completed job, together with its residuals, fit and validation RMSE, one row
+  per experiment, parameter review warnings, convergence status, and solver
+  message. A reserved validation region is shaded on the plots.
 * **Compare completed jobs** opens a table ranked by an unweighted RMSE
   recalculated from the model predictions and measured rates. This common score
   remains comparable when jobs use different solver cost functions. Lower is
@@ -120,10 +137,10 @@ Comparing completed results
 ---------------------------
 
 Complete at least two jobs, then click **Compare completed jobs**. The
-comparison table reports the common RMSE beside the solver cost, parameter
-count, evaluation count, and duration. A solver cost is useful for understanding
-the calculation that was requested, while the RMSE is the column to use for a
-direct fit comparison on the same measurements.
+comparison table reports fit, validation, and overall RMSE beside the solver
+cost, parameter count, evaluation count, and duration. A solver cost is useful
+for understanding the calculation that was requested, while RMSE is the metric
+to use for a direct comparison on the same measurements and training split.
 
 The **Multi-start groups** tab summarizes each generated group. It reports the
 number of completed and converged runs, the best and median RMSE, the best job,
@@ -131,6 +148,14 @@ and the largest relative range observed across the fitted parameters. A small
 range means that the completed runs returned similar parameter values. There is
 no universal acceptable percentage: interpret it together with convergence,
 the residual plots, parameter units, and the physical meaning of the model.
+The **Parameter stability** tab expands this indicator into minimum, median,
+maximum, and relative range for every fitted parameter instead of hiding the
+source of the largest spread.
+
+The result inspector also flags fitted values at or within one percent of a
+finite solver bound and values outside KinOpt's illustrative model-reference
+ranges. These are prompts for review rather than universal physical limits;
+material-specific knowledge remains decisive.
 
 Use **Export JSON...** to preserve the complete queued configurations, measured
 data, starting values, results, comparison metrics, group summaries, seeds, and

@@ -28,6 +28,7 @@ from kinopt.src.optimization_diagnostics_dialog import (
 from kinopt.src.optimization_multistart import generate_multistart_configs
 from kinopt.src.optimization_queue import JobStatus
 from kinopt.src.optimization_scheduler import ConcurrentOptimizationScheduler
+from kinopt.src.optimization_validation import with_validation_experiment
 
 
 class BatchOptimizationThread(QThread):
@@ -159,6 +160,7 @@ class BatchOptimizationDialog(QDialog):
 
         self.add_button = QPushButton("Add current setup")
         self.multistart_button = QPushButton("Add multi-start jobs")
+        self.holdout_button = QPushButton("Add holdout validation job")
         self.plan_button = QPushButton("Build comparison plan…")
         self.name_edit = QLineEdit()
         self.name_edit.setPlaceholderText(
@@ -175,6 +177,13 @@ class BatchOptimizationDialog(QDialog):
         self.multistart_seed.setValue(42)
         self.multistart_seed.setToolTip(
             "Use the same seed and bounds to reproduce the generated starts."
+        )
+        self.validation_experiment = QSpinBox()
+        self.validation_experiment.setRange(1, 999)
+        self.validation_experiment.setValue(1)
+        self.validation_experiment.setToolTip(
+            "This experiment is kept in the stored configuration for scoring "
+            "but excluded from the solver objective."
         )
         available_cpus = max(1, os.cpu_count() or 1)
         self.concurrent_jobs = QSpinBox()
@@ -216,6 +225,15 @@ class BatchOptimizationDialog(QDialog):
         multistart_controls.addWidget(self.multistart_seed)
         multistart_controls.addWidget(self.multistart_button)
         multistart_controls.addStretch(1)
+
+        validation_controls = QHBoxLayout()
+        validation_controls.addWidget(QLabel("Validation experiment:"))
+        validation_controls.addWidget(self.validation_experiment)
+        validation_controls.addWidget(self.holdout_button)
+        validation_controls.addWidget(QLabel(
+            "Fit on every other imported experiment, then report predictive RMSE."
+        ))
+        validation_controls.addStretch(1)
 
         plan_controls = QHBoxLayout()
         plan_controls.addWidget(self.plan_button)
@@ -267,6 +285,7 @@ class BatchOptimizationDialog(QDialog):
         layout.addWidget(self.table)
         layout.addLayout(add_controls)
         layout.addLayout(multistart_controls)
+        layout.addLayout(validation_controls)
         layout.addLayout(plan_controls)
         layout.addLayout(resource_controls)
         layout.addLayout(execution_controls)
@@ -277,6 +296,7 @@ class BatchOptimizationDialog(QDialog):
 
         self.add_button.clicked.connect(self.add_current_setup)
         self.multistart_button.clicked.connect(self.add_multi_start_jobs)
+        self.holdout_button.clicked.connect(self.add_holdout_job)
         self.plan_button.clicked.connect(self.build_comparison_plan)
         self.start_button.clicked.connect(self.start_pending_jobs)
         self.pause_button.clicked.connect(self.pause_after_current_job)
@@ -466,6 +486,33 @@ class BatchOptimizationDialog(QDialog):
         self.name_edit.clear()
         self.refresh()
         self._restore_selection(jobs[0].identifier)
+
+    def add_holdout_job(self):
+        """Queue one run that excludes a complete experiment from fitting."""
+        config = self.config_provider()
+        if config is None:
+            return
+        experiment_number = self.validation_experiment.value()
+        try:
+            holdout_config = with_validation_experiment(
+                config,
+                experiment_number - 1,
+            )
+            base_name = self.name_edit.text().strip() or "Holdout validation"
+            job = self.queue.add(
+                holdout_config,
+                name=f"{base_name} - experiment {experiment_number}",
+            )
+        except (TypeError, ValueError) as error:
+            QMessageBox.critical(self, "Holdout validation", str(error))
+            return
+        self.status_label.setText(
+            f"Added {job.name}; experiment {experiment_number} will only be "
+            "used for validation."
+        )
+        self.name_edit.clear()
+        self.refresh()
+        self._restore_selection(job.identifier)
 
     def build_comparison_plan(self):
         """Open the assistant using an immutable snapshot of the main form."""

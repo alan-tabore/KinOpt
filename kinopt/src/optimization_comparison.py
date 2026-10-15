@@ -9,6 +9,20 @@ from typing import Optional
 import numpy as np
 
 from kinopt.src import optimization
+from kinopt.src.optimization_validation import (
+    experiment_slices,
+    fitted_parameter_metadata,
+)
+
+
+@dataclass(frozen=True)
+class ExperimentFit:
+    """Fit error for one imported experiment and its role in the run."""
+
+    index: int
+    sample_count: int
+    rmse: float
+    role: str
 
 
 @dataclass(frozen=True)
@@ -18,6 +32,9 @@ class FitComparison:
     rmse: float
     sample_count: int
     dataset_fingerprint: str
+    overall_rmse: float
+    validation_rmse: Optional[float]
+    experiment_fits: tuple
 
 
 @dataclass(frozen=True)
@@ -32,6 +49,24 @@ class FitDiagnostics:
     mean_residual: float
     maximum_absolute_error: float
     sample_count: int
+    overall_rmse: float
+    validation_rmse: Optional[float]
+    training_sample_count: int
+    validation_sample_count: int
+    experiment_fits: tuple
+
+
+@dataclass(frozen=True)
+class ParameterStability:
+    """Spread of one fitted parameter across a multi-start group."""
+
+    index: int
+    name: str
+    unit: str
+    minimum: float
+    median: float
+    maximum: float
+    relative_range: float
 
 
 @dataclass(frozen=True)
@@ -50,6 +85,7 @@ class MultiStartSummary:
     best_rmse: Optional[float]
     median_rmse: Optional[float]
     maximum_relative_parameter_range: Optional[float]
+    parameter_stability: tuple
     message: str
 
 
@@ -68,6 +104,9 @@ def dataset_fingerprint(config):
     digest = hashlib.sha256()
     digest.update(str(values.shape).encode("ascii"))
     digest.update(values.astype("<f8", copy=False).tobytes())
+    digest.update(str(tuple(config.experiment_lengths)).encode("ascii"))
+    if config.training_mask is not None:
+        digest.update(np.asarray(config.training_mask, dtype=np.uint8).tobytes())
     return digest.hexdigest()
 
 
@@ -98,7 +137,38 @@ def diagnose_fit(config, parameters):
     if not np.all(np.isfinite(model_rate)):
         raise ValueError("The model rates must be finite for comparison.")
     residuals = model_rate - experimental_rate
-    rmse = float(np.sqrt(np.mean(np.square(residuals))))
+    overall_rmse = float(np.sqrt(np.mean(np.square(residuals))))
+    training_mask = (
+        np.ones(experimental_rate.size, dtype=bool)
+        if config.training_mask is None
+        else np.asarray(config.training_mask, dtype=bool)
+    )
+    validation_mask = ~training_mask
+    rmse = float(np.sqrt(np.mean(np.square(residuals[training_mask]))))
+    validation_rmse = (
+        None
+        if not np.any(validation_mask)
+        else float(np.sqrt(np.mean(np.square(residuals[validation_mask]))))
+    )
+    experiment_fits = []
+    for index, experiment_slice in enumerate(experiment_slices(config)):
+        experiment_residuals = residuals[experiment_slice]
+        experiment_training = training_mask[experiment_slice]
+        role = (
+            "validation"
+            if not np.any(experiment_training)
+            else "fit" if np.all(experiment_training) else "mixed"
+        )
+        experiment_fits.append(
+            ExperimentFit(
+                index=index,
+                sample_count=experiment_residuals.size,
+                rmse=float(
+                    np.sqrt(np.mean(np.square(experiment_residuals)))
+                ),
+                role=role,
+            )
+        )
     mean_absolute_error = float(np.mean(np.abs(residuals)))
     mean_residual = float(np.mean(residuals))
     maximum_absolute_error = float(np.max(np.abs(residuals)))
@@ -107,7 +177,10 @@ def diagnose_fit(config, parameters):
         mean_absolute_error,
         mean_residual,
         maximum_absolute_error,
+        overall_rmse,
     )
+    if validation_rmse is not None:
+        indicators += (validation_rmse,)
     if not all(math.isfinite(value) for value in indicators):
         raise ValueError("The fit diagnostics are not finite.")
 
@@ -125,6 +198,11 @@ def diagnose_fit(config, parameters):
         mean_residual=mean_residual,
         maximum_absolute_error=maximum_absolute_error,
         sample_count=experimental_rate.size,
+        overall_rmse=overall_rmse,
+        validation_rmse=validation_rmse,
+        training_sample_count=int(np.count_nonzero(training_mask)),
+        validation_sample_count=int(np.count_nonzero(validation_mask)),
+        experiment_fits=tuple(experiment_fits),
     )
 
 
@@ -133,8 +211,11 @@ def compare_fit(config, parameters):
     diagnostics = diagnose_fit(config, parameters)
     return FitComparison(
         rmse=diagnostics.rmse,
-        sample_count=diagnostics.sample_count,
+        sample_count=diagnostics.training_sample_count,
         dataset_fingerprint=dataset_fingerprint(config),
+        overall_rmse=diagnostics.overall_rmse,
+        validation_rmse=diagnostics.validation_rmse,
+        experiment_fits=diagnostics.experiment_fits,
     )
 
 
@@ -160,6 +241,42 @@ def _maximum_relative_parameter_range(completed_jobs):
         where=scale > 0,
     )
     return float(np.max(relative_ranges))
+
+
+def _parameter_stability(completed_jobs):
+    if len(completed_jobs) < 2:
+        return ()
+    lengths = {len(job.result.parameters) for job in completed_jobs}
+    if len(lengths) != 1:
+        return ()
+    matrix = np.vstack(
+        [np.asarray(job.result.parameters, dtype=float) for job in completed_jobs]
+    )
+    if not np.all(np.isfinite(matrix)):
+        return ()
+    metadata = fitted_parameter_metadata(completed_jobs[0].config)
+    stability = []
+    for index in range(matrix.shape[1]):
+        values = matrix[:, index]
+        scale = float(np.max(np.abs(values)))
+        relative_range = 0.0 if scale == 0 else float(np.ptp(values) / scale)
+        parameter = metadata[index] if index < len(metadata) else None
+        stability.append(
+            ParameterStability(
+                index=index,
+                name=(
+                    parameter.label
+                    if parameter is not None
+                    else f"Parameter {index + 1}"
+                ),
+                unit="" if parameter is None else parameter.unit,
+                minimum=float(np.min(values)),
+                median=float(np.median(values)),
+                maximum=float(np.max(values)),
+                relative_range=relative_range,
+            )
+        )
+    return tuple(stability)
 
 
 def summarize_multistart_groups(jobs):
@@ -212,6 +329,7 @@ def summarize_multistart_groups(jobs):
         )
         best_job = ranked[0][0] if ranked else None
         rmse_values = [comparison.rmse for _, comparison in ranked]
+        parameter_stability = _parameter_stability(completed)
         summaries.append(
             MultiStartSummary(
                 group_identifier=ordered[0].group_identifier,
@@ -234,6 +352,7 @@ def summarize_multistart_groups(jobs):
                 maximum_relative_parameter_range=(
                     _maximum_relative_parameter_range(completed)
                 ),
+                parameter_stability=parameter_stability,
                 message=message,
             )
         )

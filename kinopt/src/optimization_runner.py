@@ -83,6 +83,8 @@ class OptimizationRunConfig:
     cost_function_args: Tuple[Any, ...]
     experimental_args_for_cost_function: Tuple[Any, ...]
     max_iterations: int
+    experiment_lengths: Tuple[int, ...] = ()
+    training_mask: Optional[np.ndarray] = None
 
     def __post_init__(self) -> None:
         if not self.global_method and not self.local_method:
@@ -98,6 +100,30 @@ class OptimizationRunConfig:
         if self.max_iterations <= 0:
             raise ValueError("The iteration budget must be a positive integer.")
 
+        sample_count = np.asarray(self.experimental_rate).size
+        lengths = tuple(int(length) for length in self.experiment_lengths)
+        if lengths and (
+            any(length <= 0 for length in lengths)
+            or sum(lengths) != sample_count
+        ):
+            raise ValueError(
+                "Experiment lengths must be positive and cover every rate value."
+            )
+        object.__setattr__(self, "experiment_lengths", lengths)
+        if self.training_mask is not None:
+            mask = np.asarray(self.training_mask, dtype=bool)
+            if mask.ndim != 1 or mask.size != sample_count:
+                raise ValueError(
+                    "The training mask must select the experimental rate series."
+                )
+            if not np.any(mask):
+                raise ValueError("The training mask must keep at least one value.")
+            if np.all(mask):
+                raise ValueError(
+                    "Omit the training mask when every value is used for fitting."
+                )
+            object.__setattr__(self, "training_mask", mask)
+
         fields_to_freeze = (
             "initial_guess",
             "global_options",
@@ -110,6 +136,7 @@ class OptimizationRunConfig:
             "tg_args",
             "cost_function_args",
             "experimental_args_for_cost_function",
+            "training_mask",
         )
         for field_name in fields_to_freeze:
             object.__setattr__(self, field_name, _freeze(getattr(self, field_name)))
@@ -124,20 +151,62 @@ class OptimizationRunResult:
 
 
 def _objective_arguments(config: OptimizationRunConfig) -> Tuple[Any, ...]:
+    training_mask = config.training_mask
+
+    def training_value(value):
+        thawed = _thaw(value)
+        if training_mask is None:
+            return thawed
+        if isinstance(thawed, np.ndarray):
+            if thawed.ndim > 0 and thawed.shape[0] == training_mask.size:
+                return thawed[training_mask]
+            return thawed
+        if (
+            isinstance(thawed, (tuple, list))
+            and config.experiment_lengths
+            and len(thawed) == len(config.experiment_lengths)
+            and all(
+                isinstance(item, np.ndarray)
+                and item.ndim > 0
+                and item.shape[0] == length
+                for item, length in zip(thawed, config.experiment_lengths)
+            )
+        ):
+            selected = []
+            start = 0
+            for item, length in zip(thawed, config.experiment_lengths):
+                experiment_mask = training_mask[start:start + length]
+                if np.all(experiment_mask):
+                    selected.append(item)
+                elif np.any(experiment_mask):
+                    selected.append(item[experiment_mask])
+                start += length
+            return tuple(selected)
+        return thawed
+
     return (
-        _thaw(config.experimental_rate),
+        training_value(config.experimental_rate),
         config.rate_law,
-        _thaw(config.experimental_args_for_rate),
+        tuple(training_value(value) for value in config.experimental_args_for_rate),
         config.rate_parameter_count,
         config.vitrification_law,
-        _thaw(config.experimental_args_for_vitrification),
+        tuple(
+            training_value(value)
+            for value in config.experimental_args_for_vitrification
+        ),
         config.vitrification_parameter_count,
         config.coupling_law,
-        _thaw(config.experimental_args_for_coupling),
+        tuple(
+            training_value(value)
+            for value in config.experimental_args_for_coupling
+        ),
         config.tg_law,
-        _thaw(config.experimental_args_for_tg),
+        tuple(training_value(value) for value in config.experimental_args_for_tg),
         _thaw(config.tg_args),
-        *_thaw(config.experimental_args_for_cost_function),
+        *tuple(
+            training_value(value)
+            for value in config.experimental_args_for_cost_function
+        ),
         *_thaw(config.cost_function_args),
     )
 

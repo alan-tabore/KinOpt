@@ -12,7 +12,7 @@ from kinopt.src.optimization_runner import OptimizationRunConfig
 from kinopt.src.optimization_runner import LOG_SPACE_LEAST_SQUARES
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 _COST_FUNCTIONS = {
     "rss_standard",
@@ -207,6 +207,8 @@ def config_to_dict(config: OptimizationRunConfig) -> Dict[str, Any]:
             config.experimental_args_for_cost_function
         ),
         "max_iterations": config.max_iterations,
+        "experiment_lengths": list(config.experiment_lengths),
+        "training_mask": _json_value(config.training_mask),
     }
     # Enforce standard JSON now so invalid NaN or infinite values fail before
     # the payload reaches persistent storage.
@@ -218,7 +220,8 @@ def config_from_dict(payload: Mapping[str, Any]) -> OptimizationRunConfig:
     """Rebuild an immutable run configuration from a versioned payload."""
     if not isinstance(payload, Mapping):
         raise ValueError("The optimization configuration must be a JSON object.")
-    if payload.get("schema_version") != SCHEMA_VERSION:
+    schema_version = payload.get("schema_version")
+    if schema_version not in {1, SCHEMA_VERSION}:
         raise ValueError(
             "Unsupported optimization configuration schema: "
             f"{payload.get('schema_version')!r}"
@@ -318,6 +321,14 @@ def config_from_dict(payload: Mapping[str, Any]) -> OptimizationRunConfig:
                 "Cost-function experimental arguments",
             ),
             max_iterations=int(payload["max_iterations"]),
+            experiment_lengths=tuple(
+                int(value) for value in payload.get("experiment_lengths", ())
+            ),
+            training_mask=(
+                None
+                if payload.get("training_mask") is None
+                else np.asarray(payload["training_mask"], dtype=bool)
+            ),
         )
     except KeyError as error:
         raise ValueError(

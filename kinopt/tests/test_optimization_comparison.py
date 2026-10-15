@@ -69,6 +69,31 @@ def test_fit_diagnostics_explain_pointwise_model_errors(serializable_config):
     assert not diagnostics.residuals.flags.writeable
 
 
+def test_diagnostics_separate_fit_validation_and_each_experiment(
+    serializable_config,
+):
+    config = replace(
+        serializable_config,
+        experiment_lengths=(1, 2),
+        training_mask=np.array([False, True, True]),
+    )
+
+    diagnostics = diagnose_fit(config, [7e7, 57000.0, 1.2])
+    comparison = compare_fit(config, [7e7, 57000.0, 1.2])
+
+    assert diagnostics.training_sample_count == 2
+    assert diagnostics.validation_sample_count == 1
+    assert diagnostics.validation_rmse == pytest.approx(
+        abs(diagnostics.residuals[0])
+    )
+    assert [item.role for item in diagnostics.experiment_fits] == [
+        "validation",
+        "fit",
+    ]
+    assert comparison.validation_rmse == diagnostics.validation_rmse
+    assert comparison.sample_count == 2
+
+
 def test_dataset_identity_depends_on_ordered_measured_rates(serializable_config):
     copied = replace(
         serializable_config,
@@ -151,3 +176,9 @@ def test_multistart_summary_reports_fit_and_parameter_stability(
     ).rmse
     assert summary.median_rmse == pytest.approx(alternative_rmse / 2.)
     assert summary.maximum_relative_parameter_range == pytest.approx(0.2)
+    assert [parameter.name for parameter in summary.parameter_stability] == [
+        'A₁',
+        'E₁',
+        'n',
+    ]
+    assert summary.parameter_stability[0].relative_range == pytest.approx(0.2)
